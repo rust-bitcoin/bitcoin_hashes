@@ -35,6 +35,7 @@ extern crate byteorder;
 #[macro_use] mod util;
 pub mod error;
 pub mod hex;
+pub mod hash160;
 pub mod ripemd160;
 pub mod sha1;
 pub mod sha256;
