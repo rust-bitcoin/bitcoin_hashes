@@ -13,9 +13,9 @@
 //
 
 /// Circular left-shift a 32-bit word
-pub fn circular_lshift32(bits: u32, word: u32) -> u32 {
-    return word << bits as u32 | word >> (32u32 - bits) as u32;
-}
+macro_rules! circular_lshift32 (
+    ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (32 - $shift)))
+);
 
 macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ty) => (

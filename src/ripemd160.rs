@@ -23,7 +23,6 @@ use std::io;
 
 use byteorder::{ByteOrder, LittleEndian};
 
-use util;
 use {Error, Hash};
 
 const BLOCK_SIZE: usize = 64;
@@ -108,8 +107,8 @@ macro_rules! round(
     ($a:expr, $b:expr, $c:expr, $d:expr, $e:expr,
      $x:expr, $bits:expr, $add:expr, $round:expr) => ({
         $a = $a.wrapping_add($round).wrapping_add($x).wrapping_add($add);
-        $a = util::circular_lshift32($bits, $a).wrapping_add($e);
-        $c = util::circular_lshift32(10, $c);
+        $a = circular_lshift32!($bits, $a).wrapping_add($e);
+        $c = circular_lshift32!(10, $c);
     });
 );
 

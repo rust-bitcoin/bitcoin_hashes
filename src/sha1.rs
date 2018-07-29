@@ -23,7 +23,6 @@ use std::io;
 
 use byteorder::{ByteOrder, BigEndian};
 
-use util;
 use {Error, Hash};
 
 const BLOCK_SIZE: usize = 64;
@@ -142,7 +141,7 @@ impl Sha1Engine {
         let mut w = [0u32; 80];
         BigEndian::read_u32_into(&self.buffer, &mut w[0..16]);
         for i in 16..80 {
-            w[i] = util::circular_lshift32(1, w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16]);
+            w[i] = circular_lshift32!(1, w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16]);
         }
 
         let mut a = self.h[0];
@@ -160,10 +159,10 @@ impl Sha1Engine {
                 _ => unreachable!()
             };
 
-            let new_a = util::circular_lshift32(5, a).wrapping_add(f).wrapping_add(e).wrapping_add(k).wrapping_add(w[i]);
+            let new_a = circular_lshift32!(5, a).wrapping_add(f).wrapping_add(e).wrapping_add(k).wrapping_add(w[i]);
             e = d;
             d = c;
-            c = util::circular_lshift32(30, b);
+            c = circular_lshift32!(30, b);
             b = a;
             a = new_a;
         }
