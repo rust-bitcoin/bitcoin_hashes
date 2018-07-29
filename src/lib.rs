@@ -30,9 +30,12 @@
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 #[cfg(all(test, feature = "unstable"))] extern crate test;
 
+#[cfg(feature="serde")] extern crate serde;
+#[cfg(all(test,feature="serde"))] extern crate serde_test;
 extern crate byteorder;
 
 #[macro_use] mod util;
+#[macro_use] mod serde_macros;
 pub mod error;
 pub mod hex;
 pub mod hash160;

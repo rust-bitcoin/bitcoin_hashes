@@ -79,6 +79,7 @@ hex_fmt_impl!(Debug, Sha512Hash);
 hex_fmt_impl!(Display, Sha512Hash);
 hex_fmt_impl!(LowerHex, Sha512Hash);
 index_impl!(Sha512Hash);
+serde_impl!(Sha512Hash, 64);
 
 impl Hash for Sha512Hash {
     type Engine = Sha512Engine;
@@ -379,6 +380,40 @@ mod tests {
             let manual_hash = Sha512Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
         }
+    }
+
+    #[cfg(feature="serde")]
+    #[test]
+    fn sha512_serde() {
+        use serde_test::{Configure, Token, assert_tokens, assert_ser_tokens, assert_de_tokens};
+
+        static HASH_BYTES: [u8; 64] = [
+            0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21,
+            0x11, 0x3c, 0x52, 0xff, 0x18, 0x2a, 0x1b, 0x8e,
+            0x0a, 0x19, 0x57, 0x54, 0xaa, 0x52, 0x7f, 0xcd,
+            0x00, 0xa4, 0x11, 0x62, 0x0b, 0x46, 0xf2, 0x0f,
+            0xff, 0xfb, 0x80, 0x88, 0xcc, 0xf8, 0x54, 0x97,
+            0x12, 0x1a, 0xd4, 0x49, 0x9e, 0x08, 0x45, 0xb8,
+            0x76, 0xf6, 0xdd, 0x66, 0x40, 0x08, 0x8a, 0x2f,
+            0x0b, 0x2d, 0x8a, 0x60, 0x0b, 0xdf, 0x4c, 0x0c,
+        ];
+
+        let hash = Sha512Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
+        assert_ser_tokens(
+            &hash.readable(),
+            &[Token::Str(
+                "8b41e1b78ad11521113c52ff182a1b8e0a195754aa527fcd00a411620b46f20f\
+                 fffb8088ccf85497121ad4499e0845b876f6dd6640088a2f0b2d8a600bdf4c0c"
+            )],
+        );
+        assert_de_tokens(
+            &hash.readable(),
+            &[Token::BorrowedStr(
+                "8b41e1b78ad11521113c52ff182a1b8e0a195754aa527fcd00a411620b46f20f\
+                 fffb8088ccf85497121ad4499e0845b876f6dd6640088a2f0b2d8a600bdf4c0c"
+            )],
+        );
     }
 }
 

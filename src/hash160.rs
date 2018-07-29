@@ -31,6 +31,7 @@ hex_fmt_impl!(Debug, Hash160Hash);
 hex_fmt_impl!(Display, Hash160Hash);
 hex_fmt_impl!(LowerHex, Hash160Hash);
 index_impl!(Hash160Hash);
+serde_impl!(Hash160Hash, 20);
 
 impl Hash for Hash160Hash {
     type Engine = sha256::Sha256Engine;
@@ -121,6 +122,25 @@ mod tests {
             let manual_hash = Hash160Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
         }
+    }
+
+    #[cfg(feature="serde")]
+    #[test]
+    fn ripemd_serde() {
+        use serde_test::{Configure, Token, assert_tokens, assert_ser_tokens, assert_de_tokens};
+
+        static HASH_BYTES: [u8; 20] = [
+            0x13, 0x20, 0x72, 0xdf,
+            0x69, 0x09, 0x33, 0x83,
+            0x5e, 0xb8, 0xb6, 0xad,
+            0x0b, 0x77, 0xe7, 0xb6,
+            0xf1, 0x4a, 0xca, 0xd7,
+        ];
+
+        let hash = Hash160Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
+        assert_ser_tokens(&hash.readable(), &[Token::Str("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
+        assert_de_tokens(&hash.readable(), &[Token::BorrowedStr("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
     }
 }
 

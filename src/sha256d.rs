@@ -25,6 +25,7 @@ hex_fmt_impl!(Debug, Sha256dHash);
 hex_fmt_impl!(Display, Sha256dHash);
 hex_fmt_impl!(LowerHex, Sha256dHash);
 index_impl!(Sha256dHash);
+serde_impl!(Sha256dHash, 32);
 
 impl Hash for Sha256dHash {
     type Engine = sha256::Sha256Engine;
@@ -90,7 +91,7 @@ input: &'static str,
                     0x5d, 0xf6, 0xe0, 0xe2, 0x76, 0x13, 0x59, 0xd3,
                     0x0a, 0x82, 0x75, 0x05, 0x8e, 0x29, 0x9f, 0xcc,
                     0x03, 0x81, 0x53, 0x45, 0x45, 0xf5, 0x5c, 0xf4,
-                    0x3e, 0x41, 0x98, 0x3f, 0x5d, 0x4c, 0x94, 0x56, 
+                    0x3e, 0x41, 0x98, 0x3f, 0x5d, 0x4c, 0x94, 0x56,
                 ],
                 output_str: "56944c5d3f98413ef45cf54545538103cc9f298e0575820ad3591376e2e0f65d",
             },
@@ -111,6 +112,24 @@ input: &'static str,
             let manual_hash = Sha256dHash::from_engine(engine);
             assert_eq!(hash, manual_hash);
         }
+    }
+
+    #[cfg(feature="serde")]
+    #[test]
+    fn sha256_serde() {
+        use serde_test::{Configure, Token, assert_tokens, assert_ser_tokens, assert_de_tokens};
+
+        static HASH_BYTES: [u8; 32] = [
+            0xef, 0x53, 0x7f, 0x25, 0xc8, 0x95, 0xbf, 0xa7,
+            0x82, 0x52, 0x65, 0x29, 0xa9, 0xb6, 0x3d, 0x97,
+            0xaa, 0x63, 0x15, 0x64, 0xd5, 0xd7, 0x89, 0xc2,
+            0xb7, 0x65, 0x44, 0x8c, 0x86, 0x35, 0xfb, 0x6c,
+        ];
+
+        let hash = Sha256dHash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
+        assert_ser_tokens(&hash.readable(), &[Token::Str("6cfb35868c4465b7c289d7d5641563aa973db6a929655282a7bf95c8257f53ef")]);
+        assert_de_tokens(&hash.readable(), &[Token::BorrowedStr("6cfb35868c4465b7c289d7d5641563aa973db6a929655282a7bf95c8257f53ef")]);
     }
 }
 
