@@ -1,0 +1,19 @@
+[package]
+name = "bitcoin_hashes"
+version = "0.1.0"
+authors = ["Andrew Poelstra <apoelstra@wpsoftware.net>"]
+license = "CC0-1.0"
+documentation = "https://docs.rs/bitcoin-hashes/"
+keywords = [ "crypto", "bitcoin", "hash", "digest" ]
+readme = "README.md"
+
+[lib]
+name = "bitcoin_hashes"
+path = "src/lib.rs"
+
+[features]
+unstable = []  # for benchmarking
+
+[dependencies]
+byteorder = "1.2"
+
