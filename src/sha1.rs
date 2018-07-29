@@ -237,7 +237,6 @@ mod tests {
         ];
 
         for test in tests {
-            println!("test input «{}»", test.input);
             // Hash through high-level API, check hex encoding/decoding
             let hash = Sha1Hash::hash(&test.input.as_bytes());
             assert_eq!(hash, Sha1Hash::from_hex(test.output_str).expect("parse hex"));
