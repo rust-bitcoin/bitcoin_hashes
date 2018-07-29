@@ -17,6 +17,10 @@ macro_rules! circular_lshift32 (
     ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (32 - $shift)))
 );
 
+macro_rules! circular_lshift64 (
+    ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (64 - $shift)))
+);
+
 macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ty) => (
         impl ::std::fmt::$imp for $ty {

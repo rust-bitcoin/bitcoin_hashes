@@ -39,6 +39,7 @@ pub mod hash160;
 pub mod ripemd160;
 pub mod sha1;
 pub mod sha256;
+pub mod sha512;
 pub mod sha256d;
 
 use std::{fmt, io, ops};
