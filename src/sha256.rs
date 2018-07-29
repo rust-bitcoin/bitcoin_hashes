@@ -92,6 +92,10 @@ impl Hash for Sha256Hash {
         32
     }
 
+    fn block_size() -> usize {
+        64
+    }
+
     fn from_slice(sl: &[u8]) -> Result<Sha256Hash, Error> {
         if sl.len() != 32 {
             Err(Error::InvalidLength(Self::len(), sl.len()))
