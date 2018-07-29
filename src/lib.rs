@@ -36,6 +36,7 @@ extern crate byteorder;
 pub mod error;
 pub mod hex;
 pub mod hash160;
+pub mod hmac;
 pub mod ripemd160;
 pub mod sha1;
 pub mod sha256;
@@ -44,6 +45,7 @@ pub mod sha256d;
 
 use std::{fmt, io, ops};
 
+pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
 
 /// A hashing engine which bytes can be serialized into. It is expected
