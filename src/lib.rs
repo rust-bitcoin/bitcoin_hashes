@@ -37,6 +37,8 @@ pub mod error;
 pub mod hex;
 pub mod ripemd160;
 pub mod sha1;
+pub mod sha256;
+pub mod sha256d;
 
 use std::{fmt, io, ops};
 
