@@ -36,6 +36,7 @@ extern crate byteorder;
 pub mod error;
 pub mod hex;
 pub mod ripemd160;
+pub mod sha1;
 
 use std::{fmt, io, ops};
 
