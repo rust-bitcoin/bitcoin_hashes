@@ -46,7 +46,7 @@ impl Clone for Sha1Engine {
 
 /// Output of the SHA1 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Sha1Hash([u8; 20]);
+pub struct Sha1Hash(pub [u8; 20]);
 
 hex_fmt_impl!(Debug, Sha1Hash);
 hex_fmt_impl!(Display, Sha1Hash);

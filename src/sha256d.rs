@@ -24,7 +24,7 @@ use {Error, Hash};
 
 /// Output of the SHA256d hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Sha256dHash([u8; 32]);
+pub struct Sha256dHash(pub [u8; 32]);
 
 hex_fmt_impl!(Debug, Sha256dHash);
 hex_fmt_impl!(Display, Sha256dHash);

@@ -25,7 +25,7 @@ use {Error, Hash};
 
 /// Output of the Bitcoin HASH160 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Hash160Hash([u8; 20]);
+pub struct Hash160Hash(pub [u8; 20]);
 
 hex_fmt_impl!(Debug, Hash160Hash);
 hex_fmt_impl!(Display, Hash160Hash);

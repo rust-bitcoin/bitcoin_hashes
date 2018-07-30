@@ -46,7 +46,7 @@ impl Clone for Sha256Engine {
 
 /// Output of the SHA256 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Sha256Hash([u8; 32]);
+pub struct Sha256Hash(pub [u8; 32]);
 
 hex_fmt_impl!(Debug, Sha256Hash);
 hex_fmt_impl!(Display, Sha256Hash);

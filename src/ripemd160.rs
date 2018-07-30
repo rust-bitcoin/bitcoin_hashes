@@ -46,7 +46,7 @@ impl Clone for Ripemd160Engine {
 
 /// Output of the RIPEMD160 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Ripemd160Hash([u8; 20]);
+pub struct Ripemd160Hash(pub [u8; 20]);
 
 hex_fmt_impl!(Debug, Ripemd160Hash);
 hex_fmt_impl!(Display, Ripemd160Hash);

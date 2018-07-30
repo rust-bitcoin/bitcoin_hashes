@@ -45,7 +45,7 @@ impl Clone for Sha512Engine {
 }
 
 /// Output of the SHA256 hash function
-pub struct Sha512Hash([u8; 64]);
+pub struct Sha512Hash(pub [u8; 64]);
 
 impl Copy for Sha512Hash {}
 
