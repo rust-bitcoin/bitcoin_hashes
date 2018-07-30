@@ -84,5 +84,10 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
         engine.write_all(data).unwrap();
         Self::from_engine(engine)
     }
+
+    /// Flag indicating whether user-visible serializations of this hash
+    /// should be backward. For some reason Satoshi decided this should be
+    /// true for `Sha256dHash`, so here we are.
+    fn display_backward() -> bool { false }
 }
 

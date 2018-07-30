@@ -64,6 +64,10 @@ impl Hash for Sha256dHash {
             Ok(Sha256dHash(ret))
         }
     }
+
+    fn display_backward() -> bool {
+        true
+    }
 }
 
 #[cfg(test)]
@@ -74,14 +78,14 @@ mod tests {
     use hex::{FromHex, ToHex};
     use Hash;
 
-    #[derive(Clone)]
+#[derive(Clone)]
     struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
+input: &'static str,
+           output: Vec<u8>,
+           output_str: &'static str,
     }
 
-    #[test]
+#[test]
     fn test() {
         let tests = vec![
             // Test vector copied out of rust-bitcoin
@@ -93,7 +97,7 @@ mod tests {
                     0x03, 0x81, 0x53, 0x45, 0x45, 0xf5, 0x5c, 0xf4,
                     0x3e, 0x41, 0x98, 0x3f, 0x5d, 0x4c, 0x94, 0x56, 
                 ],
-                output_str: "5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456"
+                output_str: "56944c5d3f98413ef45cf54545538103cc9f298e0575820ad3591376e2e0f65d",
             },
         ];
 

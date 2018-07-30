@@ -22,11 +22,15 @@ macro_rules! circular_lshift64 (
 );
 
 macro_rules! hex_fmt_impl(
-    ($imp:ident, $ty:ty) => (
+    ($imp:ident, $ty:ident) => (
         impl ::std::fmt::$imp for $ty {
             fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                use hex::format_hex;
-                format_hex(&self.0, f)
+                use hex::{format_hex, format_hex_reverse};
+                if $ty::display_backward() {
+                    format_hex_reverse(&self.0, f)
+                } else {
+                    format_hex(&self.0, f)
+                }
             }
         }
     )
