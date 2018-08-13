@@ -18,15 +18,15 @@ use std::io;
 
 use byteorder::{ByteOrder, BigEndian};
 
-use {Error, Hash};
+use {Error, Hash, HashEngine};
 
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute SHA256 hash function
 pub struct Sha256Engine {
+    buffer: [u8; BLOCK_SIZE],
     h: [u32; 8],
     length: usize,
-    buffer: [u8; BLOCK_SIZE],
 }
 
 impl Clone for Sha256Engine {
@@ -38,6 +38,8 @@ impl Clone for Sha256Engine {
         }
     }
 }
+
+impl HashEngine for Sha256Engine {}
 
 /// Output of the SHA256 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
