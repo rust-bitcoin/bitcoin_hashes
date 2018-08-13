@@ -23,7 +23,7 @@ use std::io;
 
 use byteorder::{ByteOrder, BigEndian};
 
-use {Error, Hash};
+use {Error, Hash, HashEngine};
 
 const BLOCK_SIZE: usize = 128;
 
@@ -43,6 +43,8 @@ impl Clone for Sha512Engine {
         }
     }
 }
+
+impl HashEngine for Sha512Engine {}
 
 /// Output of the SHA256 hash function
 pub struct Sha512Hash(pub [u8; 64]);

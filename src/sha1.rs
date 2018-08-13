@@ -18,15 +18,15 @@ use std::io;
 
 use byteorder::{ByteOrder, BigEndian};
 
-use {Error, Hash};
+use {Error, Hash, HashEngine};
 
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute SHA1 hash function
 pub struct Sha1Engine {
+    buffer: [u8; BLOCK_SIZE],
     h: [u32; 5],
     length: usize,
-    buffer: [u8; BLOCK_SIZE],
 }
 
 impl Clone for Sha1Engine {
@@ -38,6 +38,8 @@ impl Clone for Sha1Engine {
         }
     }
 }
+
+impl HashEngine for Sha1Engine {}
 
 /// Output of the SHA1 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]

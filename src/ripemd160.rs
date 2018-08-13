@@ -23,15 +23,15 @@ use std::io;
 
 use byteorder::{ByteOrder, LittleEndian};
 
-use {Error, Hash};
+use {Error, Hash, HashEngine};
 
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute RIPEMD160 hash function
 pub struct Ripemd160Engine {
+    buffer: [u8; BLOCK_SIZE],
     h: [u32; 5],
     length: usize,
-    buffer: [u8; BLOCK_SIZE],
 }
 
 impl Clone for Ripemd160Engine {
@@ -43,6 +43,8 @@ impl Clone for Ripemd160Engine {
         }
     }
 }
+
+impl HashEngine for Ripemd160Engine {}
 
 /// Output of the RIPEMD160 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]

@@ -46,6 +46,17 @@ use std::{fmt, io, ops};
 
 pub use error::Error;
 
+/// A hashing engine which bytes can be serialized into. It is expected
+/// to implement the `io::Write` trait, but to never return errors under
+/// any conditions.
+pub trait HashEngine: Clone + io::Write {
+    /// Add data to the hash engine without any error return type to deal with
+    #[inline(always)]
+    fn input(&mut self, data: &[u8]) {
+        self.write_all(data).expect("hash returned error");
+    }
+}
+
 /// Trait which applies to hashes of all types
 pub trait Hash: Copy + Clone + PartialEq + Eq +
     fmt::Debug + fmt::Display + fmt::LowerHex +
@@ -59,7 +70,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
     /// A hashing engine which bytes can be serialized into. It is expected
     /// to implement the `io::Write` trait, and to never return errors under
     /// any conditions.
-    type Engine: Clone + io::Write;
+    type Engine: HashEngine;
 
     /// Construct a new engine
     fn engine() -> Self::Engine;
