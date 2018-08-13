@@ -12,11 +12,6 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-// This module is largely copied from the rust-crypto ripemd.rs file;
-// while rust-crypto is licensed under Apache, that file specifically
-// was written entirely by Andrew Poelstra, who is re-licensing its
-// contents here as CC0.
-
 //! # SHA1
 
 use std::io;
