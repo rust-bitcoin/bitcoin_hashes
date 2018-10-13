@@ -15,7 +15,7 @@
 //! # Rust Hashes Library
 //!
 //! This is a simple, no-dependency library which implements the hash functions
-//! needed by Bitcoin. These are SHA256, SHA256d, and RIPEMD160. As an ancilliary
+//! needed by Bitcoin. These are SHA256, SHA256d, and RIPEMD160. As an ancillary
 //! thing, it exposes hexadecimal serialization and deserialization, since these
 //! are needed to display hashes anway.
 //!
@@ -55,7 +55,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
     hex::ToHex
 {
     /// A hashing engine which bytes can be serialized into. It is expected
-    /// to implment the `io::Write` trait, and to never return errors under
+    /// to implement the `io::Write` trait, and to never return errors under
     /// any conditions.
     type Engine: Clone + io::Write;
 
