@@ -41,7 +41,7 @@ impl Clone for Sha1Engine {
 
 /// Output of the SHA1 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Sha1Hash([u8; 20]);
+pub struct Sha1Hash(pub [u8; 20]);
 
 hex_fmt_impl!(Debug, Sha1Hash);
 hex_fmt_impl!(Display, Sha1Hash);
@@ -85,6 +85,10 @@ impl Hash for Sha1Hash {
 
     fn len() -> usize {
         20
+    }
+
+    fn block_size() -> usize {
+        64
     }
 
     fn from_slice(sl: &[u8]) -> Result<Sha1Hash, Error> {

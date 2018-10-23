@@ -44,10 +44,12 @@ impl<'a, T: Hash> FromHex<'a> for T {
             return Err(Error::InvalidLength(2 * Self::len(), s.len()));
         }
 
-        let vec = Vec::<u8>::from_hex(s)?;
+        let mut vec = Vec::<u8>::from_hex(s)?;
+        if Self::display_backward() {
+            vec.reverse();
+        }
         Self::from_slice(&vec)
     }
-
 }
 
 struct HexIterator<'a> {
@@ -84,6 +86,15 @@ impl<'a> Iterator for HexIterator<'a> {
 /// efficient than going through a `String` using `ToHex`.
 pub fn format_hex<T: fmt::Write>(data: &[u8], mut fmt: T) -> fmt::Result {
     for ch in data {
+        write!(fmt, "{:02x}", *ch)?;
+    }
+    Ok(())
+}
+
+/// Output hex in reverse order; used for Sha256dHash whose standard hex encoding
+/// has the bytes reversed.
+pub fn format_hex_reverse<T: fmt::Write>(data: &[u8], mut fmt: T) -> fmt::Result {
+    for ch in data.iter().rev() {
         write!(fmt, "{:02x}", *ch)?;
     }
     Ok(())

@@ -46,7 +46,7 @@ impl Clone for Ripemd160Engine {
 
 /// Output of the RIPEMD160 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Ripemd160Hash([u8; 20]);
+pub struct Ripemd160Hash(pub [u8; 20]);
 
 hex_fmt_impl!(Debug, Ripemd160Hash);
 hex_fmt_impl!(Display, Ripemd160Hash);
@@ -90,6 +90,10 @@ impl Hash for Ripemd160Hash {
 
     fn len() -> usize {
         20
+    }
+
+    fn block_size() -> usize {
+        64
     }
 
     fn from_slice(sl: &[u8]) -> Result<Ripemd160Hash, Error> {

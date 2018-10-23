@@ -35,9 +35,11 @@ extern crate byteorder;
 #[macro_use] mod util;
 pub mod error;
 pub mod hex;
+pub mod hash160;
 pub mod ripemd160;
 pub mod sha1;
 pub mod sha256;
+pub mod sha512;
 pub mod sha256d;
 
 use std::{fmt, io, ops};
@@ -68,6 +70,9 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
     /// Length of the hash, in bytes
     fn len() -> usize;
 
+    /// Length of the hash's internal block size, in bytes
+    fn block_size() -> usize;
+
     /// Copies a byte slice into a hash object
     fn from_slice(sl: &[u8]) -> Result<Self, Error>;
 
@@ -79,5 +84,10 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
         engine.write_all(data).unwrap();
         Self::from_engine(engine)
     }
+
+    /// Flag indicating whether user-visible serializations of this hash
+    /// should be backward. For some reason Satoshi decided this should be
+    /// true for `Sha256dHash`, so here we are.
+    fn display_backward() -> bool { false }
 }
 

@@ -31,3 +31,7 @@ path = "fuzz_targets/ripemd160.rs"
 name = "sha256"
 path = "fuzz_targets/sha256.rs"
 
+[[bin]]
+name = "sha512"
+path = "fuzz_targets/sha512.rs"
+
