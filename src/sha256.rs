@@ -39,7 +39,15 @@ impl Clone for Sha256Engine {
     }
 }
 
-impl HashEngine for Sha256Engine {}
+impl HashEngine for Sha256Engine {
+    type MidState = [u8; 32];
+
+    fn midstate(&self) -> [u8; 32] {
+        let mut ret = [0; 32];
+        BigEndian::write_u32_into(&self.h, &mut ret);
+        ret
+    }
+}
 
 /// Output of the SHA256 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -80,9 +88,7 @@ impl Hash for Sha256Hash {
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
-        let mut ret = [0; 32];
-        BigEndian::write_u32_into(&e.h, &mut ret);
-        Sha256Hash(ret)
+        Sha256Hash(e.midstate())
     }
 
     fn len() -> usize {
@@ -257,7 +263,7 @@ mod tests {
 
     use sha256::Sha256Hash;
     use hex::{FromHex, ToHex};
-    use Hash;
+    use {Hash, HashEngine};
 
     #[derive(Clone)]
     struct Test {
@@ -318,6 +324,32 @@ mod tests {
             let manual_hash = Sha256Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
         }
+    }
+
+    #[test]
+    fn midstate() {
+        // Test vector obtained by doing an asset issuance on Elements
+        let mut engine = Sha256Hash::engine();
+        // sha256dhash of outpoint
+        // 73828cbc65fd68ab78dc86992b76ae50ae2bf8ceedbe8de0483172f0886219f7:0
+        engine.write_all(&[
+            0x9d, 0xd0, 0x1b, 0x56, 0xb1, 0x56, 0x45, 0x14,
+            0x3e, 0xad, 0x15, 0x8d, 0xec, 0x19, 0xf8, 0xce,
+            0xa9, 0x0b, 0xd0, 0xa9, 0xb2, 0xf8, 0x1d, 0x21,
+            0xff, 0xa3, 0xa4, 0xc6, 0x44, 0x81, 0xd4, 0x1c,
+        ]);
+        // 32 bytes of zeroes representing "new asset"
+        engine.write_all(&[0; 32]);
+        assert_eq!(
+            engine.midstate(),
+            // RPC output
+            [
+                0x0b, 0xcf, 0xe0, 0xe5, 0x4e, 0x6c, 0xc7, 0xd3,
+                0x4f, 0x4f, 0x7c, 0x1d, 0xf0, 0xb0, 0xf5, 0x03,
+                0xf2, 0xf7, 0x12, 0x91, 0x2a, 0x06, 0x05, 0xb4,
+                0x14, 0xed, 0x33, 0x7f, 0x7f, 0x03, 0x2e, 0x03, 
+            ]
+        );
     }
 }
 

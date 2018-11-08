@@ -50,6 +50,13 @@ pub use error::Error;
 /// to implement the `io::Write` trait, but to never return errors under
 /// any conditions.
 pub trait HashEngine: Clone + io::Write {
+    /// Byte array representing the internal state of the hash engine
+    type MidState;
+
+    /// Outputs the midstate of the hash engine. This function should not be
+    /// used directly unless you really know what you're doing.
+    fn midstate(&self) -> Self::MidState;
+
     /// Add data to the hash engine without any error return type to deal with
     #[inline(always)]
     fn input(&mut self, data: &[u8]) {
