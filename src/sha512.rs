@@ -44,7 +44,15 @@ impl Clone for Sha512Engine {
     }
 }
 
-impl HashEngine for Sha512Engine {}
+impl HashEngine for Sha512Engine {
+    type MidState = [u8; 64];
+
+    fn midstate(&self) -> [u8; 64] {
+        let mut ret = [0; 64];
+        BigEndian::write_u64_into(&self.h, &mut ret);
+        ret
+    }
+}
 
 /// Output of the SHA256 hash function
 pub struct Sha512Hash(pub [u8; 64]);
@@ -106,9 +114,7 @@ impl Hash for Sha512Hash {
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
-        let mut ret = [0; 64];
-        BigEndian::write_u64_into(&e.h, &mut ret);
-        Sha512Hash(ret)
+        Sha512Hash(e.midstate())
     }
 
     fn len() -> usize {

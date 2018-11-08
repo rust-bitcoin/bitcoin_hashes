@@ -44,7 +44,15 @@ impl Clone for Ripemd160Engine {
     }
 }
 
-impl HashEngine for Ripemd160Engine {}
+impl HashEngine for Ripemd160Engine {
+    type MidState = [u8; 20];
+
+    fn midstate(&self) -> [u8; 20] {
+        let mut ret = [0; 20];
+        LittleEndian::write_u32_into(&self.h, &mut ret);
+        ret
+    }
+}
 
 /// Output of the RIPEMD160 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -85,9 +93,7 @@ impl Hash for Ripemd160Hash {
         e.write_u64::<LittleEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
-        let mut ret = [0; 20];
-        LittleEndian::write_u32_into(&e.h, &mut ret);
-        Ripemd160Hash(ret)
+        Ripemd160Hash(e.midstate())
     }
 
     fn len() -> usize {

@@ -39,7 +39,15 @@ impl Clone for Sha1Engine {
     }
 }
 
-impl HashEngine for Sha1Engine {}
+impl HashEngine for Sha1Engine {
+    type MidState = [u8; 20];
+
+    fn midstate(&self) -> [u8; 20] {
+        let mut ret = [0; 20];
+        BigEndian::write_u32_into(&self.h, &mut ret);
+        ret
+    }
+}
 
 /// Output of the SHA1 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -80,9 +88,7 @@ impl Hash for Sha1Hash {
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
-        let mut ret = [0; 20];
-        BigEndian::write_u32_into(&e.h, &mut ret);
-        Sha1Hash(ret)
+        Sha1Hash(e.midstate())
     }
 
     fn len() -> usize {
