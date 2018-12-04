@@ -5,22 +5,19 @@ extern crate bitcoin_hashes;
 extern crate serde_cbor;
 
 use bitcoin_hashes::Hmac;
-use bitcoin_hashes::sha1::Sha1Hash;
-use bitcoin_hashes::sha512::Sha512Hash;
-use bitcoin_hashes::ripemd160::Ripemd160Hash;
-use bitcoin_hashes::sha256d::Sha256dHash;
+use bitcoin_hashes::{sha1, sha512, ripemd160, sha256d};
 
 #[derive(Deserialize, Serialize)]
 struct Hmacs {
-    sha1: Hmac<Sha1Hash>,
-    sha512: Hmac<Sha512Hash>,
+    sha1: Hmac<sha1::Hash>,
+    sha512: Hmac<sha512::Hash>,
 }
 
 #[derive(Deserialize, Serialize)]
 struct Main {
     hmacs: Hmacs,
-    ripemd: Ripemd160Hash,
-    sha2d: Sha256dHash,
+    ripemd: ripemd160::Hash,
+    sha2d: sha256d::Hash,
 }
 
 fn do_test(data: &[u8]) {

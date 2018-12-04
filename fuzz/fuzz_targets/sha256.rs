@@ -3,12 +3,12 @@ extern crate bitcoin_hashes;
 extern crate crypto;
 
 use bitcoin_hashes::Hash;
-use bitcoin_hashes::sha256::Sha256Hash;
+use bitcoin_hashes::sha256;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 
 fn do_test(data: &[u8]) {
-    let our_hash = Sha256Hash::hash(data);
+    let our_hash = sha256::Hash::hash(data);
 
     let mut rc_hash = [0u8; 32];
     let mut rc_engine = Sha256::new();

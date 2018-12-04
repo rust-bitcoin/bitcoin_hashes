@@ -54,7 +54,7 @@ pub use error::Error;
 /// A hashing engine which bytes can be serialized into. It is expected
 /// to implement the `io::Write` trait, but to never return errors under
 /// any conditions.
-pub trait HashEngine: Clone + io::Write {
+pub trait Engine: Clone + io::Write {
     /// Byte array representing the internal state of the hash engine
     type MidState;
 
@@ -82,7 +82,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
     /// A hashing engine which bytes can be serialized into. It is expected
     /// to implement the `io::Write` trait, and to never return errors under
     /// any conditions.
-    type Engine: HashEngine;
+    type Engine: Engine;
 
     /// Construct a new engine
     fn engine() -> Self::Engine;
