@@ -188,7 +188,7 @@ impl<'de, T: Hash + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
 #[cfg(test)]
 mod tests {
     use sha256::Sha256Hash;
-    use sha512::Sha512Hash;
+    #[cfg(feature="serde")] use sha512::Sha512Hash;
     use {Hash, HashEngine, Hmac, HmacEngine};
 
     #[derive(Clone)]

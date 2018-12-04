@@ -1,5 +1,7 @@
 
 #[cfg(feature="serde")]
+/// Implements `Serialize` and `Deserialize` for a type `$t` which
+/// represents a newtype over a byte-slice over length `$len`.
 macro_rules! serde_impl(
     ($t:ident, $len:expr) => (
         impl ::serde::Serialize for $t {
