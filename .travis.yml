@@ -12,4 +12,5 @@ before_install:
 script:
   - cargo build --verbose
   - cargo test --verbose
+  - cargo test --verbose --features "serde"
   - if [ "$(rustup show | grep default | grep stable)" != "" ]; then cd fuzz && cargo test --verbose && ./travis-fuzz.sh; fi

@@ -62,6 +62,7 @@ hex_fmt_impl!(Debug, Ripemd160Hash);
 hex_fmt_impl!(Display, Ripemd160Hash);
 hex_fmt_impl!(LowerHex, Ripemd160Hash);
 index_impl!(Ripemd160Hash);
+serde_impl!(Ripemd160Hash, 20);
 
 impl Hash for Ripemd160Hash {
     type Engine = Ripemd160Engine;
@@ -473,7 +474,7 @@ mod tests {
                     0x4a, 0x9c, 0x0c, 0x88,
                     0xe4, 0x05, 0xa0, 0x6c,
                     0x27, 0xdc, 0xf4, 0x9a,
-                    0xda, 0x62, 0xeb, 0x2b, 
+                    0xda, 0x62, 0xeb, 0x2b,
                 ],
                 output_str: "12a053384a9c0c88e405a06c27dcf49ada62eb2b"
             },
@@ -496,7 +497,7 @@ mod tests {
                     0x69, 0x09, 0x33, 0x83,
                     0x5e, 0xb8, 0xb6, 0xad,
                     0x0b, 0x77, 0xe7, 0xb6,
-                    0xf1, 0x4a, 0xca, 0xd7, 
+                    0xf1, 0x4a, 0xca, 0xd7,
                 ],
                 output_str: "132072df690933835eb8b6ad0b77e7b6f14acad7",
             },
@@ -517,6 +518,25 @@ mod tests {
             let manual_hash = Ripemd160Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
         }
+    }
+
+    #[cfg(feature="serde")]
+    #[test]
+    fn ripemd_serde() {
+        use serde_test::{Configure, Token, assert_tokens, assert_ser_tokens, assert_de_tokens};
+
+        static HASH_BYTES: [u8; 20] = [
+            0x13, 0x20, 0x72, 0xdf,
+            0x69, 0x09, 0x33, 0x83,
+            0x5e, 0xb8, 0xb6, 0xad,
+            0x0b, 0x77, 0xe7, 0xb6,
+            0xf1, 0x4a, 0xca, 0xd7,
+        ];
+
+        let hash = Ripemd160Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
+        assert_ser_tokens(&hash.readable(), &[Token::Str("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
+        assert_de_tokens(&hash.readable(), &[Token::BorrowedStr("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
     }
 }
 
