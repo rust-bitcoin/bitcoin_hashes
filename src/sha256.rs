@@ -18,20 +18,22 @@ use std::io;
 
 use byteorder::{ByteOrder, BigEndian};
 
-use {Error, Hash, HashEngine};
+use HashEngine as EngineTrait;
+use Hash as HashTrait;
+use Error;
 
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute SHA256 hash function
-pub struct Sha256Engine {
+pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
     h: [u32; 8],
     length: usize,
 }
 
-impl Clone for Sha256Engine {
-    fn clone(&self) -> Sha256Engine {
-        Sha256Engine {
+impl Clone for HashEngine {
+    fn clone(&self) -> HashEngine {
+        HashEngine {
             h: self.h,
             length: self.length,
             buffer: self.buffer,
@@ -39,7 +41,7 @@ impl Clone for Sha256Engine {
     }
 }
 
-impl HashEngine for Sha256Engine {
+impl EngineTrait for HashEngine {
     type MidState = [u8; 32];
 
     fn midstate(&self) -> [u8; 32] {
@@ -51,26 +53,26 @@ impl HashEngine for Sha256Engine {
 
 /// Output of the SHA256 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Sha256Hash(pub [u8; 32]);
+pub struct Hash(pub [u8; 32]);
 
-hex_fmt_impl!(Debug, Sha256Hash);
-hex_fmt_impl!(Display, Sha256Hash);
-hex_fmt_impl!(LowerHex, Sha256Hash);
-index_impl!(Sha256Hash);
-serde_impl!(Sha256Hash, 32);
+hex_fmt_impl!(Debug, Hash);
+hex_fmt_impl!(Display, Hash);
+hex_fmt_impl!(LowerHex, Hash);
+index_impl!(Hash);
+serde_impl!(Hash, 32);
 
-impl Hash for Sha256Hash {
-    type Engine = Sha256Engine;
+impl HashTrait for Hash {
+    type Engine = HashEngine;
 
-    fn engine() -> Sha256Engine {
-        Sha256Engine {
+    fn engine() -> HashEngine {
+        HashEngine {
             h: [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19],
             length: 0,
             buffer: [0; BLOCK_SIZE],
         }
     }
 
-    fn from_engine(mut e: Sha256Engine) -> Sha256Hash {
+    fn from_engine(mut e: HashEngine) -> Hash {
         use std::io::Write;
         use byteorder::WriteBytesExt;
 
@@ -89,7 +91,7 @@ impl Hash for Sha256Hash {
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
-        Sha256Hash(e.midstate())
+        Hash(e.midstate())
     }
 
     fn len() -> usize {
@@ -100,18 +102,18 @@ impl Hash for Sha256Hash {
         64
     }
 
-    fn from_slice(sl: &[u8]) -> Result<Sha256Hash, Error> {
+    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
         if sl.len() != 32 {
             Err(Error::InvalidLength(Self::len(), sl.len()))
         } else {
             let mut ret = [0; 32];
             ret.copy_from_slice(sl);
-            Ok(Sha256Hash(ret))
+            Ok(Hash(ret))
         }
     }
 }
 
-impl io::Write for Sha256Engine {
+impl io::Write for HashEngine {
     fn flush(&mut self) -> io::Result<()> {
         Ok(())
     }
@@ -162,7 +164,7 @@ macro_rules! round(
     )
 );
 
-impl Sha256Engine {
+impl HashEngine {
     // Algorithm copied from libsecp256k1
     fn process_block(&mut self) {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
@@ -262,7 +264,7 @@ impl Sha256Engine {
 mod tests {
     use std::io::Write;
 
-    use sha256::Sha256Hash;
+    use sha256;
     use hex::{FromHex, ToHex};
     use {Hash, HashEngine};
 
@@ -311,17 +313,17 @@ mod tests {
 
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
-            let hash = Sha256Hash::hash(&test.input.as_bytes());
-            assert_eq!(hash, Sha256Hash::from_hex(test.output_str).expect("parse hex"));
+            let hash = sha256::Hash::hash(&test.input.as_bytes());
+            assert_eq!(hash, sha256::Hash::from_hex(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_hex(), &test.output_str);
 
             // Hash through engine, checking that we can input byte by byte
-            let mut engine = Sha256Hash::engine();
+            let mut engine = sha256::Hash::engine();
             for ch in test.input.as_bytes() {
                 engine.write(&[*ch]).expect("write to engine");
             }
-            let manual_hash = Sha256Hash::from_engine(engine);
+            let manual_hash = sha256::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
         }
     }
@@ -329,7 +331,7 @@ mod tests {
     #[test]
     fn midstate() {
         // Test vector obtained by doing an asset issuance on Elements
-        let mut engine = Sha256Hash::engine();
+        let mut engine = sha256::Hash::engine();
         // sha256dhash of outpoint
         // 73828cbc65fd68ab78dc86992b76ae50ae2bf8ceedbe8de0483172f0886219f7:0
         engine.input(&[
@@ -364,7 +366,7 @@ mod tests {
             0xb7, 0x65, 0x44, 0x8c, 0x86, 0x35, 0xfb, 0x6c,
         ];
 
-        let hash = Sha256Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        let hash = sha256::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_ser_tokens(&hash.readable(), &[Token::Str("ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c")]);
         assert_de_tokens(&hash.readable(), &[Token::BorrowedStr("ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c")]);
@@ -376,12 +378,12 @@ mod benches {
     use std::io::Write;
     use test::Bencher;
 
-    use sha256::Sha256Hash;
+    use sha256;
     use Hash;
 
     #[bench]
     pub fn sha256_10(bh: & mut Bencher) {
-        let mut engine = Sha256Hash::engine();
+        let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
             engine.write(&bytes).expect("write");
@@ -391,7 +393,7 @@ mod benches {
 
     #[bench]
     pub fn sha256_1k(bh: & mut Bencher) {
-        let mut engine = Sha256Hash::engine();
+        let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
             engine.write(&bytes).expect("write");
@@ -401,7 +403,7 @@ mod benches {
 
     #[bench]
     pub fn sha256_64k(bh: & mut Bencher) {
-        let mut engine = Sha256Hash::engine();
+        let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
             engine.write(&bytes).expect("write");

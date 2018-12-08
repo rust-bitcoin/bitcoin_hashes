@@ -187,8 +187,8 @@ impl<'de, T: Hash + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
 
 #[cfg(test)]
 mod tests {
-    use sha256::Sha256Hash;
-    #[cfg(feature="serde")] use sha512::Sha512Hash;
+    use sha256;
+    #[cfg(feature="serde")] use sha512;
     use {Hash, HashEngine, Hmac, HmacEngine};
 
     #[derive(Clone)]
@@ -305,9 +305,9 @@ mod tests {
         ];
 
         for test in tests {
-            let mut engine = HmacEngine::<Sha256Hash>::new(&test.key);
+            let mut engine = HmacEngine::<sha256::Hash>::new(&test.key);
             engine.input(&test.input);
-            let hash = Hmac::<Sha256Hash>::from_engine(engine);
+            let hash = Hmac::<sha256::Hash>::from_engine(engine);
             assert_eq!(&hash[..], &test.output[..]);
         }
     }
@@ -328,7 +328,7 @@ mod tests {
             0x0b, 0x2d, 0x8a, 0x60, 0x0b, 0xdf, 0x4c, 0x0c,
         ];
 
-        let hash = Hmac::<Sha512Hash>::from_slice(&HASH_BYTES).expect("right number of bytes");
+        let hash = Hmac::<sha512::Hash>::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_ser_tokens(
             &hash.readable(),
@@ -349,15 +349,14 @@ mod tests {
 
 #[cfg(all(test, feature="unstable"))]
 mod benches {
-    use std::io::Write;
     use test::Bencher;
 
-    use sha256::Sha256Hash;
-    use {Hmac, Hash};
+    use sha256;
+    use {Hmac, Hash, HashEngine};
 
     #[bench]
     pub fn hmac_sha256_10(bh: & mut Bencher) {
-        let mut engine = Hmac::<Sha256Hash>::engine();
+        let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
             engine.input(&bytes);
@@ -367,7 +366,7 @@ mod benches {
 
     #[bench]
     pub fn hmac_sha256_1k(bh: & mut Bencher) {
-        let mut engine = Hmac::<Sha256Hash>::engine();
+        let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
             engine.input(&bytes);
@@ -377,7 +376,7 @@ mod benches {
 
     #[bench]
     pub fn hmac_sha256_64k(bh: & mut Bencher) {
-        let mut engine = Hmac::<Sha256Hash>::engine();
+        let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
             engine.input(&bytes);

@@ -15,32 +15,33 @@
 //! # SHA256d
 
 use sha256;
-use {Error, Hash};
+use Hash as HashTrait;
+use Error;
 
 /// Output of the SHA256d hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Sha256dHash(pub [u8; 32]);
+pub struct Hash(pub [u8; 32]);
 
-hex_fmt_impl!(Debug, Sha256dHash);
-hex_fmt_impl!(Display, Sha256dHash);
-hex_fmt_impl!(LowerHex, Sha256dHash);
-index_impl!(Sha256dHash);
-serde_impl!(Sha256dHash, 32);
+hex_fmt_impl!(Debug, Hash);
+hex_fmt_impl!(Display, Hash);
+hex_fmt_impl!(LowerHex, Hash);
+index_impl!(Hash);
+serde_impl!(Hash, 32);
 
-impl Hash for Sha256dHash {
-    type Engine = sha256::Sha256Engine;
+impl HashTrait for Hash {
+    type Engine = sha256::HashEngine;
 
-    fn engine() -> sha256::Sha256Engine {
-        sha256::Sha256Hash::engine()
+    fn engine() -> sha256::HashEngine {
+        sha256::Hash::engine()
     }
 
-    fn from_engine(e: sha256::Sha256Engine) -> Sha256dHash {
-        let sha2 = sha256::Sha256Hash::from_engine(e);
-        let sha2d = sha256::Sha256Hash::hash(&sha2[..]);
+    fn from_engine(e: sha256::HashEngine) -> Hash {
+        let sha2 = sha256::Hash::from_engine(e);
+        let sha2d = sha256::Hash::hash(&sha2[..]);
 
         let mut ret = [0; 32];
         ret.copy_from_slice(&sha2d[..]);
-        Sha256dHash(ret)
+        Hash(ret)
     }
 
     fn len() -> usize {
@@ -51,13 +52,13 @@ impl Hash for Sha256dHash {
         64
     }
 
-    fn from_slice(sl: &[u8]) -> Result<Sha256dHash, Error> {
+    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
         if sl.len() != 32 {
             Err(Error::InvalidLength(Self::len(), sl.len()))
         } else {
             let mut ret = [0; 32];
             ret.copy_from_slice(sl);
-            Ok(Sha256dHash(ret))
+            Ok(Hash(ret))
         }
     }
 
@@ -70,7 +71,7 @@ impl Hash for Sha256dHash {
 mod tests {
     use std::io::Write;
 
-    use sha256d::Sha256dHash;
+    use sha256d;
     use hex::{FromHex, ToHex};
     use Hash;
 
@@ -99,17 +100,17 @@ input: &'static str,
 
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
-            let hash = Sha256dHash::hash(&test.input.as_bytes());
-            assert_eq!(hash, Sha256dHash::from_hex(test.output_str).expect("parse hex"));
+            let hash = sha256d::Hash::hash(&test.input.as_bytes());
+            assert_eq!(hash, sha256d::Hash::from_hex(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_hex(), &test.output_str);
 
             // Hash through engine, checking that we can input byte by byte
-            let mut engine = Sha256dHash::engine();
+            let mut engine = sha256d::Hash::engine();
             for ch in test.input.as_bytes() {
                 engine.write(&[*ch]).expect("write to engine");
             }
-            let manual_hash = Sha256dHash::from_engine(engine);
+            let manual_hash = sha256d::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
         }
     }
@@ -126,7 +127,7 @@ input: &'static str,
             0xb7, 0x65, 0x44, 0x8c, 0x86, 0x35, 0xfb, 0x6c,
         ];
 
-        let hash = Sha256dHash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        let hash = sha256d::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_ser_tokens(&hash.readable(), &[Token::Str("6cfb35868c4465b7c289d7d5641563aa973db6a929655282a7bf95c8257f53ef")]);
         assert_de_tokens(&hash.readable(), &[Token::BorrowedStr("6cfb35868c4465b7c289d7d5641563aa973db6a929655282a7bf95c8257f53ef")]);
@@ -138,12 +139,12 @@ mod benches {
     use std::io::Write;
     use test::Bencher;
 
-    use sha256d::Sha256dHash;
+    use sha256d;
     use Hash;
 
     #[bench]
     pub fn sha256d_10(bh: & mut Bencher) {
-        let mut engine = Sha256dHash::engine();
+        let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
             engine.write(&bytes).expect("write");
@@ -153,7 +154,7 @@ mod benches {
 
     #[bench]
     pub fn sha256d_1k(bh: & mut Bencher) {
-        let mut engine = Sha256dHash::engine();
+        let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
             engine.write(&bytes).expect("write");
@@ -163,7 +164,7 @@ mod benches {
 
     #[bench]
     pub fn sha256d_64k(bh: & mut Bencher) {
-        let mut engine = Sha256dHash::engine();
+        let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
             engine.write(&bytes).expect("write");

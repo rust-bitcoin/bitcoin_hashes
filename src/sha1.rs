@@ -18,20 +18,22 @@ use std::io;
 
 use byteorder::{ByteOrder, BigEndian};
 
-use {Error, Hash, HashEngine};
+use HashEngine as EngineTrait;
+use Hash as HashTrait;
+use Error;
 
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute SHA1 hash function
-pub struct Sha1Engine {
+pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
     h: [u32; 5],
     length: usize,
 }
 
-impl Clone for Sha1Engine {
-    fn clone(&self) -> Sha1Engine {
-        Sha1Engine {
+impl Clone for HashEngine {
+    fn clone(&self) -> HashEngine {
+        HashEngine {
             h: self.h,
             length: self.length,
             buffer: self.buffer,
@@ -39,7 +41,7 @@ impl Clone for Sha1Engine {
     }
 }
 
-impl HashEngine for Sha1Engine {
+impl EngineTrait for HashEngine {
     type MidState = [u8; 20];
 
     fn midstate(&self) -> [u8; 20] {
@@ -51,26 +53,26 @@ impl HashEngine for Sha1Engine {
 
 /// Output of the SHA1 hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Sha1Hash(pub [u8; 20]);
+pub struct Hash(pub [u8; 20]);
 
-hex_fmt_impl!(Debug, Sha1Hash);
-hex_fmt_impl!(Display, Sha1Hash);
-hex_fmt_impl!(LowerHex, Sha1Hash);
-index_impl!(Sha1Hash);
-serde_impl!(Sha1Hash, 20);
+hex_fmt_impl!(Debug, Hash);
+hex_fmt_impl!(Display, Hash);
+hex_fmt_impl!(LowerHex, Hash);
+index_impl!(Hash);
+serde_impl!(Hash, 20);
 
-impl Hash for Sha1Hash {
-    type Engine = Sha1Engine;
+impl HashTrait for Hash {
+    type Engine = HashEngine;
 
-    fn engine() -> Sha1Engine {
-        Sha1Engine {
+    fn engine() -> HashEngine {
+        HashEngine {
             h: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0],
             length: 0,
             buffer: [0; BLOCK_SIZE],
         }
     }
 
-    fn from_engine(mut e: Sha1Engine) -> Sha1Hash {
+    fn from_engine(mut e: HashEngine) -> Hash {
         use std::io::Write;
         use byteorder::WriteBytesExt;
 
@@ -89,7 +91,7 @@ impl Hash for Sha1Hash {
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
-        Sha1Hash(e.midstate())
+        Hash(e.midstate())
     }
 
     fn len() -> usize {
@@ -100,18 +102,18 @@ impl Hash for Sha1Hash {
         64
     }
 
-    fn from_slice(sl: &[u8]) -> Result<Sha1Hash, Error> {
+    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
         if sl.len() != 20 {
             Err(Error::InvalidLength(Self::len(), sl.len()))
         } else {
             let mut ret = [0; 20];
             ret.copy_from_slice(sl);
-            Ok(Sha1Hash(ret))
+            Ok(Hash(ret))
         }
     }
 }
 
-impl io::Write for Sha1Engine {
+impl io::Write for HashEngine {
     fn flush(&mut self) -> io::Result<()> {
         Ok(())
     }
@@ -141,7 +143,7 @@ impl io::Write for Sha1Engine {
     }
 }
 
-impl Sha1Engine {
+impl HashEngine {
     // Basic unoptimized algorithm from Wikipedia
     fn process_block(&mut self) {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
@@ -187,7 +189,7 @@ impl Sha1Engine {
 mod tests {
     use std::io::Write;
 
-    use sha1::Sha1Hash;
+    use sha1;
     use hex::{FromHex, ToHex};
     use Hash;
 
@@ -239,17 +241,17 @@ mod tests {
 
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
-            let hash = Sha1Hash::hash(&test.input.as_bytes());
-            assert_eq!(hash, Sha1Hash::from_hex(test.output_str).expect("parse hex"));
+            let hash = sha1::Hash::hash(&test.input.as_bytes());
+            assert_eq!(hash, sha1::Hash::from_hex(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_hex(), &test.output_str);
 
             // Hash through engine, checking that we can input byte by byte
-            let mut engine = Sha1Hash::engine();
+            let mut engine = sha1::Hash::engine();
             for ch in test.input.as_bytes() {
                 engine.write(&[*ch]).expect("write to engine");
             }
-            let manual_hash = Sha1Hash::from_engine(engine);
+            let manual_hash = sha1::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
         }
     }
@@ -267,7 +269,7 @@ mod tests {
             0xf1, 0x4a, 0xca, 0xd7,
         ];
 
-        let hash = Sha1Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        let hash = sha1::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_ser_tokens(&hash.readable(), &[Token::Str("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
         assert_de_tokens(&hash.readable(), &[Token::BorrowedStr("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
@@ -279,12 +281,12 @@ mod benches {
     use std::io::Write;
     use test::Bencher;
 
-    use sha1::Sha1Hash;
+    use sha1;
     use Hash;
 
     #[bench]
     pub fn sha1_10(bh: & mut Bencher) {
-        let mut engine = Sha1Hash::engine();
+        let mut engine = sha1::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
             engine.write(&bytes).expect("write");
@@ -294,7 +296,7 @@ mod benches {
 
     #[bench]
     pub fn sha1_1k(bh: & mut Bencher) {
-        let mut engine = Sha1Hash::engine();
+        let mut engine = sha1::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
             engine.write(&bytes).expect("write");
@@ -304,7 +306,7 @@ mod benches {
 
     #[bench]
     pub fn sha1_64k(bh: & mut Bencher) {
-        let mut engine = Sha1Hash::engine();
+        let mut engine = sha1::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
             engine.write(&bytes).expect("write");

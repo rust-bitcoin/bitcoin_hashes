@@ -3,12 +3,12 @@ extern crate bitcoin_hashes;
 extern crate crypto;
 
 use bitcoin_hashes::Hash;
-use bitcoin_hashes::ripemd160::Ripemd160Hash;
+use bitcoin_hashes::ripemd160;
 use crypto::digest::Digest;
 use crypto::ripemd160::Ripemd160;
 
 fn do_test(data: &[u8]) {
-    let our_hash = Ripemd160Hash::hash(data);
+    let our_hash = ripemd160::Hash::hash(data);
 
     let mut rc_hash = [0u8; 20];
     let mut rc_engine = Ripemd160::new();

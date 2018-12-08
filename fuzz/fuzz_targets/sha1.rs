@@ -3,12 +3,12 @@ extern crate bitcoin_hashes;
 extern crate crypto;
 
 use bitcoin_hashes::Hash;
-use bitcoin_hashes::sha1::Sha1Hash;
+use bitcoin_hashes::sha1;
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
 
 fn do_test(data: &[u8]) {
-    let our_hash = Sha1Hash::hash(data);
+    let our_hash = sha1::Hash::hash(data);
 
     let mut rc_hash = [0u8; 20];
     let mut rc_sha1 = Sha1::new();

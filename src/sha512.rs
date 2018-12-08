@@ -23,20 +23,23 @@ use std::io;
 
 use byteorder::{ByteOrder, BigEndian};
 
-use {Error, Hash, HashEngine};
+use HashEngine as EngineTrait;
+use Hash as HashTrait;
+use Error;
+
 
 const BLOCK_SIZE: usize = 128;
 
 /// Engine to compute SHA512 hash function
-pub struct Sha512Engine {
+pub struct HashEngine {
     h: [u64; 8],
     length: usize,
     buffer: [u8; BLOCK_SIZE],
 }
 
-impl Clone for Sha512Engine {
-    fn clone(&self) -> Sha512Engine {
-        Sha512Engine {
+impl Clone for HashEngine {
+    fn clone(&self) -> HashEngine {
+        HashEngine {
             h: self.h,
             length: self.length,
             buffer: self.buffer,
@@ -44,7 +47,7 @@ impl Clone for Sha512Engine {
     }
 }
 
-impl HashEngine for Sha512Engine {
+impl EngineTrait for HashEngine {
     type MidState = [u8; 64];
 
     fn midstate(&self) -> [u8; 64] {
@@ -55,37 +58,37 @@ impl HashEngine for Sha512Engine {
 }
 
 /// Output of the SHA256 hash function
-pub struct Sha512Hash(pub [u8; 64]);
+pub struct Hash(pub [u8; 64]);
 
-impl Copy for Sha512Hash {}
+impl Copy for Hash {}
 
-impl Clone for Sha512Hash {
-    fn clone(&self) -> Sha512Hash {
+impl Clone for Hash {
+    fn clone(&self) -> Hash {
         let mut ret = [0; 64];
         ret.copy_from_slice(&self.0);
-        Sha512Hash(ret)
+        Hash(ret)
     }
 }
 
-impl PartialEq for Sha512Hash {
-    fn eq(&self, other: &Sha512Hash) -> bool {
+impl PartialEq for Hash {
+    fn eq(&self, other: &Hash) -> bool {
         &self.0[..] == &other.0[..]
     }
 }
 
-impl Eq for Sha512Hash {}
+impl Eq for Hash {}
 
-hex_fmt_impl!(Debug, Sha512Hash);
-hex_fmt_impl!(Display, Sha512Hash);
-hex_fmt_impl!(LowerHex, Sha512Hash);
-index_impl!(Sha512Hash);
-serde_impl!(Sha512Hash, 64);
+hex_fmt_impl!(Debug, Hash);
+hex_fmt_impl!(Display, Hash);
+hex_fmt_impl!(LowerHex, Hash);
+index_impl!(Hash);
+serde_impl!(Hash, 64);
 
-impl Hash for Sha512Hash {
-    type Engine = Sha512Engine;
+impl HashTrait for Hash {
+    type Engine = HashEngine;
 
-    fn engine() -> Sha512Engine {
-        Sha512Engine {
+    fn engine() -> HashEngine {
+        HashEngine {
             h: [
                 0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
                 0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179,
@@ -95,7 +98,7 @@ impl Hash for Sha512Hash {
         }
     }
 
-    fn from_engine(mut e: Sha512Engine) -> Sha512Hash {
+    fn from_engine(mut e: HashEngine) -> Hash {
         use std::io::Write;
         use byteorder::WriteBytesExt;
 
@@ -115,7 +118,7 @@ impl Hash for Sha512Hash {
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
-        Sha512Hash(e.midstate())
+        Hash(e.midstate())
     }
 
     fn len() -> usize {
@@ -126,18 +129,18 @@ impl Hash for Sha512Hash {
         128
     }
 
-    fn from_slice(sl: &[u8]) -> Result<Sha512Hash, Error> {
+    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
         if sl.len() != 64 {
             Err(Error::InvalidLength(Self::len(), sl.len()))
         } else {
             let mut ret = [0; 64];
             ret.copy_from_slice(sl);
-            Ok(Sha512Hash(ret))
+            Ok(Hash(ret))
         }
     }
 }
 
-impl io::Write for Sha512Engine {
+impl io::Write for HashEngine {
     fn flush(&mut self) -> io::Result<()> {
         Ok(())
     }
@@ -189,7 +192,7 @@ macro_rules! round(
     )
 );
 
-impl Sha512Engine {
+impl HashEngine {
     // Algorithm copied from libsecp256k1
     fn process_block(&mut self) {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
@@ -306,7 +309,7 @@ impl Sha512Engine {
 mod tests {
     use std::io::Write;
 
-    use sha512::Sha512Hash;
+    use sha512;
     use hex::{FromHex, ToHex};
     use Hash;
 
@@ -367,17 +370,17 @@ mod tests {
 
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
-            let hash = Sha512Hash::hash(&test.input.as_bytes());
-            assert_eq!(hash, Sha512Hash::from_hex(test.output_str).expect("parse hex"));
+            let hash = sha512::Hash::hash(&test.input.as_bytes());
+            assert_eq!(hash, sha512::Hash::from_hex(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_hex(), &test.output_str);
 
             // Hash through engine, checking that we can input byte by byte
-            let mut engine = Sha512Hash::engine();
+            let mut engine = sha512::Hash::engine();
             for ch in test.input.as_bytes() {
                 engine.write(&[*ch]).expect("write to engine");
             }
-            let manual_hash = Sha512Hash::from_engine(engine);
+            let manual_hash = sha512::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
         }
     }
@@ -398,7 +401,7 @@ mod tests {
             0x0b, 0x2d, 0x8a, 0x60, 0x0b, 0xdf, 0x4c, 0x0c,
         ];
 
-        let hash = Sha512Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        let hash = sha512::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_ser_tokens(
             &hash.readable(),
@@ -422,12 +425,12 @@ mod benches {
     use std::io::Write;
     use test::Bencher;
 
-    use sha512::Sha512Hash;
+    use sha512;
     use Hash;
 
     #[bench]
     pub fn sha512_10(bh: & mut Bencher) {
-        let mut engine = Sha512Hash::engine();
+        let mut engine = sha512::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
             engine.write(&bytes).expect("write");
@@ -437,7 +440,7 @@ mod benches {
 
     #[bench]
     pub fn sha512_1k(bh: & mut Bencher) {
-        let mut engine = Sha512Hash::engine();
+        let mut engine = sha512::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
             engine.write(&bytes).expect("write");
@@ -447,7 +450,7 @@ mod benches {
 
     #[bench]
     pub fn sha512_64k(bh: & mut Bencher) {
-        let mut engine = Sha512Hash::engine();
+        let mut engine = sha512::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
             engine.write(&bytes).expect("write");
