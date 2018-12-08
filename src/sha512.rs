@@ -23,7 +23,7 @@ use std::io;
 
 use byteorder::{ByteOrder, BigEndian};
 
-use Engine as EngineTrait;
+use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
 
@@ -31,15 +31,15 @@ use Error;
 const BLOCK_SIZE: usize = 128;
 
 /// Engine to compute SHA512 hash function
-pub struct Engine {
+pub struct HashEngine {
     h: [u64; 8],
     length: usize,
     buffer: [u8; BLOCK_SIZE],
 }
 
-impl Clone for Engine {
-    fn clone(&self) -> Engine {
-        Engine {
+impl Clone for HashEngine {
+    fn clone(&self) -> HashEngine {
+        HashEngine {
             h: self.h,
             length: self.length,
             buffer: self.buffer,
@@ -47,7 +47,7 @@ impl Clone for Engine {
     }
 }
 
-impl EngineTrait for Engine {
+impl EngineTrait for HashEngine {
     type MidState = [u8; 64];
 
     fn midstate(&self) -> [u8; 64] {
@@ -85,10 +85,10 @@ index_impl!(Hash);
 serde_impl!(Hash, 64);
 
 impl HashTrait for Hash {
-    type Engine = Engine;
+    type Engine = HashEngine;
 
-    fn engine() -> Engine {
-        Engine {
+    fn engine() -> HashEngine {
+        HashEngine {
             h: [
                 0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
                 0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179,
@@ -98,7 +98,7 @@ impl HashTrait for Hash {
         }
     }
 
-    fn from_engine(mut e: Engine) -> Hash {
+    fn from_engine(mut e: HashEngine) -> Hash {
         use std::io::Write;
         use byteorder::WriteBytesExt;
 
@@ -140,7 +140,7 @@ impl HashTrait for Hash {
     }
 }
 
-impl io::Write for Engine {
+impl io::Write for HashEngine {
     fn flush(&mut self) -> io::Result<()> {
         Ok(())
     }
@@ -192,7 +192,7 @@ macro_rules! round(
     )
 );
 
-impl Engine {
+impl HashEngine {
     // Algorithm copied from libsecp256k1
     fn process_block(&mut self) {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);

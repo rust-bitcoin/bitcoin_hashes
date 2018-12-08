@@ -29,13 +29,13 @@ index_impl!(Hash);
 serde_impl!(Hash, 32);
 
 impl HashTrait for Hash {
-    type Engine = sha256::Engine;
+    type Engine = sha256::HashEngine;
 
-    fn engine() -> sha256::Engine {
+    fn engine() -> sha256::HashEngine {
         sha256::Hash::engine()
     }
 
-    fn from_engine(e: sha256::Engine) -> Hash {
+    fn from_engine(e: sha256::HashEngine) -> Hash {
         let sha2 = sha256::Hash::from_engine(e);
         let sha2d = sha256::Hash::hash(&sha2[..]);
 

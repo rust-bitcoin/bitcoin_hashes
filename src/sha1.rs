@@ -18,22 +18,22 @@ use std::io;
 
 use byteorder::{ByteOrder, BigEndian};
 
-use Engine as EngineTrait;
+use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
 
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute SHA1 hash function
-pub struct Engine {
+pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
     h: [u32; 5],
     length: usize,
 }
 
-impl Clone for Engine {
-    fn clone(&self) -> Engine {
-        Engine {
+impl Clone for HashEngine {
+    fn clone(&self) -> HashEngine {
+        HashEngine {
             h: self.h,
             length: self.length,
             buffer: self.buffer,
@@ -41,7 +41,7 @@ impl Clone for Engine {
     }
 }
 
-impl EngineTrait for Engine {
+impl EngineTrait for HashEngine {
     type MidState = [u8; 20];
 
     fn midstate(&self) -> [u8; 20] {
@@ -62,17 +62,17 @@ index_impl!(Hash);
 serde_impl!(Hash, 20);
 
 impl HashTrait for Hash {
-    type Engine = Engine;
+    type Engine = HashEngine;
 
-    fn engine() -> Engine {
-        Engine {
+    fn engine() -> HashEngine {
+        HashEngine {
             h: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0],
             length: 0,
             buffer: [0; BLOCK_SIZE],
         }
     }
 
-    fn from_engine(mut e: Engine) -> Hash {
+    fn from_engine(mut e: HashEngine) -> Hash {
         use std::io::Write;
         use byteorder::WriteBytesExt;
 
@@ -113,7 +113,7 @@ impl HashTrait for Hash {
     }
 }
 
-impl io::Write for Engine {
+impl io::Write for HashEngine {
     fn flush(&mut self) -> io::Result<()> {
         Ok(())
     }
@@ -143,7 +143,7 @@ impl io::Write for Engine {
     }
 }
 
-impl Engine {
+impl HashEngine {
     // Basic unoptimized algorithm from Wikipedia
     fn process_block(&mut self) {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);

@@ -23,7 +23,7 @@ use std::{fmt, io, ops};
 #[cfg(feature="serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
-use {Error, Hash, Engine};
+use {Error, Hash, HashEngine};
 
 /// A hash computed from a RFC 2104 HMAC. Parameterized by the underlying hash function.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -66,14 +66,14 @@ impl<T: Hash> HmacEngine<T> {
             }
         };
 
-        Engine::input(&mut ret.iengine, &ipad[..T::block_size()]);
-        Engine::input(&mut ret.oengine, &opad[..T::block_size()]);
+        HashEngine::input(&mut ret.iengine, &ipad[..T::block_size()]);
+        HashEngine::input(&mut ret.oengine, &opad[..T::block_size()]);
         ret
     }
 }
 
-impl<T: Hash> Engine for HmacEngine<T> {
-    type MidState = <<T as Hash>::Engine as Engine>::MidState;
+impl<T: Hash> HashEngine for HmacEngine<T> {
+    type MidState = <<T as Hash>::Engine as HashEngine>::MidState;
 
     fn midstate(&self) -> Self::MidState {
         self.iengine.midstate()
@@ -189,7 +189,7 @@ impl<'de, T: Hash + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
 mod tests {
     use sha256;
     #[cfg(feature="serde")] use sha512;
-    use {Hash, Engine, Hmac, HmacEngine};
+    use {Hash, HashEngine, Hmac, HmacEngine};
 
     #[derive(Clone)]
     struct Test {
@@ -352,7 +352,7 @@ mod benches {
     use test::Bencher;
 
     use sha256;
-    use {Hmac, Hash, Engine};
+    use {Hmac, Hash, HashEngine};
 
     #[bench]
     pub fn hmac_sha256_10(bh: & mut Bencher) {
