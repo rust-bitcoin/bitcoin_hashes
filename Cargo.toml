@@ -3,6 +3,7 @@ name = "bitcoin_hashes"
 version = "0.1.0"
 authors = ["Andrew Poelstra <apoelstra@wpsoftware.net>"]
 license = "CC0-1.0"
+description = "Hash functions used by rust-bitcoin which support rustc 1.14.0"
 documentation = "https://docs.rs/bitcoin-hashes/"
 keywords = [ "crypto", "bitcoin", "hash", "digest" ]
 readme = "README.md"
