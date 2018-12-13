@@ -58,7 +58,7 @@ impl EngineTrait for HashEngine {
 }
 
 /// Output of the SHA256 hash function
-pub struct Hash(pub [u8; 64]);
+pub struct Hash([u8; 64]);
 
 impl Copy for Hash {}
 
