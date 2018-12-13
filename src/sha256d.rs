@@ -20,7 +20,7 @@ use Error;
 
 /// Output of the SHA256d hash function
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Hash(pub [u8; 32]);
+pub struct Hash([u8; 32]);
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
