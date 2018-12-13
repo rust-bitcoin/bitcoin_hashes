@@ -145,6 +145,7 @@ impl<T: Hash> ops::Index<ops::RangeFull> for Hmac<T> {
 
 impl<T: Hash> Hash for Hmac<T> {
     type Engine = HmacEngine<T>;
+    type Inner = T::Inner;
 
     fn engine() -> HmacEngine<T> {
         HmacEngine::new(&[])
@@ -167,6 +168,10 @@ impl<T: Hash> Hash for Hmac<T> {
 
     fn from_slice(sl: &[u8]) -> Result<Hmac<T>, Error> {
         T::from_slice(sl).map(Hmac)
+    }
+
+    fn into_inner(self) -> Self::Inner {
+        self.0.into_inner()
     }
 }
 

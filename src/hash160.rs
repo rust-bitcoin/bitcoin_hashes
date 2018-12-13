@@ -36,6 +36,7 @@ serde_impl!(Hash, 20);
 
 impl HashTrait for Hash {
     type Engine = sha256::HashEngine;
+    type Inner = [u8; 20];
 
     fn engine() -> sha256::HashEngine {
         sha256::Hash::engine()
@@ -66,6 +67,10 @@ impl HashTrait for Hash {
             ret.copy_from_slice(sl);
             Ok(Hash(ret))
         }
+    }
+
+    fn into_inner(self) -> Self::Inner {
+        self.0
     }
 }
 
