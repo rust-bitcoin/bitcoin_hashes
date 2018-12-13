@@ -19,7 +19,7 @@
 
 //! # HMAC support
 
-use std::{fmt, io, ops};
+use std::{borrow, fmt, io, ops};
 #[cfg(feature="serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
@@ -140,6 +140,12 @@ impl<T: Hash> ops::Index<ops::RangeFull> for Hmac<T> {
     type Output = [u8];
     fn index(&self, index: ops::RangeFull) -> &[u8] {
         &self.0[index]
+    }
+}
+
+impl<T: Hash> borrow::Borrow<[u8]> for Hmac<T> {
+    fn borrow(&self) -> &[u8] {
+        &self[..]
     }
 }
 

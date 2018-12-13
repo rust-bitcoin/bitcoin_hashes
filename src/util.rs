@@ -75,3 +75,12 @@ macro_rules! index_impl(
     )
 );
 
+macro_rules! borrow_slice_impl(
+    ($ty:ty) => (
+        impl ::std::borrow::Borrow<[u8]> for $ty {
+            fn borrow(&self) -> &[u8] {
+                &self[..]
+            }
+        }
+    )
+);

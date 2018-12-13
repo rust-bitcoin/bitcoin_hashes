@@ -60,6 +60,7 @@ hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
 index_impl!(Hash);
 serde_impl!(Hash, 32);
+borrow_slice_impl!(Hash);
 
 impl HashTrait for Hash {
     type Engine = HashEngine;

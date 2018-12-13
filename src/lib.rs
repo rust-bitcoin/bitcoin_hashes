@@ -46,7 +46,7 @@ pub mod sha256;
 pub mod sha512;
 pub mod sha256d;
 
-use std::{fmt, io, ops};
+use std::{borrow, fmt, io, ops};
 
 pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
@@ -77,7 +77,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
     ops::Index<ops::RangeTo<usize>, Output = [u8]> +
     ops::Index<ops::Range<usize>, Output = [u8]> +
     ops::Index<usize, Output = u8> +
-    hex::ToHex
+    hex::ToHex + borrow::Borrow<[u8]>
 {
     /// A hashing engine which bytes can be serialized into. It is expected
     /// to implement the `io::Write` trait, and to never return errors under
@@ -113,4 +113,3 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
     /// true for `Sha256dHash`, so here we are.
     fn display_backward() -> bool { false }
 }
-
