@@ -314,6 +314,7 @@ mod tests {
             engine.input(&test.input);
             let hash = Hmac::<sha256::Hash>::from_engine(engine);
             assert_eq!(&hash[..], &test.output[..]);
+            assert_eq!(hash.into_inner()[..].as_ref(), test.output.as_slice());
         }
     }
 
