@@ -84,6 +84,9 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
     /// any conditions.
     type Engine: HashEngine;
 
+    /// The byte array that represents the hash internally
+    type Inner;
+
     /// Construct a new engine
     fn engine() -> Self::Engine;
 
@@ -112,5 +115,8 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
     /// should be backward. For some reason Satoshi decided this should be
     /// true for `Sha256dHash`, so here we are.
     fn display_backward() -> bool { false }
+
+    /// Unwraps the hash and returns the underlying byte array
+    fn into_inner(self) -> Self::Inner;
 }
 
