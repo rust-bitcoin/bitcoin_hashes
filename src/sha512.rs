@@ -19,7 +19,7 @@
 
 //! # SHA512
 
-use std::io;
+use std::{hash, io};
 
 use byteorder::{ByteOrder, BigEndian};
 
@@ -85,6 +85,32 @@ impl PartialEq for Hash {
 }
 
 impl Eq for Hash {}
+
+impl Default for Hash {
+    fn default() -> Hash {
+        Hash([0; 64])
+    }
+}
+
+use std::cmp::Ordering;
+
+impl PartialOrd for Hash {
+    fn partial_cmp(&self, other: &Hash) -> Option<Ordering> {
+        (&self.0).partial_cmp(&other.0)
+    }
+}
+
+impl Ord for Hash {
+    fn cmp(&self, other: &Hash) -> Ordering {
+        (&self.0).cmp(&other.0)
+    }
+}
+
+impl hash::Hash for Hash {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        (&self.0).hash(state)
+    }
+}
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);

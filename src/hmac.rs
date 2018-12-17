@@ -26,7 +26,7 @@ use serde::{Serialize, Serializer, Deserialize, Deserializer};
 use {Error, Hash, HashEngine};
 
 /// A hash computed from a RFC 2104 HMAC. Parameterized by the underlying hash function.
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Hmac<T: Hash>(T);
 
 /// Pair of underyling hash engines, used for the inner and outer hash of HMAC
@@ -45,12 +45,12 @@ impl<T: Hash> HmacEngine<T> {
         let mut ipad = [0x36u8; 128];
         let mut opad = [0x5cu8; 128];
         let mut ret = HmacEngine {
-            iengine: T::engine(),
-            oengine: T::engine(),
+            iengine: <T as Hash>::engine(),
+            oengine: <T as Hash>::engine(),
         };
 
-        if key.len() > T::block_size() {
-            let hash = T::hash(key);
+        if key.len() > <T as Hash>::block_size() {
+            let hash = <T as Hash>::hash(key);
             for (b_i, b_h) in ipad.iter_mut().zip(&hash[..]) {
                 *b_i ^= *b_h;
             }

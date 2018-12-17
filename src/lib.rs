@@ -46,7 +46,7 @@ pub mod sha256;
 pub mod sha512;
 pub mod sha256d;
 
-use std::{borrow, fmt, io, ops};
+use std::{borrow, fmt, hash, io, ops};
 
 pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
@@ -70,8 +70,8 @@ pub trait HashEngine: Clone + io::Write {
 }
 
 /// Trait which applies to hashes of all types
-pub trait Hash: Copy + Clone + PartialEq + Eq +
-    fmt::Debug + fmt::Display + fmt::LowerHex +
+pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
+    hash::Hash + fmt::Debug + fmt::Display + fmt::LowerHex +
     ops::Index<ops::RangeFull, Output = [u8]> +
     ops::Index<ops::RangeFrom<usize>, Output = [u8]> +
     ops::Index<ops::RangeTo<usize>, Output = [u8]> +
