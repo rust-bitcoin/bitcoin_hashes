@@ -8,7 +8,7 @@
 /// Instead of doing fancy bit twiddling to try to outsmart the compiler and prevent early exits,
 /// which is not guaranteed to remain stable as compilers get ever smarter, we take the hit of
 /// writing each intermediate value to memory with a volatile write and then re-reading it with a
-/// volatile read. This should remain stable across compiler upgrades, but may be somewhat slower.
+/// volatile read. This should remain stable across compiler upgrades, but is much slower.
 ///
 /// As of rust 1.31.0 disassembly looks completely within reason for this, see
 /// https://godbolt.org/z/mMbGQv
@@ -77,4 +77,86 @@ fn eq_test() {
     assert!(!fixed_time_eq(&[0b00000000, 0b00000001], &[0b00000000, 0b00000000]));
     assert!(!fixed_time_eq(&[0b00000000, 0b00000000], &[0b00000001, 0b00000000]));
     assert!(!fixed_time_eq(&[0b00000000, 0b00000000], &[0b00000001, 0b00000001]));
+}
+
+#[cfg(all(test, feature="unstable"))]
+mod benches {
+    use test::Bencher;
+
+    use sha256;
+    use sha512;
+    use Hash;
+    use cmp::fixed_time_eq;
+
+    #[bench]
+    fn bench_32b_constant_time_cmp_ne(bh: &mut Bencher) {
+        let hash_a = sha256::Hash::hash(&[0; 1]);
+        let hash_b = sha256::Hash::hash(&[1; 1]);
+        bh.iter(|| {
+            fixed_time_eq(&hash_a[..], &hash_b[..])
+        })
+    }
+
+    #[bench]
+    fn bench_32b_slice_cmp_ne(bh: &mut Bencher) {
+        let hash_a = sha256::Hash::hash(&[0; 1]);
+        let hash_b = sha256::Hash::hash(&[1; 1]);
+        bh.iter(|| {
+            &hash_a[..] == &hash_b[..]
+        })
+    }
+
+    #[bench]
+    fn bench_32b_constant_time_cmp_eq(bh: &mut Bencher) {
+        let hash_a = sha256::Hash::hash(&[0; 1]);
+        let hash_b = sha256::Hash::hash(&[0; 1]);
+        bh.iter(|| {
+            fixed_time_eq(&hash_a[..], &hash_b[..])
+        })
+    }
+
+    #[bench]
+    fn bench_32b_slice_cmp_eq(bh: &mut Bencher) {
+        let hash_a = sha256::Hash::hash(&[0; 1]);
+        let hash_b = sha256::Hash::hash(&[0; 1]);
+        bh.iter(|| {
+            &hash_a[..] == &hash_b[..]
+        })
+    }
+
+    #[bench]
+    fn bench_64b_constant_time_cmp_ne(bh: &mut Bencher) {
+        let hash_a = sha512::Hash::hash(&[0; 1]);
+        let hash_b = sha512::Hash::hash(&[1; 1]);
+        bh.iter(|| {
+            fixed_time_eq(&hash_a[..], &hash_b[..])
+        })
+    }
+
+    #[bench]
+    fn bench_64b_slice_cmp_ne(bh: &mut Bencher) {
+        let hash_a = sha512::Hash::hash(&[0; 1]);
+        let hash_b = sha512::Hash::hash(&[1; 1]);
+        bh.iter(|| {
+            &hash_a[..] == &hash_b[..]
+        })
+    }
+
+    #[bench]
+    fn bench_64b_constant_time_cmp_eq(bh: &mut Bencher) {
+        let hash_a = sha512::Hash::hash(&[0; 1]);
+        let hash_b = sha512::Hash::hash(&[0; 1]);
+        bh.iter(|| {
+            fixed_time_eq(&hash_a[..], &hash_b[..])
+        })
+    }
+
+    #[bench]
+    fn bench_64b_slice_cmp_eq(bh: &mut Bencher) {
+        let hash_a = sha512::Hash::hash(&[0; 1]);
+        let hash_b = sha512::Hash::hash(&[0; 1]);
+        bh.iter(|| {
+            &hash_a[..] == &hash_b[..]
+        })
+    }
 }
