@@ -15,6 +15,7 @@ path = "src/lib.rs"
 [features]
 default = []
 unstable = []  # for benchmarking
+fuzztarget = [] # used by other rust-bitcoin projects to make hashes almost-noops, DON'T USE THIS
 
 [dev-dependencies]
 serde_test = "1.0"
