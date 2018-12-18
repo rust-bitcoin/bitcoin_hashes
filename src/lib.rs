@@ -45,6 +45,7 @@ pub mod sha1;
 pub mod sha256;
 pub mod sha512;
 pub mod sha256d;
+pub mod cmp;
 
 use std::{borrow, fmt, hash, io, ops};
 
