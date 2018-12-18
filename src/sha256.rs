@@ -44,9 +44,17 @@ impl Clone for HashEngine {
 impl EngineTrait for HashEngine {
     type MidState = [u8; 32];
 
+    #[cfg(not(feature = "fuzztarget"))]
     fn midstate(&self) -> [u8; 32] {
         let mut ret = [0; 32];
         BigEndian::write_u32_into(&self.h, &mut ret);
+        ret
+    }
+
+    #[cfg(feature = "fuzztarget")]
+    fn midstate(&self) -> [u8; 32] {
+        let mut ret = [0; 32];
+        ret.copy_from_slice(&self.buffer[..32]);
         ret
     }
 }
@@ -74,6 +82,7 @@ impl HashTrait for Hash {
         }
     }
 
+    #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {
         use std::io::Write;
         use byteorder::WriteBytesExt;
@@ -93,6 +102,11 @@ impl HashTrait for Hash {
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
+        Hash(e.midstate())
+    }
+
+    #[cfg(feature = "fuzztarget")]
+    fn from_engine(e: HashEngine) -> Hash {
         Hash(e.midstate())
     }
 
@@ -124,6 +138,7 @@ impl io::Write for HashEngine {
         Ok(())
     }
 
+    #[cfg(not(feature = "fuzztarget"))]
     fn write(&mut self, mut inp: &[u8]) -> io::Result<usize> {
         let ret = Ok(inp.len());
 
@@ -146,6 +161,14 @@ impl io::Write for HashEngine {
             }
         }
         ret
+    }
+
+    #[cfg(feature = "fuzztarget")]
+    fn write(&mut self, inp: &[u8]) -> io::Result<usize> {
+        for c in inp {
+            self.buffer[0] ^= c;
+        }
+        Ok(inp.len())
     }
 }
 
