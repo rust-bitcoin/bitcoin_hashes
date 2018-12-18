@@ -49,9 +49,17 @@ impl Clone for HashEngine {
 impl EngineTrait for HashEngine {
     type MidState = [u8; 20];
 
+    #[cfg(not(feature = "fuzztarget"))]
     fn midstate(&self) -> [u8; 20] {
         let mut ret = [0; 20];
         LittleEndian::write_u32_into(&self.h, &mut ret);
+        ret
+    }
+
+    #[cfg(feature = "fuzztarget")]
+    fn midstate(&self) -> [u8; 20] {
+        let mut ret = [0; 20];
+        ret.copy_from_slice(&self.buffer[..20]);
         ret
     }
 }
@@ -79,6 +87,7 @@ impl HashTrait for Hash {
         }
     }
 
+    #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {
         use std::io::Write;
         use byteorder::WriteBytesExt;
@@ -99,6 +108,13 @@ impl HashTrait for Hash {
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
         Hash(e.midstate())
+    }
+
+    #[cfg(feature = "fuzztarget")]
+    fn from_engine(e: HashEngine) -> Hash {
+        let mut res = e.midstate();
+        res[0] ^= (e.length & 0xff) as u8;
+        Hash(res)
     }
 
     fn len() -> usize {
@@ -229,6 +245,7 @@ impl io::Write for HashEngine {
         Ok(())
     }
 
+    #[cfg(not(feature = "fuzztarget"))]
     fn write(&mut self, mut inp: &[u8]) -> io::Result<usize> {
         let ret = Ok(inp.len());
 
@@ -251,6 +268,15 @@ impl io::Write for HashEngine {
             }
         }
         ret
+    }
+
+    #[cfg(feature = "fuzztarget")]
+    fn write(&mut self, inp: &[u8]) -> io::Result<usize> {
+        for c in inp {
+            self.buffer[0] ^= *c;
+        }
+        self.length += inp.len();
+        Ok(inp.len())
     }
 }
 
