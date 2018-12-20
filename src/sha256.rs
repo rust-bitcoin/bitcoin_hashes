@@ -166,7 +166,7 @@ impl io::Write for HashEngine {
     #[cfg(feature = "fuzztarget")]
     fn write(&mut self, inp: &[u8]) -> io::Result<usize> {
         for c in inp {
-            self.buffer[0] ^= c;
+            self.buffer[0] ^= *c;
         }
         Ok(inp.len())
     }
