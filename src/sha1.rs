@@ -52,7 +52,7 @@ impl EngineTrait for HashEngine {
 }
 
 /// Output of the SHA1 hash function
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Hash([u8; 20]);
 
 hex_fmt_impl!(Debug, Hash);

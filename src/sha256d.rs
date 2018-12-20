@@ -19,7 +19,7 @@ use Hash as HashTrait;
 use Error;
 
 /// Output of the SHA256d hash function
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Hash([u8; 32]);
 
 hex_fmt_impl!(Debug, Hash);
