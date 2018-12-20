@@ -118,4 +118,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq +
 
     /// Unwraps the hash and returns the underlying byte array
     fn into_inner(self) -> Self::Inner;
+
+    /// Constructs a hash from the underlying byte array
+    fn from_inner(inner: Self::Inner) -> Self;
 }
