@@ -93,28 +93,18 @@ macro_rules! write_impl(
             }
 
             #[cfg(not(feature = "fuzztarget"))]
-            fn write(&mut self, mut inp: &[u8]) -> ::std::io::Result<usize> {
-                let ret = Ok(inp.len());
+            fn write(&mut self, inp: &[u8]) -> ::std::io::Result<usize> {
+                let buf_idx = self.length % BLOCK_SIZE;
+                let rem_len = BLOCK_SIZE - buf_idx;
+                let write_len = ::std::cmp::min(rem_len, inp.len());
 
-                while !inp.is_empty() {
-                    let buf_idx = self.length % BLOCK_SIZE;
-                    let rem_len = BLOCK_SIZE - buf_idx;
-                    let write_len;
-
-                    if inp.len() >= rem_len {
-                        write_len = rem_len;
-                    } else {
-                        write_len = inp.len();
-                    }
-
-                    self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
-                    inp = &inp[write_len..];
-                    self.length += write_len;
-                    if self.length % BLOCK_SIZE == 0 {
-                        self.process_block();
-                    }
+                self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
+                self.length += write_len;
+                if self.length % BLOCK_SIZE == 0 {
+                    self.process_block();
                 }
-                ret
+
+                Ok(write_len)
             }
 
             #[cfg(feature = "fuzztarget")]
