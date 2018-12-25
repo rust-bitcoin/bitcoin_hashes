@@ -84,3 +84,47 @@ macro_rules! borrow_slice_impl(
         }
     )
 );
+
+macro_rules! write_impl(
+    ($ty:ty) => (
+        impl ::std::io::Write for $ty {
+            fn flush(&mut self) -> ::std::io::Result<()> {
+                Ok(())
+            }
+
+            #[cfg(not(feature = "fuzztarget"))]
+            fn write(&mut self, mut inp: &[u8]) -> ::std::io::Result<usize> {
+                let ret = Ok(inp.len());
+
+                while !inp.is_empty() {
+                    let buf_idx = self.length % BLOCK_SIZE;
+                    let rem_len = BLOCK_SIZE - buf_idx;
+                    let write_len;
+
+                    if inp.len() >= rem_len {
+                        write_len = rem_len;
+                    } else {
+                        write_len = inp.len();
+                    }
+
+                    self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
+                    inp = &inp[write_len..];
+                    self.length += write_len;
+                    if self.length % BLOCK_SIZE == 0 {
+                        self.process_block();
+                    }
+                }
+                ret
+            }
+
+            #[cfg(feature = "fuzztarget")]
+            fn write(&mut self, inp: &[u8]) -> ::std::io::Result<usize> {
+                for c in inp {
+                    self.buffer[0] ^= *c;
+                }
+                self.length += inp.len();
+                Ok(inp.len())
+            }
+        }
+    )
+);

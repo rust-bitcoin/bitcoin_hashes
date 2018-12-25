@@ -14,8 +14,6 @@
 
 //! # SHA1
 
-use std::io;
-
 use byteorder::{ByteOrder, BigEndian};
 
 use HashEngine as EngineTrait;
@@ -30,6 +28,8 @@ pub struct HashEngine {
     h: [u32; 5],
     length: usize,
 }
+
+write_impl!(HashEngine);
 
 impl Clone for HashEngine {
     fn clone(&self) -> HashEngine {
@@ -116,36 +116,6 @@ impl HashTrait for Hash {
 
     fn into_inner(self) -> Self::Inner {
         self.0
-    }
-}
-
-impl io::Write for HashEngine {
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
-
-    fn write(&mut self, mut inp: &[u8]) -> io::Result<usize> {
-        let ret = Ok(inp.len());
-
-        while !inp.is_empty() {
-            let buf_idx = self.length % BLOCK_SIZE;
-            let rem_len = BLOCK_SIZE - buf_idx;
-            let write_len;
-
-            if inp.len() >= rem_len {
-                write_len = rem_len;
-            } else {
-                write_len = inp.len();
-            }
-
-            self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
-            inp = &inp[write_len..];
-            self.length += write_len;
-            if self.length % BLOCK_SIZE == 0 {
-                self.process_block();
-            }
-        }
-        ret
     }
 }
 
