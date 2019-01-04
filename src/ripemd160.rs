@@ -62,6 +62,10 @@ impl EngineTrait for HashEngine {
         ret.copy_from_slice(&self.buffer[..20]);
         ret
     }
+
+    fn block_size() -> usize {
+        64
+    }
 }
 
 /// Output of the RIPEMD160 hash function
@@ -119,10 +123,6 @@ impl HashTrait for Hash {
 
     fn len() -> usize {
         20
-    }
-
-    fn block_size() -> usize {
-        64
     }
 
     fn from_slice(sl: &[u8]) -> Result<Hash, Error> {

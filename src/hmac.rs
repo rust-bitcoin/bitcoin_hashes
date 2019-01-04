@@ -78,6 +78,10 @@ impl<T: Hash> HashEngine for HmacEngine<T> {
     fn midstate(&self) -> Self::MidState {
         self.iengine.midstate()
     }
+
+    fn block_size() -> usize {
+        T::block_size()
+    }
 }
 
 impl<T: Hash> io::Write for HmacEngine<T> {
@@ -166,10 +170,6 @@ impl<T: Hash> Hash for Hmac<T> {
 
     fn len() -> usize {
         T::len()
-    }
-
-    fn block_size() -> usize {
-        T::block_size()
     }
 
     fn from_slice(sl: &[u8]) -> Result<Hmac<T>, Error> {
