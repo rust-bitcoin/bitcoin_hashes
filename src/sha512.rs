@@ -19,7 +19,7 @@
 
 //! # SHA512
 
-use std::{hash, io};
+use std::hash;
 
 use byteorder::{ByteOrder, BigEndian};
 
@@ -36,6 +36,8 @@ pub struct HashEngine {
     length: usize,
     buffer: [u8; BLOCK_SIZE],
 }
+
+write_impl!(HashEngine);
 
 impl Clone for HashEngine {
     fn clone(&self) -> HashEngine {
@@ -185,45 +187,6 @@ impl HashTrait for Hash {
 
     fn into_inner(self) -> Self::Inner {
         self.0
-    }
-}
-
-impl io::Write for HashEngine {
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
-
-    #[cfg(not(feature = "fuzztarget"))]
-    fn write(&mut self, mut inp: &[u8]) -> io::Result<usize> {
-        let ret = Ok(inp.len());
-
-        while !inp.is_empty() {
-            let buf_idx = self.length % BLOCK_SIZE;
-            let rem_len = BLOCK_SIZE - buf_idx;
-            let write_len;
-
-            if inp.len() >= rem_len {
-                write_len = rem_len;
-            } else {
-                write_len = inp.len();
-            }
-
-            self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
-            inp = &inp[write_len..];
-            self.length += write_len;
-            if self.length % BLOCK_SIZE == 0 {
-                self.process_block();
-            }
-        }
-        ret
-    }
-
-    #[cfg(feature = "fuzztarget")]
-    fn write(&mut self, inp: &[u8]) -> io::Result<usize> {
-        for c in inp {
-            self.buffer[0] ^= *c;
-        }
-        Ok(inp.len())
     }
 }
 
