@@ -65,6 +65,10 @@ impl EngineTrait for HashEngine {
         ret.copy_from_slice(&self.buffer[..64]);
         ret
     }
+
+    fn block_size() -> usize {
+        128
+    }
 }
 
 /// Output of the SHA256 hash function
@@ -169,10 +173,6 @@ impl HashTrait for Hash {
 
     fn len() -> usize {
         64
-    }
-
-    fn block_size() -> usize {
-        128
     }
 
     fn from_slice(sl: &[u8]) -> Result<Hash, Error> {

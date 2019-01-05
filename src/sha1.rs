@@ -49,6 +49,10 @@ impl EngineTrait for HashEngine {
         BigEndian::write_u32_into(&self.h, &mut ret);
         ret
     }
+
+    fn block_size() -> usize {
+        64
+    }
 }
 
 /// Output of the SHA1 hash function
@@ -98,10 +102,6 @@ impl HashTrait for Hash {
 
     fn len() -> usize {
         20
-    }
-
-    fn block_size() -> usize {
-        64
     }
 
     fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
