@@ -136,7 +136,7 @@ impl HashEngine {
         let mut d = self.h[3];
         let mut e = self.h[4];
 
-        for i in 0..80 {
+        for (i, &wi) in w.iter().enumerate() {
             let (f, k) = match i {
                  0...19 => ((b & c) | (!b & d), 0x5a827999),
                 20...39 => (b ^ c ^ d, 0x6ed9eba1),
@@ -145,7 +145,7 @@ impl HashEngine {
                 _ => unreachable!()
             };
 
-            let new_a = circular_lshift32!(5, a).wrapping_add(f).wrapping_add(e).wrapping_add(k).wrapping_add(w[i]);
+            let new_a = circular_lshift32!(5, a).wrapping_add(f).wrapping_add(e).wrapping_add(k).wrapping_add(wi);
             e = d;
             d = c;
             c = circular_lshift32!(30, b);
