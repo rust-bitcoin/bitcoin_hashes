@@ -25,9 +25,9 @@ pub trait ToHex {
 }
 
 /// Trait for objects that can be deserialized from hex strings
-pub trait FromHex<'a>: Sized {
+pub trait FromHex: Sized {
     /// Produce an object from a hex string
-    fn from_hex(s: &'a str) -> Result<Self, Error>;
+    fn from_hex(s: &str) -> Result<Self, Error>;
 }
 
 impl<T: fmt::LowerHex> ToHex for T {
@@ -37,7 +37,7 @@ impl<T: fmt::LowerHex> ToHex for T {
     }
 }
 
-impl<'a, T: Hash> FromHex<'a> for T {
+impl<T: Hash> FromHex for T {
     /// Parses a hex string as a hash object
     fn from_hex(s: &str) -> Result<Self, Error> {
         if s.len() != 2 * Self::len() {
@@ -108,8 +108,8 @@ impl ToHex for [u8] {
     }
 }
 
-impl<'a> FromHex<'a> for Vec<u8> {
-    fn from_hex(s: &'a str) -> Result<Vec<u8>, Error> {
+impl FromHex for Vec<u8> {
+    fn from_hex(s: &str) -> Result<Vec<u8>, Error> {
         if s.len() % 2 == 1 {
             return Err(Error::OddLengthString(s.len()));
         }
