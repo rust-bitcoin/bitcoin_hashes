@@ -115,7 +115,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     /// Flag indicating whether user-visible serializations of this hash
     /// should be backward. For some reason Satoshi decided this should be
     /// true for `Sha256dHash`, so here we are.
-    fn display_backward() -> bool { false }
+    const DISPLAY_BACKWARD: bool = false;
 
     /// Unwraps the hash and returns the underlying byte array
     fn into_inner(self) -> Self::Inner;
