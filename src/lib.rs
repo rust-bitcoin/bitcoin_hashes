@@ -64,7 +64,7 @@ pub trait HashEngine: Clone + io::Write {
     fn midstate(&self) -> Self::MidState;
 
     /// Length of the hash's internal block size, in bytes
-    fn block_size() -> usize;
+    const BLOCK_SIZE: usize;
 
     /// Add data to the hash engine without any error return type to deal with
     #[inline(always)]
@@ -98,7 +98,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     fn from_engine(e: Self::Engine) -> Self;
 
     /// Length of the hash, in bytes
-    fn len() -> usize;
+    const LEN: usize;
 
     /// Copies a byte slice into a hash object
     fn from_slice(sl: &[u8]) -> Result<Self, Error>;

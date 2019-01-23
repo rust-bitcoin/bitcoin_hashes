@@ -52,13 +52,11 @@ impl HashTrait for Hash {
         Hash(ret)
     }
 
-    fn len() -> usize {
-        20
-    }
+    const LEN: usize = 20;
 
     fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
         if sl.len() != 20 {
-            Err(Error::InvalidLength(Self::len(), sl.len()))
+            Err(Error::InvalidLength(Self::LEN, sl.len()))
         } else {
             let mut ret = [0; 20];
             ret.copy_from_slice(sl);

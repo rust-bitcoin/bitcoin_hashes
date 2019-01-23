@@ -50,9 +50,7 @@ impl EngineTrait for HashEngine {
         ret
     }
 
-    fn block_size() -> usize {
-        64
-    }
+    const BLOCK_SIZE: usize = 64;
 }
 
 /// Output of the SHA1 hash function
@@ -100,13 +98,11 @@ impl HashTrait for Hash {
         Hash(e.midstate())
     }
 
-    fn len() -> usize {
-        20
-    }
+    const LEN: usize = 20;
 
     fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
         if sl.len() != 20 {
-            Err(Error::InvalidLength(Self::len(), sl.len()))
+            Err(Error::InvalidLength(Self::LEN, sl.len()))
         } else {
             let mut ret = [0; 20];
             ret.copy_from_slice(sl);
