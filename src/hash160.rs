@@ -135,7 +135,7 @@ mod tests {
     #[cfg(feature="serde")]
     #[test]
     fn ripemd_serde() {
-        use serde_test::{Configure, Token, assert_tokens, assert_ser_tokens, assert_de_tokens};
+        use serde_test::{Configure, Token, assert_tokens};
 
         static HASH_BYTES: [u8; 20] = [
             0x13, 0x20, 0x72, 0xdf,
@@ -147,8 +147,7 @@ mod tests {
 
         let hash = hash160::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
-        assert_ser_tokens(&hash.readable(), &[Token::Str("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
-        assert_de_tokens(&hash.readable(), &[Token::BorrowedStr("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
+        assert_tokens(&hash.readable(), &[Token::Str("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
     }
 }
 

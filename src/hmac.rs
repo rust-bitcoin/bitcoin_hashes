@@ -327,7 +327,7 @@ mod tests {
     #[cfg(feature="serde")]
     #[test]
     fn hmac_sha512_serde() {
-        use serde_test::{Configure, Token, assert_tokens, assert_ser_tokens, assert_de_tokens};
+        use serde_test::{Configure, Token, assert_tokens};
 
         static HASH_BYTES: [u8; 64] = [
             0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21,
@@ -342,16 +342,9 @@ mod tests {
 
         let hash = Hmac::<sha512::Hash>::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
-        assert_ser_tokens(
+        assert_tokens(
             &hash.readable(),
             &[Token::Str(
-                "8b41e1b78ad11521113c52ff182a1b8e0a195754aa527fcd00a411620b46f20f\
-                 fffb8088ccf85497121ad4499e0845b876f6dd6640088a2f0b2d8a600bdf4c0c"
-            )],
-        );
-        assert_de_tokens(
-            &hash.readable(),
-            &[Token::BorrowedStr(
                 "8b41e1b78ad11521113c52ff182a1b8e0a195754aa527fcd00a411620b46f20f\
                  fffb8088ccf85497121ad4499e0845b876f6dd6640088a2f0b2d8a600bdf4c0c"
             )],
