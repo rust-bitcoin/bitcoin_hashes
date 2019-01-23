@@ -118,7 +118,7 @@ mod tests {
             // Hash through engine, checking that we can input byte by byte
             let mut engine = hash160::Hash::engine();
             for ch in test.input {
-                engine.write(&[ch]).expect("write to engine");
+                engine.write_all(&[ch]).expect("write to engine");
             }
             let manual_hash = Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
@@ -158,7 +158,7 @@ mod benches {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
-            engine.write(&bytes).expect("write");
+            engine.write_all(&bytes).expect("write");
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -168,7 +168,7 @@ mod benches {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
-            engine.write(&bytes).expect("write");
+            engine.write_all(&bytes).expect("write");
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -178,7 +178,7 @@ mod benches {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
-            engine.write(&bytes).expect("write");
+            engine.write_all(&bytes).expect("write");
         });
         bh.bytes = bytes.len() as u64;
     }

@@ -93,12 +93,12 @@ impl HashTrait for Hash {
         let data_len = e.length as u64;
 
         let zeroes = [0; BLOCK_SIZE - 8];
-        e.write(&[0x80]).unwrap();
+        e.write_all(&[0x80]).unwrap();
         if e.length % BLOCK_SIZE > zeroes.len() {
-            e.write(&zeroes).unwrap();
+            e.write_all(&zeroes).unwrap();
         }
         let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
-        e.write(&zeroes[..pad_length]).unwrap();
+        e.write_all(&zeroes[..pad_length]).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
 
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
@@ -307,7 +307,7 @@ mod tests {
             // Hash through engine, checking that we can input byte by byte
             let mut engine = sha256::Hash::engine();
             for ch in test.input.as_bytes() {
-                engine.write(&[*ch]).expect("write to engine");
+                engine.write_all(&[*ch]).expect("write to engine");
             }
             let manual_hash = sha256::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
@@ -372,7 +372,7 @@ mod benches {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
-            engine.write(&bytes).expect("write");
+            engine.write_all(&bytes).expect("write");
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -382,7 +382,7 @@ mod benches {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
-            engine.write(&bytes).expect("write");
+            engine.write_all(&bytes).expect("write");
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -392,7 +392,7 @@ mod benches {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
-            engine.write(&bytes).expect("write");
+            engine.write_all(&bytes).expect("write");
         });
         bh.bytes = bytes.len() as u64;
     }
