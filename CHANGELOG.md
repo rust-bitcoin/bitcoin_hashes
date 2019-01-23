@@ -1,3 +1,12 @@
+# 0.3.0 - 2019-01-23
+
+* Bump minimum required rustc version to 1.22.0
+* Fixed serde deserialization into owned string that previously caused panics
+  when doing round-trip (de)serialization
+* `HashEngine::block_size()` and `Hash::len()` are now associated constants
+  `HashEngine::BLOCK_SIZE` and `Hash::LEN`
+* Removed `block_size()` method from `Hash` trait. It is still available as
+  `<T as Hash>::Engine::BLOCK_SIZE`
 
 # 0.2.0 - 2019-01-15
 
