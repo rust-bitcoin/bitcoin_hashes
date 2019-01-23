@@ -45,7 +45,7 @@ impl<'a, T: Hash> FromHex<'a> for T {
         }
 
         let mut vec = Vec::<u8>::from_hex(s)?;
-        if Self::display_backward() {
+        if Self::DISPLAY_BACKWARD {
             vec.reverse();
         }
         Self::from_slice(&vec)
