@@ -21,8 +21,8 @@ macro_rules! serde_impl(
                 use hex::FromHex;
 
                 if d.is_human_readable() {
-                    let sl: &str = ::serde::Deserialize::deserialize(d)?;
-                    $t::from_hex(sl).map_err(D::Error::custom)
+                    let sl: String = ::serde::Deserialize::deserialize(d)?;
+                    $t::from_hex(&sl).map_err(D::Error::custom)
                 } else {
                     let sl: &[u8] = ::serde::Deserialize::deserialize(d)?;
                     if sl.len() != $t::len() {
