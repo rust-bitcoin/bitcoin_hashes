@@ -94,13 +94,13 @@ macro_rules! write_impl(
 
             #[cfg(not(feature = "fuzztarget"))]
             fn write(&mut self, inp: &[u8]) -> ::std::io::Result<usize> {
-                let buf_idx = self.length % <Self as ::HashEngine>::block_size();
-                let rem_len = <Self as ::HashEngine>::block_size() - buf_idx;
+                let buf_idx = self.length % <Self as ::HashEngine>::BLOCK_SIZE;
+                let rem_len = <Self as ::HashEngine>::BLOCK_SIZE - buf_idx;
                 let write_len = ::std::cmp::min(rem_len, inp.len());
 
                 self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
                 self.length += write_len;
-                if self.length % <Self as ::HashEngine>::block_size() == 0 {
+                if self.length % <Self as ::HashEngine>::BLOCK_SIZE == 0 {
                     self.process_block();
                 }
 

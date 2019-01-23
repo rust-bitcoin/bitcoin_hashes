@@ -25,7 +25,7 @@ macro_rules! serde_impl(
                     $t::from_hex(&sl).map_err(D::Error::custom)
                 } else {
                     let sl: &[u8] = ::serde::Deserialize::deserialize(d)?;
-                    if sl.len() != $t::len() {
+                    if sl.len() != $t::LEN {
                         Err(D::Error::invalid_length(sl.len(), &stringify!($len)))
                     } else {
                         let mut ret = [0; $len];

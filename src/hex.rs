@@ -40,8 +40,8 @@ impl<T: fmt::LowerHex> ToHex for T {
 impl<'a, T: Hash> FromHex<'a> for T {
     /// Parses a hex string as a hash object
     fn from_hex(s: &str) -> Result<Self, Error> {
-        if s.len() != 2 * Self::len() {
-            return Err(Error::InvalidLength(2 * Self::len(), s.len()));
+        if s.len() != 2 * Self::LEN {
+            return Err(Error::InvalidLength(2 * Self::LEN, s.len()));
         }
 
         let mut vec = Vec::<u8>::from_hex(s)?;
