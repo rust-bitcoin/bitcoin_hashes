@@ -100,9 +100,6 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     /// Length of the hash, in bytes
     fn len() -> usize;
 
-    /// Length of the hash's internal block size, in bytes
-    fn block_size() -> usize { Self::Engine::block_size() }
-
     /// Copies a byte slice into a hash object
     fn from_slice(sl: &[u8]) -> Result<Self, Error>;
 

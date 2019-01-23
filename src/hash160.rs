@@ -56,10 +56,6 @@ impl HashTrait for Hash {
         20
     }
 
-    fn block_size() -> usize {
-        64
-    }
-
     fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
         if sl.len() != 20 {
             Err(Error::InvalidLength(Self::len(), sl.len()))
