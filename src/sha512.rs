@@ -84,7 +84,7 @@ impl Clone for Hash {
 
 impl PartialEq for Hash {
     fn eq(&self, other: &Hash) -> bool {
-        &self.0[..] == &other.0[..]
+        self.0[..] == other.0[..]
     }
 }
 
