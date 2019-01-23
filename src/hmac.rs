@@ -40,7 +40,7 @@ impl<T: Hash> HmacEngine<T> {
     /// Construct a new keyed HMAC with the given key. We only support underlying hashes
     /// whose block sizes are ≤ 128 bytes; larger hashes will result in panics.
     pub fn new(key: &[u8]) -> HmacEngine<T> {
-        debug_assert!(T::block_size() <= 128);
+        debug_assert!(T::Engine::block_size() <= 128);
 
         let mut ipad = [0x36u8; 128];
         let mut opad = [0x5cu8; 128];
@@ -49,7 +49,7 @@ impl<T: Hash> HmacEngine<T> {
             oengine: <T as Hash>::engine(),
         };
 
-        if key.len() > <T as Hash>::block_size() {
+        if key.len() > T::Engine::block_size() {
             let hash = <T as Hash>::hash(key);
             for (b_i, b_h) in ipad.iter_mut().zip(&hash[..]) {
                 *b_i ^= *b_h;
@@ -66,8 +66,8 @@ impl<T: Hash> HmacEngine<T> {
             }
         };
 
-        HashEngine::input(&mut ret.iengine, &ipad[..T::block_size()]);
-        HashEngine::input(&mut ret.oengine, &opad[..T::block_size()]);
+        HashEngine::input(&mut ret.iengine, &ipad[..T::Engine::block_size()]);
+        HashEngine::input(&mut ret.oengine, &opad[..T::Engine::block_size()]);
         ret
     }
 }
@@ -80,7 +80,7 @@ impl<T: Hash> HashEngine for HmacEngine<T> {
     }
 
     fn block_size() -> usize {
-        T::block_size()
+        T::Engine::block_size()
     }
 }
 
