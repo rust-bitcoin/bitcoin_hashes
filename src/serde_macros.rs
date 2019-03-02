@@ -24,14 +24,30 @@ macro_rules! serde_impl(
                     let sl: String = ::serde::Deserialize::deserialize(d)?;
                     $t::from_hex(&sl).map_err(D::Error::custom)
                 } else {
-                    let sl: &[u8] = ::serde::Deserialize::deserialize(d)?;
-                    if sl.len() != $t::LEN {
-                        Err(D::Error::invalid_length(sl.len(), &stringify!($len)))
-                    } else {
-                        let mut ret = [0; $len];
-                        ret.copy_from_slice(sl);
-                        Ok($t(ret))
+                    struct BytesVisitor;
+
+                    impl<'de> ::serde::de::Visitor<'de> for BytesVisitor {
+                        type Value = $t;
+
+                        fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                            formatter.write_str("a bytestring")
+                        }
+
+                        fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+                        where
+                            E: ::serde::de::Error,
+                        {
+                            if v.len() != $t::LEN {
+                                Err(E::invalid_length(v.len(), &stringify!($len)))
+                            } else {
+                                let mut ret = [0; $len];
+                                ret.copy_from_slice(v);
+                                Ok($t(ret))
+                            }
+                        }
                     }
+
+                    d.deserialize_bytes(BytesVisitor)
                 }
             }
         }
