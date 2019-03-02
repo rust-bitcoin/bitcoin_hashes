@@ -17,12 +17,38 @@ macro_rules! serde_impl(
 
         impl<'de> ::serde::Deserialize<'de> for $t {
             fn deserialize<D: ::serde::Deserializer<'de>>(d: D) -> Result<$t, D::Error> {
-                use ::serde::de::Error;
                 use hex::FromHex;
 
                 if d.is_human_readable() {
-                    let sl: String = ::serde::Deserialize::deserialize(d)?;
-                    $t::from_hex(&sl).map_err(D::Error::custom)
+                    struct HexVisitor;
+
+                    impl<'de> ::serde::de::Visitor<'de> for HexVisitor {
+                        type Value = $t;
+
+                        fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                            formatter.write_str("an ASCII hex string")
+                        }
+
+                        fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+                        where
+                            E: ::serde::de::Error,
+                        {
+                            if let Ok(hex) = ::std::str::from_utf8(v) {
+                                $t::from_hex(hex).map_err(E::custom)
+                            } else {
+                                return Err(E::invalid_value(::serde::de::Unexpected::Bytes(v), &self));
+                            }
+                        }
+
+                        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                        where
+                            E: ::serde::de::Error,
+                        {
+                            $t::from_hex(v).map_err(E::custom)
+                        }
+                    }
+
+                    d.deserialize_str(HexVisitor)
                 } else {
                     struct BytesVisitor;
 
