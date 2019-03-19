@@ -52,8 +52,10 @@ impl<T: Hash> FromHex for T {
     }
 }
 
-struct HexIterator<'a> {
-    sl: &'a str
+/// Iterator over a hex-encoded string slice which decodes hex and yields bytes.
+pub struct HexIterator<'a> {
+    /// The slice whose first two characters will be decoded to yield the next byte
+    pub sl: &'a str
 }
 
 impl<'a> Iterator for HexIterator<'a> {
@@ -125,6 +127,51 @@ impl FromHex for Vec<u8> {
     }
 }
 
+macro_rules! impl_fromhex_array {
+    ($len:expr) => {
+        impl FromHex for [u8; $len] {
+            fn from_hex(s: &str) -> Result<[u8; $len], Error> {
+                if s.len() == 2 * $len {
+                    let mut ret = [0; $len];
+                    let iter = HexIterator {
+                        sl: s,
+                    };
+                    for (n, byte) in iter.enumerate() {
+                        ret[n] = byte?;
+                    }
+                    Ok(ret)
+                } else {
+                    if s.len() % 2 == 1 {
+                        Err(Error::OddLengthString(s.len()))
+                    } else {
+                        Err(Error::InvalidLength(2 * $len, s.len()))
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl_fromhex_array!(2);
+impl_fromhex_array!(4);
+impl_fromhex_array!(6);
+impl_fromhex_array!(8);
+impl_fromhex_array!(10);
+impl_fromhex_array!(12);
+impl_fromhex_array!(14);
+impl_fromhex_array!(16);
+impl_fromhex_array!(20);
+impl_fromhex_array!(24);
+impl_fromhex_array!(28);
+impl_fromhex_array!(32);
+impl_fromhex_array!(33);
+impl_fromhex_array!(64);
+impl_fromhex_array!(65);
+impl_fromhex_array!(128);
+impl_fromhex_array!(256);
+impl_fromhex_array!(384);
+impl_fromhex_array!(512);
+
 #[cfg(test)]
 mod tests {
     use super::{ToHex, FromHex};
@@ -144,6 +191,11 @@ mod tests {
         assert_eq!(parse, vec![0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
         let ser = parse.to_hex();
         assert_eq!(ser, expected);
+
+        let parse: [u8; 8] = FromHex::from_hex(expected_up).expect("parse uppercase string");
+        assert_eq!(parse, [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+        let ser = parse.to_hex();
+        assert_eq!(ser, expected);
     }
 
     #[test]
@@ -155,6 +207,14 @@ mod tests {
 
         assert_eq!(
             Vec::<u8>::from_hex(oddlen),
+            Err(Error::OddLengthString(17))
+        );
+        assert_eq!(
+            <[u8; 4]>::from_hex(oddlen),
+            Err(Error::OddLengthString(17))
+        );
+        assert_eq!(
+            <[u8; 8]>::from_hex(oddlen),
             Err(Error::OddLengthString(17))
         );
         assert_eq!(
