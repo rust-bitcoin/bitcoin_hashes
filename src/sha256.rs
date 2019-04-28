@@ -16,6 +16,7 @@
 
 use byteorder::{ByteOrder, BigEndian};
 
+use hex;
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
@@ -42,20 +43,20 @@ impl Clone for HashEngine {
 }
 
 impl EngineTrait for HashEngine {
-    type MidState = [u8; 32];
+    type MidState = Midstate;
 
     #[cfg(not(feature = "fuzztarget"))]
-    fn midstate(&self) -> [u8; 32] {
+    fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         BigEndian::write_u32_into(&self.h, &mut ret);
-        ret
+        Midstate(ret)
     }
 
     #[cfg(feature = "fuzztarget")]
-    fn midstate(&self) -> [u8; 32] {
+    fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         ret.copy_from_slice(&self.buffer[..32]);
-        ret
+        Midstate(ret)
     }
 
     const BLOCK_SIZE: usize = 64;
@@ -104,12 +105,12 @@ impl HashTrait for Hash {
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
-        Hash(e.midstate())
+        Hash(e.midstate().into_inner())
     }
 
     #[cfg(feature = "fuzztarget")]
     fn from_engine(e: HashEngine) -> Hash {
-        Hash(e.midstate())
+        Hash(e.midstate().into_inner())
     }
 
     const LEN: usize = 32;
@@ -130,6 +131,59 @@ impl HashTrait for Hash {
 
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
+    }
+}
+
+/// Output of the SHA256 hash function
+#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+pub struct Midstate([u8; 32]);
+
+hex_fmt_impl!(Debug, Midstate);
+hex_fmt_impl!(Display, Midstate);
+hex_fmt_impl!(LowerHex, Midstate);
+index_impl!(Midstate);
+serde_impl!(Midstate, 32);
+borrow_slice_impl!(Midstate);
+
+impl Midstate {
+    /// Length of the midstate, in bytes.
+    const LEN: usize = 32;
+
+    /// Flag indicating whether user-visible serializations of this hash
+    /// should be backward. For some reason Satoshi decided this should be
+    /// true for `Sha256dHash`, so here we are.
+    const DISPLAY_BACKWARD: bool = true;
+
+    /// Construct a new midstate from the inner value.
+    pub fn from_inner(inner: [u8; 32]) -> Self {
+        Midstate(inner)
+    }
+
+    /// Copies a byte slice into the [Midstate] object.
+    pub fn from_slice(sl: &[u8]) -> Result<Midstate, Error> {
+        if sl.len() != Self::LEN {
+            Err(Error::InvalidLength(Self::LEN, sl.len()))
+        } else {
+            let mut ret = [0; 32];
+            ret.copy_from_slice(sl);
+            Ok(Midstate(ret))
+        }
+    }
+
+    /// Unwraps the [Midstate] and returns the underlying byte array.
+    pub fn into_inner(self) -> [u8; 32] {
+        self.0
+    }
+}
+
+impl hex::FromHex for Midstate {
+    fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
+        where I: Iterator<Item=Result<u8, Error>> +
+            ExactSizeIterator +
+            DoubleEndedIterator,
+    {
+        // DISPLAY_BACKWARD is true
+        Ok(Midstate::from_inner(hex::FromHex::from_byte_iter(iter.rev())?))
     }
 }
 
@@ -336,12 +390,12 @@ mod tests {
         assert_eq!(
             engine.midstate(),
             // RPC output
-            [
+            sha256::Midstate::from_inner([
                 0x0b, 0xcf, 0xe0, 0xe5, 0x4e, 0x6c, 0xc7, 0xd3,
                 0x4f, 0x4f, 0x7c, 0x1d, 0xf0, 0xb0, 0xf5, 0x03,
                 0xf2, 0xf7, 0x12, 0x91, 0x2a, 0x06, 0x05, 0xb4,
                 0x14, 0xed, 0x33, 0x7f, 0x7f, 0x03, 0x2e, 0x03, 
-            ]
+            ])
         );
     }
 
