@@ -44,11 +44,13 @@ impl<T: Hash> FromHex for T {
             return Err(Error::InvalidLength(2 * Self::LEN, s.len()));
         }
 
-        let mut vec = Vec::<u8>::from_hex(s)?;
         if Self::DISPLAY_BACKWARD {
+            let mut vec = Vec::<u8>::from_hex(s)?;
             vec.reverse();
+            Self::from_slice(&vec)
+        } else {
+            Ok(Hash::from_inner(T::Inner::from_hex(&s)?))
         }
-        Self::from_slice(&vec)
     }
 }
 
