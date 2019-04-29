@@ -82,6 +82,12 @@ macro_rules! borrow_slice_impl(
                 &self[..]
             }
         }
+
+        impl ::std::convert::AsRef<[u8]> for $ty {
+            fn as_ref(&self) -> &[u8] {
+                &self[..]
+            }
+        }
     )
 );
 
