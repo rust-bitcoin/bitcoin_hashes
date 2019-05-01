@@ -89,7 +89,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     type Engine: HashEngine;
 
     /// The byte array that represents the hash internally
-    type Inner;
+    type Inner: hex::FromHex;
 
     /// Construct a new engine
     fn engine() -> Self::Engine;
