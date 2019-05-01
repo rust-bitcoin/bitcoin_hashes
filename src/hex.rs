@@ -26,8 +26,22 @@ pub trait ToHex {
 
 /// Trait for objects that can be deserialized from hex strings
 pub trait FromHex: Sized {
+    /// Produce an object from a byte iterator
+    fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
+        where I: Iterator<Item=Result<u8, Error>> +
+            ExactSizeIterator +
+            DoubleEndedIterator;
+
     /// Produce an object from a hex string
-    fn from_hex(s: &str) -> Result<Self, Error>;
+    fn from_hex(s: &str) -> Result<Self, Error> {
+        if s.len() % 2 == 1 {
+            Err(Error::OddLengthString(s.len()))
+        } else {
+            Self::from_byte_iter(HexIterator {
+                sl: s,
+            })
+        }
+    }
 }
 
 impl<T: fmt::LowerHex> ToHex for T {
@@ -38,19 +52,18 @@ impl<T: fmt::LowerHex> ToHex for T {
 }
 
 impl<T: Hash> FromHex for T {
-    /// Parses a hex string as a hash object
-    fn from_hex(s: &str) -> Result<Self, Error> {
-        if s.len() != 2 * Self::LEN {
-            return Err(Error::InvalidLength(2 * Self::LEN, s.len()));
-        }
-
+    fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
+        where I: Iterator<Item=Result<u8, Error>> +
+            ExactSizeIterator +
+            DoubleEndedIterator,
+    {
+        let inner;
         if Self::DISPLAY_BACKWARD {
-            let mut vec = Vec::<u8>::from_hex(s)?;
-            vec.reverse();
-            Self::from_slice(&vec)
+            inner = T::Inner::from_byte_iter(iter.rev())?;
         } else {
-            Ok(Hash::from_inner(T::Inner::from_hex(&s)?))
+            inner = T::Inner::from_byte_iter(iter)?;
         }
+        Ok(Hash::from_inner(inner))
     }
 }
 
@@ -84,6 +97,40 @@ impl<'a> Iterator for HexIterator<'a> {
             Some(Ok(ret as u8))
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.sl.len() / 2;
+        (len, Some(len))
+    }
+}
+
+impl<'a> DoubleEndedIterator for HexIterator<'a> {
+    fn next_back(&mut self) -> Option<Result<u8, Error>> {
+        let current_len = self.sl.len();
+        if current_len % 2 == 1 {
+            Some(Err(Error::OddLengthString(current_len)))
+        } else if self.sl.is_empty() {
+            None
+        } else {
+            let (hi, lo) = {
+                let mut iter = self.sl.chars().rev();
+                let lo = iter.next().unwrap();
+                let hi = iter.next().unwrap();
+                match (hi.to_digit(16), lo.to_digit(16)) {
+                    (Some(hi), Some(lo)) => (hi, lo),
+                    (None, _) => return Some(Err(Error::InvalidChar(hi))),
+                    (_, None) => return Some(Err(Error::InvalidChar(lo))),
+                }
+            };
+            let ret = (hi << 4) + lo;
+            self.sl = &self.sl[..current_len - 2];
+            Some(Ok(ret as u8))
+        }
+    }
+
+}
+
+impl<'a> ExactSizeIterator for HexIterator<'a> {
 }
 
 /// Output hex into an object implementing `fmt::Write`, which is usually more
@@ -113,41 +160,31 @@ impl ToHex for [u8] {
 }
 
 impl FromHex for Vec<u8> {
-    fn from_hex(s: &str) -> Result<Vec<u8>, Error> {
-        if s.len() % 2 == 1 {
-            return Err(Error::OddLengthString(s.len()));
-        }
-
-        let mut vec = Vec::with_capacity(s.len() / 2);
-        let iter = HexIterator {
-            sl: s
-        };
-        for byte in iter {
-            vec.push(byte?);
-        }
-        Ok(vec)
+    fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
+        where I: Iterator<Item=Result<u8, Error>> +
+            ExactSizeIterator +
+            DoubleEndedIterator,
+    {
+        iter.collect()
     }
 }
 
 macro_rules! impl_fromhex_array {
     ($len:expr) => {
         impl FromHex for [u8; $len] {
-            fn from_hex(s: &str) -> Result<[u8; $len], Error> {
-                if s.len() == 2 * $len {
+            fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
+                where I: Iterator<Item=Result<u8, Error>> +
+                    ExactSizeIterator +
+                    DoubleEndedIterator,
+            {
+                if iter.len() == $len {
                     let mut ret = [0; $len];
-                    let iter = HexIterator {
-                        sl: s,
-                    };
                     for (n, byte) in iter.enumerate() {
                         ret[n] = byte?;
                     }
                     Ok(ret)
                 } else {
-                    if s.len() % 2 == 1 {
-                        Err(Error::OddLengthString(s.len()))
-                    } else {
-                        Err(Error::InvalidLength(2 * $len, s.len()))
-                    }
+                    Err(Error::InvalidLength(2 * $len, 2 * iter.len()))
                 }
             }
         }
