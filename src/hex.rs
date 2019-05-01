@@ -136,15 +136,16 @@ impl<'a> ExactSizeIterator for HexIterator<'a> {
 /// Output hex into an object implementing `fmt::Write`, which is usually more
 /// efficient than going through a `String` using `ToHex`.
 pub fn format_hex(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
+    let prec = f.precision().unwrap_or(2 * data.len());
     let width = f.width().unwrap_or(2 * data.len());
     for _ in (2 * data.len())..width {
         f.write_str("0")?;
     }
-    for ch in data.into_iter().take(width / 2) {
+    for ch in data.into_iter().take(prec / 2) {
         write!(f, "{:02x}", *ch)?;
     }
-    if width < 2 * data.len() && width % 2 == 1 {
-        write!(f, "{:x}", data[width / 2] / 16)?;
+    if prec < 2 * data.len() && prec % 2 == 1 {
+        write!(f, "{:x}", data[prec / 2] / 16)?;
     }
     Ok(())
 }
@@ -152,15 +153,16 @@ pub fn format_hex(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
 /// Output hex in reverse order; used for Sha256dHash whose standard hex encoding
 /// has the bytes reversed.
 pub fn format_hex_reverse(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
+    let prec = f.precision().unwrap_or(2 * data.len());
     let width = f.width().unwrap_or(2 * data.len());
     for _ in (2 * data.len())..width {
         f.write_str("0")?;
     }
-    for ch in data.iter().rev().take(width / 2) {
+    for ch in data.iter().rev().take(prec / 2) {
         write!(f, "{:02x}", *ch)?;
     }
-    if width < 2 * data.len() && width % 2 == 1 {
-        write!(f, "{:x}", data[data.len() - 1 - width / 2] / 16)?;
+    if prec < 2 * data.len() && prec % 2 == 1 {
+        write!(f, "{:x}", data[data.len() - 1 - prec / 2] / 16)?;
     }
     Ok(())
 }
@@ -274,7 +276,7 @@ mod tests {
 
         for i in 0..20 {
             assert_eq!(
-                format!("{:width$x}", bytes, width = i),
+                format!("{:.prec$x}", bytes, prec = i),
                 &"0102030405060708090a"[0..i]
             );
         }
@@ -307,7 +309,7 @@ mod tests {
 
         for i in 0..20 {
             assert_eq!(
-                format!("{:width$x}", bytes, width = i),
+                format!("{:.prec$x}", bytes, prec = i),
                 &"0a090807060504030201"[0..i]
             );
         }
