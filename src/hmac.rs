@@ -175,6 +175,10 @@ impl<T: Hash> Hash for Hmac<T> {
     fn into_inner(self) -> Self::Inner {
         self.0.into_inner()
     }
+
+    fn from_inner(inner: T::Inner) -> Self {
+        Hmac(T::from_inner(inner))
+    }
 }
 
 #[cfg(feature="serde")]

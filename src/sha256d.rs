@@ -63,6 +63,10 @@ impl HashTrait for Hash {
     fn into_inner(self) -> Self::Inner {
         self.0
     }
+
+    fn from_inner(inner: Self::Inner) -> Self {
+        Hash(inner)
+    }
 }
 
 #[cfg(test)]
