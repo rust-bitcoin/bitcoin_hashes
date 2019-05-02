@@ -51,9 +51,10 @@ pub mod hmac;
 pub mod ripemd160;
 pub mod sha1;
 pub mod sha256;
-pub mod sha512;
 pub mod sha256d;
+pub mod sha256t;
 pub mod siphash24;
+pub mod sha512;
 pub mod cmp;
 
 use core::{borrow, fmt, hash, ops};
