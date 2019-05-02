@@ -29,6 +29,15 @@ use {Error, Hash, HashEngine};
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Hmac<T: Hash>(T);
 
+/// Pair of underlying hash midstates which represent the current state
+/// of an `HmacEngine`
+pub struct HmacMidState<T: Hash> {
+    /// Midstate of the inner hash engine
+    pub inner: <T::Engine as HashEngine>::MidState,
+    /// Midstate of the outer hash engine
+    pub outer: <T::Engine as HashEngine>::MidState,
+}
+
 /// Pair of underyling hash engines, used for the inner and outer hash of HMAC
 #[derive(Clone)]
 pub struct HmacEngine<T: Hash> {
@@ -73,10 +82,13 @@ impl<T: Hash> HmacEngine<T> {
 }
 
 impl<T: Hash> HashEngine for HmacEngine<T> {
-    type MidState = <<T as Hash>::Engine as HashEngine>::MidState;
+    type MidState = HmacMidState<T>;
 
     fn midstate(&self) -> Self::MidState {
-        self.iengine.midstate()
+        HmacMidState {
+            inner: self.iengine.midstate(),
+            outer: self.oengine.midstate(),
+        }
     }
 
     const BLOCK_SIZE: usize = T::Engine::BLOCK_SIZE;
