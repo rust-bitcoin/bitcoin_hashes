@@ -135,26 +135,45 @@ impl<'a> ExactSizeIterator for HexIterator<'a> {
 
 /// Output hex into an object implementing `fmt::Write`, which is usually more
 /// efficient than going through a `String` using `ToHex`.
-pub fn format_hex<T: fmt::Write>(data: &[u8], mut fmt: T) -> fmt::Result {
-    for ch in data {
-        write!(fmt, "{:02x}", *ch)?;
+pub fn format_hex(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
+    let prec = f.precision().unwrap_or(2 * data.len());
+    let width = f.width().unwrap_or(2 * data.len());
+    for _ in (2 * data.len())..width {
+        f.write_str("0")?;
+    }
+    for ch in data.into_iter().take(prec / 2) {
+        write!(f, "{:02x}", *ch)?;
+    }
+    if prec < 2 * data.len() && prec % 2 == 1 {
+        write!(f, "{:x}", data[prec / 2] / 16)?;
     }
     Ok(())
 }
 
 /// Output hex in reverse order; used for Sha256dHash whose standard hex encoding
 /// has the bytes reversed.
-pub fn format_hex_reverse<T: fmt::Write>(data: &[u8], mut fmt: T) -> fmt::Result {
-    for ch in data.iter().rev() {
-        write!(fmt, "{:02x}", *ch)?;
+pub fn format_hex_reverse(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
+    let prec = f.precision().unwrap_or(2 * data.len());
+    let width = f.width().unwrap_or(2 * data.len());
+    for _ in (2 * data.len())..width {
+        f.write_str("0")?;
+    }
+    for ch in data.iter().rev().take(prec / 2) {
+        write!(f, "{:02x}", *ch)?;
+    }
+    if prec < 2 * data.len() && prec % 2 == 1 {
+        write!(f, "{:x}", data[data.len() - 1 - prec / 2] / 16)?;
     }
     Ok(())
 }
 
 impl ToHex for [u8] {
     fn to_hex(&self) -> String {
+        use std::fmt::Write;
         let mut ret = String::with_capacity(2 * self.len());
-        format_hex(self, &mut ret).expect("format to string");
+        for ch in self {
+            write!(ret, "{:02x}", ch).expect("writing to string");
+        }
         ret
     }
 }
@@ -213,7 +232,9 @@ impl_fromhex_array!(512);
 
 #[cfg(test)]
 mod tests {
-    use super::{ToHex, FromHex};
+    use std::fmt;
+
+    use super::{format_hex, format_hex_reverse, ToHex, FromHex};
     use Error;
 
     #[test]
@@ -235,6 +256,72 @@ mod tests {
         assert_eq!(parse, [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
         let ser = parse.to_hex();
         assert_eq!(ser, expected);
+    }
+
+    #[test]
+    fn hex_truncate() {
+        struct HexBytes(Vec<u8>);
+        impl fmt::LowerHex for HexBytes {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                format_hex(&self.0, f)
+            }
+        }
+
+        let bytes = HexBytes(vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+        assert_eq!(
+            format!("{:x}", bytes),
+            "0102030405060708090a"
+        );
+
+        for i in 0..20 {
+            assert_eq!(
+                format!("{:.prec$x}", bytes, prec = i),
+                &"0102030405060708090a"[0..i]
+            );
+        }
+
+        assert_eq!(
+            format!("{:25x}", bytes),
+            "000000102030405060708090a"
+        );
+        assert_eq!(
+            format!("{:26x}", bytes),
+            "0000000102030405060708090a"
+        );
+    }
+
+    #[test]
+    fn hex_truncate_rev() {
+        struct HexBytes(Vec<u8>);
+        impl fmt::LowerHex for HexBytes {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                format_hex_reverse(&self.0, f)
+            }
+        }
+
+        let bytes = HexBytes(vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+        assert_eq!(
+            format!("{:x}", bytes),
+            "0a090807060504030201"
+        );
+
+        for i in 0..20 {
+            assert_eq!(
+                format!("{:.prec$x}", bytes, prec = i),
+                &"0a090807060504030201"[0..i]
+            );
+        }
+
+        assert_eq!(
+            format!("{:25x}", bytes),
+            "000000a090807060504030201"
+        );
+        assert_eq!(
+            format!("{:26x}", bytes),
+            "0000000a090807060504030201"
+        );
     }
 
     #[test]
