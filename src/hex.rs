@@ -34,13 +34,7 @@ pub trait FromHex: Sized {
 
     /// Produce an object from a hex string
     fn from_hex(s: &str) -> Result<Self, Error> {
-        if s.len() % 2 == 1 {
-            Err(Error::OddLengthString(s.len()))
-        } else {
-            Self::from_byte_iter(HexIterator {
-                sl: s,
-            })
-        }
+        Self::from_byte_iter(HexIterator::new(s)?)
     }
 }
 
@@ -70,16 +64,28 @@ impl<T: Hash> FromHex for T {
 /// Iterator over a hex-encoded string slice which decodes hex and yields bytes.
 pub struct HexIterator<'a> {
     /// The slice whose first two characters will be decoded to yield the next byte
-    pub sl: &'a str
+    sl: &'a str
+}
+
+impl<'a> HexIterator<'a> {
+    /// Constructs a new `HexIterator` from a string slice. If the string is of odd length it
+    /// returns an error.
+    pub fn new(s: &'a str) -> Result<HexIterator<'a>, Error> {
+        if s.len() % 2 != 0 {
+            Err(Error::OddLengthString(s.len()))
+        } else {
+            Ok(HexIterator {
+                sl: s
+            })
+        }
+    }
 }
 
 impl<'a> Iterator for HexIterator<'a> {
     type Item = Result<u8, Error>;
 
     fn next(&mut self) -> Option<Result<u8, Error>> {
-        if self.sl.len() % 2 == 1 {
-            Some(Err(Error::OddLengthString(self.sl.len())))
-        } else if self.sl.is_empty() {
+        if self.sl.is_empty() {
             None
         } else {
             let (hi, lo) = {
@@ -106,10 +112,7 @@ impl<'a> Iterator for HexIterator<'a> {
 
 impl<'a> DoubleEndedIterator for HexIterator<'a> {
     fn next_back(&mut self) -> Option<Result<u8, Error>> {
-        let current_len = self.sl.len();
-        if current_len % 2 == 1 {
-            Some(Err(Error::OddLengthString(current_len)))
-        } else if self.sl.is_empty() {
+        if self.sl.is_empty() {
             None
         } else {
             let (hi, lo) = {
@@ -123,7 +126,7 @@ impl<'a> DoubleEndedIterator for HexIterator<'a> {
                 }
             };
             let ret = (hi << 4) + lo;
-            self.sl = &self.sl[..current_len - 2];
+            self.sl = &self.sl[..self.sl.len() - 2];
             Some(Ok(ret as u8))
         }
     }
