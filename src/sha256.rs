@@ -211,8 +211,11 @@ macro_rules! round(
 impl HashEngine {
     /// Create a new [HashEngine] from a midstate.
     ///
-    /// Be aware that this method only works when [length] is a multiple of the block size.
+    /// Be aware that this method panics when [length] is
+    /// not a multiple of the block size.
     pub fn from_midstate(midstate: Midstate, length: usize) -> HashEngine {
+        assert!(length % BLOCK_SIZE == 0, "length is no multiple of the block size");
+
         let mut ret = [0; 8];
         BigEndian::read_u32_into(&midstate[..], &mut ret);
 
