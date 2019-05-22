@@ -16,6 +16,7 @@
 //!
 
 use std::fmt;
+use std::str::Chars;
 use {Error, Hash};
 
 /// Trait for objects that can be serialized as hex strings
@@ -63,78 +64,59 @@ impl<T: Hash> FromHex for T {
 
 /// Iterator over a hex-encoded string slice which decodes hex and yields bytes.
 pub struct HexIterator<'a> {
-    /// The slice whose first two characters will be decoded to yield the next byte
-    sl: &'a str
+    /// The `Chars` iterator whose first two characters will be decoded to yield
+    /// the next byte.
+    chars: Chars<'a>,
 }
 
 impl<'a> HexIterator<'a> {
-    /// Constructs a new `HexIterator` from a string slice. If the string is of odd length it
-    /// returns an error.
+    /// Constructs a new `HexIterator` from a string slice. If the string is of
+    /// odd length it returns an error.
     pub fn new(s: &'a str) -> Result<HexIterator<'a>, Error> {
         if s.len() % 2 != 0 {
             Err(Error::OddLengthString(s.len()))
         } else {
             Ok(HexIterator {
-                sl: s
+                chars: s.chars()
             })
         }
     }
+}
+
+fn chars_to_hex(hi: char, lo: char) -> Result<u8, Error> {
+    let hih = hi.to_digit(16)
+                .ok_or(Error::InvalidChar(hi))?;
+    let loh = lo.to_digit(16)
+                .ok_or(Error::InvalidChar(lo))?;
+
+    let ret = (hih << 4) + loh;
+    Ok(ret as u8)
 }
 
 impl<'a> Iterator for HexIterator<'a> {
     type Item = Result<u8, Error>;
 
     fn next(&mut self) -> Option<Result<u8, Error>> {
-        if self.sl.is_empty() {
-            None
-        } else {
-            let (hi, lo) = {
-                let mut iter = self.sl.chars();
-                let hi = iter.next().unwrap();
-                let lo = iter.next().unwrap();
-                match (hi.to_digit(16), lo.to_digit(16)) {
-                    (Some(hi), Some(lo)) => (hi, lo),
-                    (None, _) => return Some(Err(Error::InvalidChar(hi))),
-                    (_, None) => return Some(Err(Error::InvalidChar(lo))),
-                }
-            };
-            let ret = (hi << 4) + lo;
-            self.sl = &self.sl[2..];
-            Some(Ok(ret as u8))
-        }
+        let hi = self.chars.next()?;
+        let lo = self.chars.next().unwrap();
+        Some(chars_to_hex(hi, lo))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.sl.len() / 2;
+        let len = self.chars.as_str().len() / 2;
         (len, Some(len))
     }
 }
 
 impl<'a> DoubleEndedIterator for HexIterator<'a> {
     fn next_back(&mut self) -> Option<Result<u8, Error>> {
-        if self.sl.is_empty() {
-            None
-        } else {
-            let (hi, lo) = {
-                let mut iter = self.sl.chars().rev();
-                let lo = iter.next().unwrap();
-                let hi = iter.next().unwrap();
-                match (hi.to_digit(16), lo.to_digit(16)) {
-                    (Some(hi), Some(lo)) => (hi, lo),
-                    (None, _) => return Some(Err(Error::InvalidChar(hi))),
-                    (_, None) => return Some(Err(Error::InvalidChar(lo))),
-                }
-            };
-            let ret = (hi << 4) + lo;
-            self.sl = &self.sl[..self.sl.len() - 2];
-            Some(Ok(ret as u8))
-        }
+        let lo = self.chars.next_back()?;
+        let hi = self.chars.next_back().unwrap();
+        Some(chars_to_hex(hi, lo))
     }
-
 }
 
-impl<'a> ExactSizeIterator for HexIterator<'a> {
-}
+impl<'a> ExactSizeIterator for HexIterator<'a> {}
 
 /// Output hex into an object implementing `fmt::Write`, which is usually more
 /// efficient than going through a `String` using `ToHex`.
