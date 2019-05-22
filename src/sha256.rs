@@ -16,6 +16,7 @@
 
 use byteorder::{ByteOrder, BigEndian};
 
+use hex;
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
@@ -42,20 +43,20 @@ impl Clone for HashEngine {
 }
 
 impl EngineTrait for HashEngine {
-    type MidState = [u8; 32];
+    type MidState = Midstate;
 
     #[cfg(not(feature = "fuzztarget"))]
-    fn midstate(&self) -> [u8; 32] {
+    fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         BigEndian::write_u32_into(&self.h, &mut ret);
-        ret
+        Midstate(ret)
     }
 
     #[cfg(feature = "fuzztarget")]
-    fn midstate(&self) -> [u8; 32] {
+    fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         ret.copy_from_slice(&self.buffer[..32]);
-        ret
+        Midstate(ret)
     }
 
     const BLOCK_SIZE: usize = 64;
@@ -104,12 +105,12 @@ impl HashTrait for Hash {
         e.write_u64::<BigEndian>(8 * data_len).unwrap();
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
-        Hash(e.midstate())
+        Hash(e.midstate().into_inner())
     }
 
     #[cfg(feature = "fuzztarget")]
     fn from_engine(e: HashEngine) -> Hash {
-        Hash(e.midstate())
+        Hash(e.midstate().into_inner())
     }
 
     const LEN: usize = 32;
@@ -130,6 +131,59 @@ impl HashTrait for Hash {
 
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
+    }
+}
+
+/// Output of the SHA256 hash function
+#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+pub struct Midstate([u8; 32]);
+
+hex_fmt_impl!(Debug, Midstate);
+hex_fmt_impl!(Display, Midstate);
+hex_fmt_impl!(LowerHex, Midstate);
+index_impl!(Midstate);
+serde_impl!(Midstate, 32);
+borrow_slice_impl!(Midstate);
+
+impl Midstate {
+    /// Length of the midstate, in bytes.
+    const LEN: usize = 32;
+
+    /// Flag indicating whether user-visible serializations of this hash
+    /// should be backward. For some reason Satoshi decided this should be
+    /// true for `Sha256dHash`, so here we are.
+    const DISPLAY_BACKWARD: bool = true;
+
+    /// Construct a new midstate from the inner value.
+    pub fn from_inner(inner: [u8; 32]) -> Self {
+        Midstate(inner)
+    }
+
+    /// Copies a byte slice into the [Midstate] object.
+    pub fn from_slice(sl: &[u8]) -> Result<Midstate, Error> {
+        if sl.len() != Self::LEN {
+            Err(Error::InvalidLength(Self::LEN, sl.len()))
+        } else {
+            let mut ret = [0; 32];
+            ret.copy_from_slice(sl);
+            Ok(Midstate(ret))
+        }
+    }
+
+    /// Unwraps the [Midstate] and returns the underlying byte array.
+    pub fn into_inner(self) -> [u8; 32] {
+        self.0
+    }
+}
+
+impl hex::FromHex for Midstate {
+    fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
+        where I: Iterator<Item=Result<u8, Error>> +
+            ExactSizeIterator +
+            DoubleEndedIterator,
+    {
+        // DISPLAY_BACKWARD is true
+        Ok(Midstate::from_inner(hex::FromHex::from_byte_iter(iter.rev())?))
     }
 }
 
@@ -155,6 +209,23 @@ macro_rules! round(
 );
 
 impl HashEngine {
+    /// Create a new [HashEngine] from a midstate.
+    ///
+    /// Be aware that this method panics when [length] is
+    /// not a multiple of the block size.
+    pub fn from_midstate(midstate: Midstate, length: usize) -> HashEngine {
+        assert!(length % BLOCK_SIZE == 0, "length is no multiple of the block size");
+
+        let mut ret = [0; 8];
+        BigEndian::read_u32_into(&midstate[..], &mut ret);
+
+        HashEngine {
+            buffer: [0; BLOCK_SIZE],
+            h: ret,
+            length: length,
+        }
+    }
+
     // Algorithm copied from libsecp256k1
     fn process_block(&mut self) {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
@@ -336,13 +407,62 @@ mod tests {
         assert_eq!(
             engine.midstate(),
             // RPC output
-            [
+            sha256::Midstate::from_inner([
                 0x0b, 0xcf, 0xe0, 0xe5, 0x4e, 0x6c, 0xc7, 0xd3,
                 0x4f, 0x4f, 0x7c, 0x1d, 0xf0, 0xb0, 0xf5, 0x03,
                 0xf2, 0xf7, 0x12, 0x91, 0x2a, 0x06, 0x05, 0xb4,
                 0x14, 0xed, 0x33, 0x7f, 0x7f, 0x03, 0x2e, 0x03, 
-            ]
+            ])
         );
+    }
+
+    #[test]
+    fn engine_with_state() {
+        let mut engine = sha256::Hash::engine();
+        let midstate_engine = sha256::HashEngine::from_midstate(engine.midstate(), 0);
+        // Fresh engine and engine initialized with fresh state should have same state
+        assert_eq!(engine.h, midstate_engine.h);
+
+        // Midstate changes after writing 64 bytes
+        engine.input(&[1; 63]);
+        assert_eq!(engine.h, midstate_engine.h);
+        engine.input(&[2; 1]);
+        assert_ne!(engine.h, midstate_engine.h);
+
+        // Initializing an engine with midstate from another engine should result in
+        // both engines producing the same hashes
+        let data_vec = vec![vec![3; 1], vec![4; 63], vec![5; 65], vec![6; 66]];
+        for data in data_vec {
+            let mut engine = engine.clone();
+            let mut midstate_engine =
+                sha256::HashEngine::from_midstate(engine.midstate(), engine.length);
+            assert_eq!(engine.h, midstate_engine.h);
+            assert_eq!(engine.length, midstate_engine.length);
+            engine.input(&data);
+            midstate_engine.input(&data);
+            assert_eq!(engine.h, midstate_engine.h);
+            let hash1 = sha256::Hash::from_engine(engine);
+            let hash2 = sha256::Hash::from_engine(midstate_engine);
+            assert_eq!(hash1, hash2);
+        }
+
+        // Test that a specific midstate results in a specific hash. Midstate was
+        // obtained by applying sha256 to sha256("MuSig coefficient")||sha256("MuSig
+        // coefficient").
+        static MIDSTATE: [u8; 32] = [
+            0x0f, 0xd0, 0x69, 0x0c, 0xfe, 0xfe, 0xae, 0x97, 0x99, 0x6e, 0xac, 0x7f, 0x5c, 0x30,
+            0xd8, 0x64, 0x8c, 0x4a, 0x05, 0x73, 0xac, 0xa1, 0xa2, 0x2f, 0x6f, 0x43, 0xb8, 0x01,
+            0x85, 0xce, 0x27, 0xcd,
+        ];
+        static HASH_EXPECTED: [u8; 32] = [
+            0x18, 0x84, 0xe4, 0x72, 0x40, 0x4e, 0xf4, 0x5a, 0xb4, 0x9c, 0x4e, 0xa4, 0x9a, 0xe6,
+            0x23, 0xa8, 0x88, 0x52, 0x7f, 0x7d, 0x8a, 0x06, 0x94, 0x20, 0x8f, 0xf1, 0xf7, 0xa9,
+            0xd5, 0x69, 0x09, 0x59,
+        ];
+        let midstate_engine =
+            sha256::HashEngine::from_midstate(sha256::Midstate::from_inner(MIDSTATE), 64);
+        let hash = sha256::Hash::from_engine(midstate_engine);
+        assert_eq!(hash, sha256::Hash(HASH_EXPECTED));
     }
 
     #[cfg(feature="serde")]
