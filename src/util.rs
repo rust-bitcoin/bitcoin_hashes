@@ -76,7 +76,7 @@ macro_rules! index_impl(
 );
 
 macro_rules! borrow_slice_impl(
-    ($ty:ty) => (
+    ($ty:ty, $inner:ty) => (
         impl ::std::borrow::Borrow<[u8]> for $ty {
             fn borrow(&self) -> &[u8] {
                 &self[..]
@@ -86,6 +86,14 @@ macro_rules! borrow_slice_impl(
         impl ::std::convert::AsRef<[u8]> for $ty {
             fn as_ref(&self) -> &[u8] {
                 &self[..]
+            }
+        }
+
+        impl ::std::ops::Deref for $ty {
+            type Target = $inner;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
             }
         }
     )
@@ -124,3 +132,16 @@ macro_rules! write_impl(
         }
     )
 );
+
+#[cfg(test)]
+mod test {
+    use Hash;
+    use sha256;
+
+    #[test]
+    fn borrow_slice_impl_to_vec() {
+        // Test that the borrow_slice_impl macro gives to_vec.
+        let hash = sha256::Hash::hash(&[3, 50]);
+        assert_eq!(hash.to_vec().len(), sha256::Hash::LEN);
+    }
+}

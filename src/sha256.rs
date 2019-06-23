@@ -71,7 +71,7 @@ hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
 index_impl!(Hash);
 serde_impl!(Hash, 32);
-borrow_slice_impl!(Hash);
+borrow_slice_impl!(Hash, [u8; 32]);
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
@@ -143,7 +143,7 @@ hex_fmt_impl!(Display, Midstate);
 hex_fmt_impl!(LowerHex, Midstate);
 index_impl!(Midstate);
 serde_impl!(Midstate, 32);
-borrow_slice_impl!(Midstate);
+borrow_slice_impl!(Midstate, [u8; 32]);
 
 impl Midstate {
     /// Length of the midstate, in bytes.
