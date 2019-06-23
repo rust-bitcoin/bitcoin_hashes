@@ -1,3 +1,21 @@
+# 0.4.0 - 2019-06-23
+
+* [Add `from_inner` method](https://github.com/rust-bitcoin/bitcoin_hashes/pull/20) to all hashes
+* [Update `FromHex` trait](https://github.com/rust-bitcoin/bitcoin_hashes/pull/40) to require `from_byte_iter` method rather than `from_hex` be implemented
+* Make `Hmac` midstate [an actual HMAC midstate](https://github.com/rust-bitcoin/bitcoin_hashes/pull/43)
+* Allow `Display` [of truncated hashes](https://github.com/rust-bitcoin/bitcoin_hashes/pull/9)
+* Require [using a constructor for `HexIterator`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/44) and then [clean up the internals](https://github.com/rust-bitcoin/bitcoin_hashes/pull/47)
+* [Strongly type `sha256::Midstate`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/39) to allow independent serialization
+* Add [siphash24 module](https://github.com/rust-bitcoin/bitcoin_hashes/pull/46)
+
+# 0.3.2 - 2019-03-20
+
+* Implement the `FromHex` trait on [many more types](https://github.com/rust-bitcoin/bitcoin_hashes/pull/38)
+
+# 0.3.1 - 2019-03-04
+
+* [Fix serde serialization](https://github.com/rust-bitcoin/bitcoin_hashes/pull/36)
+
 # 0.3.0 - 2019-01-23
 
 * Bump minimum required rustc version to 1.22.0
