@@ -1,3 +1,8 @@
+# 0.5.0 - 2019-06-28
+
+* Fix panic when parsing hashes that contain multibyte characters
+* Add `FromStr` to all hashes which hex-parses them
+
 # 0.4.0 - 2019-06-23
 
 * [Add `from_inner` method](https://github.com/rust-bitcoin/bitcoin_hashes/pull/20) to all hashes
