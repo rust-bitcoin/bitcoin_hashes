@@ -19,6 +19,8 @@
 
 //! # HASH160 (SHA256 then RIPEMD160)
 
+use std::str;
+
 use sha256;
 use ripemd160;
 use Hash as HashTrait;
@@ -34,6 +36,13 @@ hex_fmt_impl!(LowerHex, Hash);
 index_impl!(Hash);
 serde_impl!(Hash, 20);
 borrow_slice_impl!(Hash, [u8; 20]);
+
+impl str::FromStr for Hash {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Error> {
+        ::hex::FromHex::from_hex(s)
+    }
+}
 
 impl HashTrait for Hash {
     type Engine = sha256::HashEngine;

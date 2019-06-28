@@ -20,7 +20,7 @@
 //! # SipHash 2-4
 
 use std::io::Write;
-use std::{cmp, mem, ptr};
+use std::{cmp, mem, ptr, str};
 
 use byteorder::{ByteOrder, LittleEndian};
 
@@ -210,6 +210,13 @@ hex_fmt_impl!(LowerHex, Hash);
 index_impl!(Hash);
 serde_impl!(Hash, 8);
 borrow_slice_impl!(Hash, [u8; 8]);
+
+impl str::FromStr for Hash {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Error> {
+        ::hex::FromHex::from_hex(s)
+    }
+}
 
 impl Hash {
     /// Hash the given data with an engine with the provided keys.
