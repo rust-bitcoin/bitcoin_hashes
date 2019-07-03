@@ -19,14 +19,13 @@
 
 //! # SHA512
 
-use std::hash;
+use std::{hash, str};
 
 use byteorder::{ByteOrder, BigEndian};
 
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
-
 
 const BLOCK_SIZE: usize = 128;
 
@@ -113,6 +112,13 @@ impl Ord for Hash {
 impl hash::Hash for Hash {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         (&self.0).hash(state)
+    }
+}
+
+impl str::FromStr for Hash {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Error> {
+        ::hex::FromHex::from_hex(s)
     }
 }
 

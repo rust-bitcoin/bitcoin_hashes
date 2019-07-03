@@ -15,6 +15,7 @@
 //! # SHA256
 
 use byteorder::{ByteOrder, BigEndian};
+use std::str;
 
 use hex;
 use HashEngine as EngineTrait;
@@ -65,6 +66,13 @@ impl EngineTrait for HashEngine {
 /// Output of the SHA256 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Hash([u8; 32]);
+
+impl str::FromStr for Hash {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Error> {
+        ::hex::FromHex::from_hex(s)
+    }
+}
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);

@@ -19,7 +19,7 @@
 
 //! # HMAC support
 
-use std::{borrow, fmt, io, ops};
+use std::{borrow, fmt, io, ops, str};
 #[cfg(feature="serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
@@ -28,6 +28,13 @@ use {Error, Hash, HashEngine};
 /// A hash computed from a RFC 2104 HMAC. Parameterized by the underlying hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Hmac<T: Hash>(T);
+
+impl<T: Hash + str::FromStr> str::FromStr for Hmac<T> {
+    type Err = <T as str::FromStr>::Err;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Hmac(str::FromStr::from_str(s)?))
+    }
+}
 
 /// Pair of underlying hash midstates which represent the current state
 /// of an `HmacEngine`

@@ -21,7 +21,7 @@ use std::{error, fmt};
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Error {
     /// non-hexadecimal character
-    InvalidChar(char),
+    InvalidChar(u8),
     /// purported hex string had odd length
     OddLengthString(usize),
     /// tried to parse fixed-length hash from a string with the wrong type (expected, got)

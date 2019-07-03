@@ -16,7 +16,7 @@
 //!
 
 use std::fmt;
-use std::str::Chars;
+use std::str;
 use {Error, Hash};
 
 /// Trait for objects that can be serialized as hex strings
@@ -64,9 +64,9 @@ impl<T: Hash> FromHex for T {
 
 /// Iterator over a hex-encoded string slice which decodes hex and yields bytes.
 pub struct HexIterator<'a> {
-    /// The `Chars` iterator whose first two characters will be decoded to yield
+    /// The `Bytes` iterator whose next two bytes will be decoded to yield
     /// the next byte.
-    chars: Chars<'a>,
+    iter: str::Bytes<'a>,
 }
 
 impl<'a> HexIterator<'a> {
@@ -76,18 +76,18 @@ impl<'a> HexIterator<'a> {
         if s.len() % 2 != 0 {
             Err(Error::OddLengthString(s.len()))
         } else {
-            Ok(HexIterator {
-                chars: s.chars()
-            })
+            Ok(HexIterator { iter: s.bytes() })
         }
     }
 }
 
-fn chars_to_hex(hi: char, lo: char) -> Result<u8, Error> {
-    let hih = hi.to_digit(16)
-                .ok_or(Error::InvalidChar(hi))?;
-    let loh = lo.to_digit(16)
-                .ok_or(Error::InvalidChar(lo))?;
+fn chars_to_hex(hi: u8, lo: u8) -> Result<u8, Error> {
+    let hih = (hi as char)
+        .to_digit(16)
+        .ok_or(Error::InvalidChar(hi))?;
+    let loh = (lo as char)
+        .to_digit(16)
+        .ok_or(Error::InvalidChar(lo))?;
 
     let ret = (hih << 4) + loh;
     Ok(ret as u8)
@@ -97,21 +97,21 @@ impl<'a> Iterator for HexIterator<'a> {
     type Item = Result<u8, Error>;
 
     fn next(&mut self) -> Option<Result<u8, Error>> {
-        let hi = self.chars.next()?;
-        let lo = self.chars.next().unwrap();
+        let hi = self.iter.next()?;
+        let lo = self.iter.next().unwrap();
         Some(chars_to_hex(hi, lo))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.chars.as_str().len() / 2;
-        (len, Some(len))
+        let (min, max) = self.iter.size_hint();
+        (min / 2, max.map(|x| x /2))
     }
 }
 
 impl<'a> DoubleEndedIterator for HexIterator<'a> {
     fn next_back(&mut self) -> Option<Result<u8, Error>> {
-        let lo = self.chars.next_back()?;
-        let hi = self.chars.next_back().unwrap();
+        let lo = self.iter.next_back()?;
+        let hi = self.iter.next_back().unwrap();
         Some(chars_to_hex(hi, lo))
     }
 }
@@ -330,15 +330,15 @@ mod tests {
         );
         assert_eq!(
             Vec::<u8>::from_hex(badchar1),
-            Err(Error::InvalidChar('Z'))
+            Err(Error::InvalidChar(b'Z'))
         );
         assert_eq!(
             Vec::<u8>::from_hex(badchar2),
-            Err(Error::InvalidChar('Y'))
+            Err(Error::InvalidChar(b'Y'))
         );
         assert_eq!(
             Vec::<u8>::from_hex(badchar3),
-            Err(Error::InvalidChar('«'))
+            Err(Error::InvalidChar(194))
         );
     }
 }
