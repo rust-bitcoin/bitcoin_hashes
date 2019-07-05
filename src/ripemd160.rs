@@ -20,7 +20,7 @@
 //! # RIPEMD160
 
 use byteorder::{ByteOrder, LittleEndian};
-use std::str;
+use std::{cmp, io, str};
 
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
@@ -35,7 +35,33 @@ pub struct HashEngine {
     length: usize,
 }
 
-write_impl!(HashEngine);
+impl io::Write for HashEngine {
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+
+    #[cfg(not(feature = "fuzztarget"))]
+    fn write(&mut self, inp: &[u8]) -> io::Result<usize> {
+        let buf_idx = self.length % <Self as EngineTrait>::BLOCK_SIZE;
+        let rem_len = <Self as EngineTrait>::BLOCK_SIZE - buf_idx;
+        let write_len = cmp::min(rem_len, inp.len());
+        
+        self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
+        self.length += write_len;
+        if self.length % <Self as EngineTrait>::BLOCK_SIZE == 0 {
+            self.process_block();
+        }
+        
+        Ok(write_len)
+    }
+    
+    #[cfg(feature = "fuzztarget")]
+    fn write(&mut self, inp: &[u8]) -> io::Result<usize> {
+        for c in inp {
+            self.buffer[0] ^= *c;
+        }
+        self.length += inp.len();
+        Ok(inp.len())
+    }
+}
 
 impl Clone for HashEngine {
     fn clone(&self) -> HashEngine {
