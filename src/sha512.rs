@@ -19,7 +19,7 @@
 
 //! # SHA512
 
-use std::{cmp, hash, io, str};
+use std::{cmp, hash, str};
 
 use byteorder::{ByteOrder, BigEndian};
 
@@ -34,34 +34,6 @@ pub struct HashEngine {
     h: [u64; 8],
     length: usize,
     buffer: [u8; BLOCK_SIZE],
-}
-
-impl io::Write for HashEngine {
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
-
-    #[cfg(not(feature = "fuzztarget"))]
-    fn write(&mut self, inp: &[u8]) -> io::Result<usize> {
-        let buf_idx = self.length % <Self as EngineTrait>::BLOCK_SIZE;
-        let rem_len = <Self as EngineTrait>::BLOCK_SIZE - buf_idx;
-        let write_len = cmp::min(rem_len, inp.len());
-        
-        self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
-        self.length += write_len;
-        if self.length % <Self as EngineTrait>::BLOCK_SIZE == 0 {
-            self.process_block();
-        }
-        
-        Ok(write_len)
-    }
-    
-    #[cfg(feature = "fuzztarget")]
-    fn write(&mut self, inp: &[u8]) -> io::Result<usize> {
-        for c in inp {
-            self.buffer[0] ^= *c;
-        }
-        self.length += inp.len();
-        Ok(inp.len())
-    }
 }
 
 impl Clone for HashEngine {
@@ -92,6 +64,30 @@ impl EngineTrait for HashEngine {
     }
 
     const BLOCK_SIZE: usize = 128;
+
+    #[cfg(not(feature = "fuzztarget"))]
+    fn input(&mut self, mut inp: &[u8]) {
+        while !inp.is_empty() {
+            let buf_idx = self.length % <Self as EngineTrait>::BLOCK_SIZE;
+            let rem_len = <Self as EngineTrait>::BLOCK_SIZE - buf_idx;
+            let write_len = cmp::min(rem_len, inp.len());
+        
+            self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
+            self.length += write_len;
+            if self.length % <Self as EngineTrait>::BLOCK_SIZE == 0 {
+                self.process_block();
+            }
+            inp = &inp[write_len..];
+        }
+    }
+    
+    #[cfg(feature = "fuzztarget")]
+    fn input(&mut self, inp: &[u8]) {
+        for c in inp {
+            self.buffer[0] ^= *c;
+        }
+        self.length += inp.len();
+    }
 }
 
 /// Output of the SHA256 hash function
@@ -172,23 +168,22 @@ impl HashTrait for Hash {
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {
-        use std::io::Write;
-        use byteorder::WriteBytesExt;
-
         // pad buffer with a single 1-bit then all 0s, until there are exactly 16 bytes remaining
         let data_len = e.length as u64;
 
         let zeroes = [0; BLOCK_SIZE - 16];
-        e.write_all(&[0x80]).unwrap();
+        e.input(&[0x80]);
         if e.length % BLOCK_SIZE > zeroes.len() {
-            e.write_all(&zeroes).unwrap();
+            e.input(&zeroes);
         }
         let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
-        e.write_all(&zeroes[..pad_length]).unwrap();
+        e.input(&zeroes[..pad_length]);
         debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
 
-        e.write_u64::<BigEndian>(0).unwrap();
-        e.write_u64::<BigEndian>(8 * data_len).unwrap();
+        let mut len_buf = [0; 8];
+        e.input(&len_buf);
+        BigEndian::write_u64(&mut len_buf, 8 * data_len);
+        e.input(&len_buf);
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
         Hash(e.midstate())
@@ -359,11 +354,10 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
-
     use sha512;
     use hex::{FromHex, ToHex};
     use Hash;
+    use HashEngine;
 
     #[derive(Clone)]
     struct Test {
@@ -430,7 +424,7 @@ mod tests {
             // Hash through engine, checking that we can input byte by byte
             let mut engine = sha512::Hash::engine();
             for ch in test.input.as_bytes() {
-                engine.write_all(&[*ch]).expect("write to engine");
+                engine.input(&[*ch]);
             }
             let manual_hash = sha512::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
@@ -468,18 +462,18 @@ mod tests {
 
 #[cfg(all(test, feature="unstable"))]
 mod benches {
-    use std::io::Write;
     use test::Bencher;
 
     use sha512;
     use Hash;
+    use HashEngine;
 
     #[bench]
     pub fn sha512_10(bh: & mut Bencher) {
         let mut engine = sha512::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -489,7 +483,7 @@ mod benches {
         let mut engine = sha512::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -499,7 +493,7 @@ mod benches {
         let mut engine = sha512::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

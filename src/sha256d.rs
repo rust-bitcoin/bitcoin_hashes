@@ -80,11 +80,10 @@ impl HashTrait for Hash {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
-
     use sha256d;
     use hex::{FromHex, ToHex};
     use Hash;
+    use HashEngine;
 
 #[derive(Clone)]
     struct Test {
@@ -119,7 +118,7 @@ input: &'static str,
             // Hash through engine, checking that we can input byte by byte
             let mut engine = sha256d::Hash::engine();
             for ch in test.input.as_bytes() {
-                engine.write_all(&[*ch]).expect("write to engine");
+                engine.input(&[*ch]);
             }
             let manual_hash = sha256d::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
@@ -147,18 +146,18 @@ input: &'static str,
 
 #[cfg(all(test, feature="unstable"))]
 mod benches {
-    use std::io::Write;
     use test::Bencher;
 
     use sha256d;
     use Hash;
+    use HashEngine;
 
     #[bench]
     pub fn sha256d_10(bh: & mut Bencher) {
         let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -168,7 +167,7 @@ mod benches {
         let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -178,9 +177,8 @@ mod benches {
         let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
-
 }

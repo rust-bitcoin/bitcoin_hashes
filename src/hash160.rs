@@ -84,11 +84,10 @@ impl HashTrait for Hash {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
-
     use hash160;
     use hex::{FromHex, ToHex};
     use Hash;
+    use HashEngine;
 
     #[derive(Clone)]
     struct Test {
@@ -131,7 +130,7 @@ mod tests {
             // Hash through engine, checking that we can input byte by byte
             let mut engine = hash160::Hash::engine();
             for ch in test.input {
-                engine.write_all(&[ch]).expect("write to engine");
+                engine.input(&[ch]);
             }
             let manual_hash = Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
@@ -160,18 +159,18 @@ mod tests {
 
 #[cfg(all(test, feature="unstable"))]
 mod benches {
-    use std::io::Write;
     use test::Bencher;
 
     use hash160;
     use Hash;
+    use HashEngine;
 
     #[bench]
     pub fn hash160_10(bh: & mut Bencher) {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -181,7 +180,7 @@ mod benches {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -191,7 +190,7 @@ mod benches {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

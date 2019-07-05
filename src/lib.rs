@@ -36,7 +36,7 @@ extern crate byteorder;
 
 #[macro_use] mod util;
 #[macro_use] mod serde_macros;
-mod std_impls;
+//mod std_impls;  // will return in next commit
 pub mod error;
 pub mod hex;
 pub mod hash160;
@@ -49,7 +49,7 @@ pub mod sha256d;
 pub mod siphash24;
 pub mod cmp;
 
-use std::{borrow, fmt, hash, io, ops};
+use std::{borrow, fmt, hash, ops};
 
 pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
@@ -57,7 +57,7 @@ pub use error::Error;
 /// A hashing engine which bytes can be serialized into. It is expected
 /// to implement the `io::Write` trait, but to never return errors under
 /// any conditions.
-pub trait HashEngine: Clone + io::Write {
+pub trait HashEngine: Clone {
     /// Byte array representing the internal state of the hash engine
     type MidState;
 
@@ -68,11 +68,8 @@ pub trait HashEngine: Clone + io::Write {
     /// Length of the hash's internal block size, in bytes
     const BLOCK_SIZE: usize;
 
-    /// Add data to the hash engine without any error return type to deal with
-    #[inline(always)]
-    fn input(&mut self, data: &[u8]) {
-        self.write_all(data).expect("hash returned error");
-    }
+    /// Add data to the hash engine
+    fn input(&mut self, data: &[u8]);
 }
 
 /// Trait which applies to hashes of all types
@@ -107,10 +104,8 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
 
     /// Hashes some bytes
     fn hash(data: &[u8]) -> Self {
-        use std::io::Write;
-
         let mut engine = Self::engine();
-        engine.write_all(data).unwrap();
+        engine.input(data);
         Self::from_engine(engine)
     }
 

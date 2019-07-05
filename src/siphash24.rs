@@ -19,7 +19,6 @@
 
 //! # SipHash 2-4
 
-use std::io::Write;
 use std::{cmp, mem, ptr, str};
 
 use byteorder::{ByteOrder, LittleEndian};
@@ -135,14 +134,17 @@ impl HashEngine {
     }
 }
 
-impl Write for HashEngine {
-    #[inline]
-    fn flush(&mut self) -> ::std::io::Result<()> {
-        Ok(())
+impl EngineTrait for HashEngine {
+    type MidState = State;
+
+    fn midstate(&self) -> State {
+        self.state.clone()
     }
 
+    const BLOCK_SIZE: usize = 8;
+
     #[inline]
-    fn write(&mut self, msg: &[u8]) -> ::std::io::Result<usize> {
+    fn input(&mut self, msg: &[u8]) {
         let length = msg.len();
         self.length += length;
 
@@ -153,7 +155,7 @@ impl Write for HashEngine {
             self.tail |= unsafe { u8to64_le(msg, 0, cmp::min(length, needed)) } << (8 * self.ntail);
             if length < needed {
                 self.ntail += length;
-                return Ok(length);
+                return;
             } else {
                 self.state.v3 ^= self.tail;
                 HashEngine::c_rounds(&mut self.state);
@@ -179,25 +181,7 @@ impl Write for HashEngine {
 
         self.tail = unsafe { u8to64_le(msg, i, left) };
         self.ntail = left;
-
-        Ok(length)
     }
-}
-
-impl EngineTrait for HashEngine {
-    type MidState = State;
-
-    #[cfg(not(feature = "fuzztarget"))]
-    fn midstate(&self) -> State {
-        self.state.clone()
-    }
-
-    #[cfg(feature = "fuzztarget")]
-    fn midstate(&self) -> State {
-        self.state.clone()
-    }
-
-    const BLOCK_SIZE: usize = 8;
 }
 
 /// Output of the SipHash24 hash function.
@@ -222,14 +206,14 @@ impl Hash {
     /// Hash the given data with an engine with the provided keys.
     pub fn hash_with_keys(k0: u64, k1: u64, data: &[u8]) -> Hash {
         let mut engine = HashEngine::with_keys(k0, k1);
-        engine.write_all(data).unwrap();
+        engine.input(data);
         Hash::from_engine(engine)
     }
 
     /// Hash the given data directly to u64 with an engine with the provided keys.
     pub fn hash_to_u64_with_keys(k0: u64, k1: u64, data: &[u8]) -> u64 {
         let mut engine = HashEngine::with_keys(k0, k1);
-        engine.write_all(data).unwrap();
+        engine.input(data);
         Hash::from_engine_to_u64(engine)
     }
 
@@ -421,18 +405,18 @@ mod tests {
 
 #[cfg(all(test, feature = "unstable"))]
 mod benches {
-    use std::io::Write;
     use test::Bencher;
 
     use siphash24;
     use Hash;
+    use HashEngine;
 
     #[bench]
     pub fn siphash24_1ki(bh: &mut Bencher) {
         let mut engine = siphash24::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter(|| {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -442,7 +426,7 @@ mod benches {
         let mut engine = siphash24::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter(|| {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

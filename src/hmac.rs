@@ -19,7 +19,7 @@
 
 //! # HMAC support
 
-use std::{borrow, fmt, io, ops, str};
+use std::{borrow, fmt, ops, str};
 #[cfg(feature="serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
@@ -99,15 +99,9 @@ impl<T: Hash> HashEngine for HmacEngine<T> {
     }
 
     const BLOCK_SIZE: usize = T::Engine::BLOCK_SIZE;
-}
-
-impl<T: Hash> io::Write for HmacEngine<T> {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.iengine.write(buf)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        self.iengine.flush()
+    
+    fn input(&mut self, buf: &[u8]) {
+        self.iengine.input(buf)
     }
 }
 
