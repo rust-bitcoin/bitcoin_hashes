@@ -16,6 +16,62 @@
 //!
 //! impls of traits defined in `std` and not `core`
 
+use std::{error, io};
+
+use {sha1, sha256, sha512, ripemd160, siphash24};
+use HashEngine;
+use Error;
+
+impl error::Error for Error {
+    fn cause(&self) -> Option<&error::Error> { None }
+    fn description(&self) -> &str { "`std::error::description` is deprecated" }
+}
+
+impl io::Write for sha1::HashEngine {
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.input(buf);
+        Ok(buf.len())
+    }
+}
+
+impl io::Write for sha256::HashEngine {
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.input(buf);
+        Ok(buf.len())
+    }
+}
+
+impl io::Write for sha512::HashEngine {
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.input(buf);
+        Ok(buf.len())
+    }
+}
+
+impl io::Write for ripemd160::HashEngine {
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.input(buf);
+        Ok(buf.len())
+    }
+}
+
+impl io::Write for siphash24::HashEngine {
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.input(buf);
+        Ok(buf.len())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Write;

@@ -36,7 +36,7 @@ extern crate byteorder;
 
 #[macro_use] mod util;
 #[macro_use] mod serde_macros;
-//mod std_impls;  // will return in next commit
+mod std_impls;
 pub mod error;
 pub mod hex;
 pub mod hash160;
