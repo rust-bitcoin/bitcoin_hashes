@@ -15,7 +15,7 @@
 //! # SHA256
 
 use byteorder::{ByteOrder, BigEndian};
-use std::{cmp, str};
+use core::{cmp, str};
 
 use hex;
 use HashEngine as EngineTrait;

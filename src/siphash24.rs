@@ -19,7 +19,7 @@
 
 //! # SipHash 2-4
 
-use std::{cmp, mem, ptr, str};
+use core::{cmp, mem, ptr, str};
 
 use byteorder::{ByteOrder, LittleEndian};
 

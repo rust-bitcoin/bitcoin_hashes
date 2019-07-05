@@ -15,7 +15,7 @@
 //! # SHA1
 
 use byteorder::{ByteOrder, BigEndian};
-use std::{cmp, str};
+use core::{cmp, str};
 
 use HashEngine as EngineTrait;
 use Hash as HashTrait;

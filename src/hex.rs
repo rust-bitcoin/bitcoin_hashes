@@ -15,11 +15,11 @@
 //! # Hex encoding and decoding
 //!
 
-use std::fmt;
-use std::str;
+use core::{fmt, str};
 use {Error, Hash};
 
 /// Trait for objects that can be serialized as hex strings
+#[cfg(any(test, feature = "std"))]
 pub trait ToHex {
     /// Hex representation of the object
     fn to_hex(&self) -> String;
@@ -39,6 +39,7 @@ pub trait FromHex: Sized {
     }
 }
 
+#[cfg(any(test, feature = "std"))]
 impl<T: fmt::LowerHex> ToHex for T {
     /// Outputs the hash in hexadecimal form
     fn to_hex(&self) -> String {
@@ -152,9 +153,10 @@ pub fn format_hex_reverse(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     Ok(())
 }
 
+#[cfg(any(test, feature = "std"))]
 impl ToHex for [u8] {
     fn to_hex(&self) -> String {
-        use std::fmt::Write;
+        use core::fmt::Write;
         let mut ret = String::with_capacity(2 * self.len());
         for ch in self {
             write!(ret, "{:02x}", ch).expect("writing to string");
@@ -163,6 +165,7 @@ impl ToHex for [u8] {
     }
 }
 
+#[cfg(any(test, feature = "std"))]
 impl FromHex for Vec<u8> {
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
         where I: Iterator<Item=Result<u8, Error>> +
@@ -217,9 +220,9 @@ impl_fromhex_array!(512);
 
 #[cfg(test)]
 mod tests {
-    use std::fmt;
+    use core::fmt;
 
-    use super::{format_hex, format_hex_reverse, ToHex, FromHex};
+    use super::{format_hex, format_hex_reverse, FromHex, ToHex};
     use Error;
 
     #[test]

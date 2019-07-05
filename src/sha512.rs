@@ -19,7 +19,7 @@
 
 //! # SHA512
 
-use std::{cmp, hash, str};
+use core::{cmp, hash, str};
 
 use byteorder::{ByteOrder, BigEndian};
 
@@ -117,16 +117,14 @@ impl Default for Hash {
     }
 }
 
-use std::cmp::Ordering;
-
 impl PartialOrd for Hash {
-    fn partial_cmp(&self, other: &Hash) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Hash) -> Option<cmp::Ordering> {
         (&self.0).partial_cmp(&other.0)
     }
 }
 
 impl Ord for Hash {
-    fn cmp(&self, other: &Hash) -> Ordering {
+    fn cmp(&self, other: &Hash) -> cmp::Ordering {
         (&self.0).cmp(&other.0)
     }
 }

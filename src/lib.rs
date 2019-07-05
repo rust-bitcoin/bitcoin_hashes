@@ -27,16 +27,18 @@
 #![deny(unused_mut)]
 #![deny(missing_docs)]
 
+#![cfg_attr(all(not(test), not(feature = "std")), no_std)]
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 #[cfg(all(test, feature = "unstable"))] extern crate test;
 
+#[cfg(any(test, feature="std"))] extern crate core;
 #[cfg(feature="serde")] extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
 extern crate byteorder;
 
 #[macro_use] mod util;
 #[macro_use] mod serde_macros;
-mod std_impls;
+#[cfg(any(test, feature = "std"))] mod std_impls;
 pub mod error;
 pub mod hex;
 pub mod hash160;
@@ -49,7 +51,7 @@ pub mod sha256d;
 pub mod siphash24;
 pub mod cmp;
 
-use std::{borrow, fmt, hash, ops};
+use core::{borrow, fmt, hash, ops};
 
 pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
@@ -80,7 +82,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     ops::Index<ops::RangeTo<usize>, Output = [u8]> +
     ops::Index<ops::Range<usize>, Output = [u8]> +
     ops::Index<usize, Output = u8> +
-    hex::ToHex + borrow::Borrow<[u8]>
+    borrow::Borrow<[u8]>
 {
     /// A hashing engine which bytes can be serialized into. It is expected
     /// to implement the `io::Write` trait, and to never return errors under

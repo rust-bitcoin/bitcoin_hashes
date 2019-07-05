@@ -15,7 +15,7 @@
 //! # Error Type
 //!
 
-use std::fmt;
+use core::fmt;
 
 /// Hex decoding error
 #[derive(Copy, Clone, PartialEq, Eq)]

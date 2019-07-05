@@ -13,7 +13,8 @@ name = "bitcoin_hashes"
 path = "src/lib.rs"
 
 [features]
-default = []
+default = [ "std" ]
+std = []
 unstable = []  # for benchmarking
 fuzztarget = [] # used by other rust-bitcoin projects to make hashes almost-noops, DON'T USE THIS
 

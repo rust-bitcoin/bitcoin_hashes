@@ -14,7 +14,7 @@
 
 //! # SHA256d
 
-use std::str;
+use core::str;
 
 use sha256;
 use Hash as HashTrait;

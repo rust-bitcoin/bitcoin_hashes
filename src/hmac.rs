@@ -19,7 +19,7 @@
 
 //! # HMAC support
 
-use std::{borrow, fmt, ops, str};
+use core::{borrow, fmt, ops, str};
 #[cfg(feature="serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 

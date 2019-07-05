@@ -20,26 +20,26 @@ pub fn fixed_time_eq(a: &[u8], b: &[u8]) -> bool {
 
     let mut r: u8 = 0;
     for i in 0..count {
-        let mut rs = unsafe { ::std::ptr::read_volatile(&r) };
+        let mut rs = unsafe { ::core::ptr::read_volatile(&r) };
         rs |= lhs[i] ^ rhs[i];
-        unsafe { ::std::ptr::write_volatile(&mut r, rs); }
+        unsafe { ::core::ptr::write_volatile(&mut r, rs); }
     }
     {
-        let mut t = unsafe { ::std::ptr::read_volatile(&r) };
+        let mut t = unsafe { ::core::ptr::read_volatile(&r) };
         t |= t >> 4;
-        unsafe { ::std::ptr::write_volatile(&mut r, t); }
+        unsafe { ::core::ptr::write_volatile(&mut r, t); }
     }
     {
-        let mut t = unsafe { ::std::ptr::read_volatile(&r) };
+        let mut t = unsafe { ::core::ptr::read_volatile(&r) };
         t |= t >> 2;
-        unsafe { ::std::ptr::write_volatile(&mut r, t); }
+        unsafe { ::core::ptr::write_volatile(&mut r, t); }
     }
     {
-        let mut t = unsafe { ::std::ptr::read_volatile(&r) };
+        let mut t = unsafe { ::core::ptr::read_volatile(&r) };
         t |= t >> 1;
-        unsafe { ::std::ptr::write_volatile(&mut r, t); }
+        unsafe { ::core::ptr::write_volatile(&mut r, t); }
     }
-    unsafe { (::std::ptr::read_volatile(&r) & 1) == 0 }
+    unsafe { (::core::ptr::read_volatile(&r) & 1) == 0 }
 }
 
 #[test]
