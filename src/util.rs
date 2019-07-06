@@ -76,7 +76,7 @@ macro_rules! index_impl(
 );
 
 macro_rules! borrow_slice_impl(
-    ($ty:ty, $inner:ty) => (
+    ($ty:ty) => (
         impl ::std::borrow::Borrow<[u8]> for $ty {
             fn borrow(&self) -> &[u8] {
                 &self[..]
@@ -90,7 +90,7 @@ macro_rules! borrow_slice_impl(
         }
 
         impl ::std::ops::Deref for $ty {
-            type Target = $inner;
+            type Target = [u8];
 
             fn deref(&self) -> &Self::Target {
                 &self.0

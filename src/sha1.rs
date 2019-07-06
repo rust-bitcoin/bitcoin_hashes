@@ -63,7 +63,7 @@ hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
 index_impl!(Hash);
 serde_impl!(Hash, 20);
-borrow_slice_impl!(Hash, [u8; 20]);
+borrow_slice_impl!(Hash);
 
 impl str::FromStr for Hash {
     type Err = Error;
