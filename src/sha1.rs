@@ -43,12 +43,19 @@ impl Clone for HashEngine {
 impl EngineTrait for HashEngine {
     type MidState = [u8; 20];
 
+    #[cfg(not(feature = "fuzztarget"))]
     fn midstate(&self) -> [u8; 20] {
         let mut ret = [0; 20];
         BigEndian::write_u32_into(&self.h, &mut ret);
         ret
     }
 
+    #[cfg(feature = "fuzztarget")]
+    fn midstate(&self) -> [u8; 20] {
+        let mut ret = [0; 20];
+        ret.copy_from_slice(&self.buffer[..20]);
+        ret
+    }
 
     const BLOCK_SIZE: usize = 64;
 
