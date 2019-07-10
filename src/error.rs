@@ -15,7 +15,7 @@
 //! # Error Type
 //!
 
-use std::{error, fmt};
+use core::fmt;
 
 /// Hex decoding error
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -41,20 +41,6 @@ impl fmt::Debug for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Debug::fmt(self, f)
-    }
-}
-
-impl error::Error for Error {
-    fn cause(&self) -> Option<&error::Error> {
-        None
-    }
-
-    fn description(&self) -> &str {
-        match *self {
-            Error::InvalidChar(_) => "invalid hex character",
-            Error::OddLengthString(_) => "odd hex string length",
-            Error::InvalidLength(_, _) => "bad hex string length",
-        }
     }
 }
 

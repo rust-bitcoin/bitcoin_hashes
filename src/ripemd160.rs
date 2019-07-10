@@ -20,7 +20,7 @@
 //! # RIPEMD160
 
 use byteorder::{ByteOrder, LittleEndian};
-use std::str;
+use core::{cmp, str};
 
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
@@ -34,8 +34,6 @@ pub struct HashEngine {
     h: [u32; 5],
     length: usize,
 }
-
-write_impl!(HashEngine);
 
 impl Clone for HashEngine {
     fn clone(&self) -> HashEngine {
@@ -65,6 +63,8 @@ impl EngineTrait for HashEngine {
     }
 
     const BLOCK_SIZE: usize = 64;
+
+    engine_input_impl!();
 }
 
 /// Output of the RIPEMD160 hash function
@@ -99,22 +99,21 @@ impl HashTrait for Hash {
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {
-        use std::io::Write;
-        use byteorder::WriteBytesExt;
-
         // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
         let data_len = e.length as u64;
 
         let zeroes = [0; BLOCK_SIZE - 8];
-        e.write_all(&[0x80]).unwrap();
+        e.input(&[0x80]);
         if e.length % BLOCK_SIZE > zeroes.len() {
-            e.write_all(&zeroes).unwrap();
+            e.input(&zeroes);
         }
         let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
-        e.write_all(&zeroes[..pad_length]).unwrap();
+        e.input(&zeroes[..pad_length]);
         debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
 
-        e.write_u64::<LittleEndian>(8 * data_len).unwrap();
+        let mut len_buf = [0; 8];
+        LittleEndian::write_u64(&mut len_buf, 8 * data_len);
+        e.input(&len_buf);
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
         Hash(e.midstate())
@@ -440,11 +439,10 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
-
     use ripemd160;
     use hex::{FromHex, ToHex};
     use Hash;
+    use HashEngine;
 
     #[derive(Clone)]
     struct Test {
@@ -515,7 +513,7 @@ mod tests {
             // Hash through engine, checking that we can input byte by byte
             let mut engine = ripemd160::Hash::engine();
             for ch in test.input.as_bytes() {
-                engine.write_all(&[*ch]).expect("write to engine");
+                engine.input(&[*ch]);
             }
             let manual_hash = ripemd160::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
@@ -544,18 +542,18 @@ mod tests {
 
 #[cfg(all(test, feature="unstable"))]
 mod benches {
-    use std::io::Write;
     use test::Bencher;
 
     use ripemd160;
     use Hash;
+    use HashEngine;
 
     #[bench]
     pub fn ripemd160_10(bh: & mut Bencher) {
         let mut engine = ripemd160::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -565,7 +563,7 @@ mod benches {
         let mut engine = ripemd160::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -575,7 +573,7 @@ mod benches {
         let mut engine = ripemd160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

@@ -15,7 +15,7 @@
 //! # SHA256
 
 use byteorder::{ByteOrder, BigEndian};
-use std::str;
+use core::{cmp, str};
 
 use hex;
 use HashEngine as EngineTrait;
@@ -30,8 +30,6 @@ pub struct HashEngine {
     h: [u32; 8],
     length: usize,
 }
-
-write_impl!(HashEngine);
 
 impl Clone for HashEngine {
     fn clone(&self) -> HashEngine {
@@ -61,6 +59,8 @@ impl EngineTrait for HashEngine {
     }
 
     const BLOCK_SIZE: usize = 64;
+
+    engine_input_impl!();
 }
 
 /// Output of the SHA256 hash function
@@ -95,22 +95,21 @@ impl HashTrait for Hash {
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {
-        use std::io::Write;
-        use byteorder::WriteBytesExt;
-
         // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
         let data_len = e.length as u64;
 
         let zeroes = [0; BLOCK_SIZE - 8];
-        e.write_all(&[0x80]).unwrap();
+        e.input(&[0x80]);
         if e.length % BLOCK_SIZE > zeroes.len() {
-            e.write_all(&zeroes).unwrap();
+            e.input(&zeroes);
         }
         let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
-        e.write_all(&zeroes[..pad_length]).unwrap();
+        e.input(&zeroes[..pad_length]);
         debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
 
-        e.write_u64::<BigEndian>(8 * data_len).unwrap();
+        let mut len_buf = [0; 8];
+        BigEndian::write_u64(&mut len_buf, 8 * data_len);
+        e.input(&len_buf);
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
         Hash(e.midstate().into_inner())
@@ -331,8 +330,6 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
-
     use sha256;
     use hex::{FromHex, ToHex};
     use {Hash, HashEngine};
@@ -390,7 +387,7 @@ mod tests {
             // Hash through engine, checking that we can input byte by byte
             let mut engine = sha256::Hash::engine();
             for ch in test.input.as_bytes() {
-                engine.write_all(&[*ch]).expect("write to engine");
+                engine.input(&[*ch]);
             }
             let manual_hash = sha256::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
@@ -419,7 +416,7 @@ mod tests {
                 0x0b, 0xcf, 0xe0, 0xe5, 0x4e, 0x6c, 0xc7, 0xd3,
                 0x4f, 0x4f, 0x7c, 0x1d, 0xf0, 0xb0, 0xf5, 0x03,
                 0xf2, 0xf7, 0x12, 0x91, 0x2a, 0x06, 0x05, 0xb4,
-                0x14, 0xed, 0x33, 0x7f, 0x7f, 0x03, 0x2e, 0x03, 
+                0x14, 0xed, 0x33, 0x7f, 0x7f, 0x03, 0x2e, 0x03,
             ])
         );
     }
@@ -493,18 +490,18 @@ mod tests {
 
 #[cfg(all(test, feature="unstable"))]
 mod benches {
-    use std::io::Write;
     use test::Bencher;
 
     use sha256;
     use Hash;
+    use HashEngine;
 
     #[bench]
     pub fn sha256_10(bh: & mut Bencher) {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -514,7 +511,7 @@ mod benches {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -524,7 +521,7 @@ mod benches {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

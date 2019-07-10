@@ -27,15 +27,18 @@
 #![deny(unused_mut)]
 #![deny(missing_docs)]
 
+#![cfg_attr(all(not(test), not(feature = "std")), no_std)]
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 #[cfg(all(test, feature = "unstable"))] extern crate test;
 
+#[cfg(any(test, feature="std"))] extern crate core;
 #[cfg(feature="serde")] extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
 extern crate byteorder;
 
 #[macro_use] mod util;
 #[macro_use] mod serde_macros;
+#[cfg(any(test, feature = "std"))] mod std_impls;
 pub mod error;
 pub mod hex;
 pub mod hash160;
@@ -48,7 +51,7 @@ pub mod sha256d;
 pub mod siphash24;
 pub mod cmp;
 
-use std::{borrow, fmt, hash, io, ops};
+use core::{borrow, fmt, hash, ops};
 
 pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
@@ -56,7 +59,7 @@ pub use error::Error;
 /// A hashing engine which bytes can be serialized into. It is expected
 /// to implement the `io::Write` trait, but to never return errors under
 /// any conditions.
-pub trait HashEngine: Clone + io::Write {
+pub trait HashEngine: Clone {
     /// Byte array representing the internal state of the hash engine
     type MidState;
 
@@ -67,11 +70,8 @@ pub trait HashEngine: Clone + io::Write {
     /// Length of the hash's internal block size, in bytes
     const BLOCK_SIZE: usize;
 
-    /// Add data to the hash engine without any error return type to deal with
-    #[inline(always)]
-    fn input(&mut self, data: &[u8]) {
-        self.write_all(data).expect("hash returned error");
-    }
+    /// Add data to the hash engine
+    fn input(&mut self, data: &[u8]);
 }
 
 /// Trait which applies to hashes of all types
@@ -82,7 +82,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     ops::Index<ops::RangeTo<usize>, Output = [u8]> +
     ops::Index<ops::Range<usize>, Output = [u8]> +
     ops::Index<usize, Output = u8> +
-    hex::ToHex + borrow::Borrow<[u8]>
+    borrow::Borrow<[u8]>
 {
     /// A hashing engine which bytes can be serialized into. It is expected
     /// to implement the `io::Write` trait, and to never return errors under
@@ -106,10 +106,8 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
 
     /// Hashes some bytes
     fn hash(data: &[u8]) -> Self {
-        use std::io::Write;
-
         let mut engine = Self::engine();
-        engine.write_all(data).unwrap();
+        engine.input(data);
         Self::from_engine(engine)
     }
 

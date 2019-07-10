@@ -19,7 +19,7 @@
 
 //! # HASH160 (SHA256 then RIPEMD160)
 
-use std::str;
+use core::str;
 
 use sha256;
 use ripemd160;
@@ -84,11 +84,10 @@ impl HashTrait for Hash {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
-
     use hash160;
     use hex::{FromHex, ToHex};
     use Hash;
+    use HashEngine;
 
     #[derive(Clone)]
     struct Test {
@@ -110,12 +109,12 @@ mod tests {
                     0xb8, 0x5d, 0xf1, 0x69, 0xc1, 0x8a, 0x3c, 0x69, 0x7f,
                     0xbb, 0x2d, 0xc4, 0xec, 0xef, 0x94, 0xac, 0x55, 0xfe,
                     0x81, 0x64, 0xcc, 0xf9, 0x82, 0xa1, 0x38, 0x69, 0x1a,
-                    0x55, 0x19, 
+                    0x55, 0x19,
                 ],
                 output: vec![
                     0xda, 0x0b, 0x34, 0x52, 0xb0, 0x6f, 0xe3, 0x41,
                     0x62, 0x6a, 0xd0, 0x94, 0x9c, 0x18, 0x3f, 0xbd,
-                    0xa5, 0x67, 0x68, 0x26, 
+                    0xa5, 0x67, 0x68, 0x26,
                 ],
                 output_str: "da0b3452b06fe341626ad0949c183fbda5676826",
             },
@@ -131,7 +130,7 @@ mod tests {
             // Hash through engine, checking that we can input byte by byte
             let mut engine = hash160::Hash::engine();
             for ch in test.input {
-                engine.write_all(&[ch]).expect("write to engine");
+                engine.input(&[ch]);
             }
             let manual_hash = Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
@@ -160,18 +159,18 @@ mod tests {
 
 #[cfg(all(test, feature="unstable"))]
 mod benches {
-    use std::io::Write;
     use test::Bencher;
 
     use hash160;
     use Hash;
+    use HashEngine;
 
     #[bench]
     pub fn hash160_10(bh: & mut Bencher) {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -181,7 +180,7 @@ mod benches {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }
@@ -191,7 +190,7 @@ mod benches {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
-            engine.write_all(&bytes).expect("write");
+            engine.input(&bytes);
         });
         bh.bytes = bytes.len() as u64;
     }

@@ -23,8 +23,8 @@ macro_rules! circular_lshift64 (
 
 macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ident) => (
-        impl ::std::fmt::$imp for $ty {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        impl ::core::fmt::$imp for $ty {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
                 use hex::{format_hex, format_hex_reverse};
                 if $ty::DISPLAY_BACKWARD {
                     format_hex_reverse(&self.0, f)
@@ -38,37 +38,37 @@ macro_rules! hex_fmt_impl(
 
 macro_rules! index_impl(
     ($ty:ty) => (
-        impl ::std::ops::Index<usize> for $ty {
+        impl ::core::ops::Index<usize> for $ty {
             type Output = u8;
             fn index(&self, index: usize) -> &u8 {
                 &self.0[index]
             }
         }
 
-        impl ::std::ops::Index<::std::ops::Range<usize>> for $ty {
+        impl ::core::ops::Index<::core::ops::Range<usize>> for $ty {
             type Output = [u8];
-            fn index(&self, index: ::std::ops::Range<usize>) -> &[u8] {
+            fn index(&self, index: ::core::ops::Range<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl ::std::ops::Index<::std::ops::RangeFrom<usize>> for $ty {
+        impl ::core::ops::Index<::core::ops::RangeFrom<usize>> for $ty {
             type Output = [u8];
-            fn index(&self, index: ::std::ops::RangeFrom<usize>) -> &[u8] {
+            fn index(&self, index: ::core::ops::RangeFrom<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl ::std::ops::Index<::std::ops::RangeTo<usize>> for $ty {
+        impl ::core::ops::Index<::core::ops::RangeTo<usize>> for $ty {
             type Output = [u8];
-            fn index(&self, index: ::std::ops::RangeTo<usize>) -> &[u8] {
+            fn index(&self, index: ::core::ops::RangeTo<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl ::std::ops::Index<::std::ops::RangeFull> for $ty {
+        impl ::core::ops::Index<::core::ops::RangeFull> for $ty {
             type Output = [u8];
-            fn index(&self, index: ::std::ops::RangeFull) -> &[u8] {
+            fn index(&self, index: ::core::ops::RangeFull) -> &[u8] {
                 &self.0[index]
             }
         }
@@ -77,19 +77,19 @@ macro_rules! index_impl(
 
 macro_rules! borrow_slice_impl(
     ($ty:ty) => (
-        impl ::std::borrow::Borrow<[u8]> for $ty {
+        impl ::core::borrow::Borrow<[u8]> for $ty {
             fn borrow(&self) -> &[u8] {
                 &self[..]
             }
         }
 
-        impl ::std::convert::AsRef<[u8]> for $ty {
+        impl ::core::convert::AsRef<[u8]> for $ty {
             fn as_ref(&self) -> &[u8] {
                 &self[..]
             }
         }
 
-        impl ::std::ops::Deref for $ty {
+        impl ::core::ops::Deref for $ty {
             type Target = [u8];
 
             fn deref(&self) -> &Self::Target {
@@ -99,36 +99,31 @@ macro_rules! borrow_slice_impl(
     )
 );
 
-macro_rules! write_impl(
-    ($ty:ty) => (
-        impl ::std::io::Write for $ty {
-            fn flush(&mut self) -> ::std::io::Result<()> {
-                Ok(())
-            }
+macro_rules! engine_input_impl(
+    () => (
+        #[cfg(not(feature = "fuzztarget"))]
+        fn input(&mut self, mut inp: &[u8]) {
+            while !inp.is_empty() {
+                let buf_idx = self.length % <Self as EngineTrait>::BLOCK_SIZE;
+                let rem_len = <Self as EngineTrait>::BLOCK_SIZE - buf_idx;
+                let write_len = cmp::min(rem_len, inp.len());
 
-            #[cfg(not(feature = "fuzztarget"))]
-            fn write(&mut self, inp: &[u8]) -> ::std::io::Result<usize> {
-                let buf_idx = self.length % <Self as ::HashEngine>::BLOCK_SIZE;
-                let rem_len = <Self as ::HashEngine>::BLOCK_SIZE - buf_idx;
-                let write_len = ::std::cmp::min(rem_len, inp.len());
-
-                self.buffer[buf_idx..buf_idx + write_len].copy_from_slice(&inp[..write_len]);
+                self.buffer[buf_idx..buf_idx + write_len]
+                    .copy_from_slice(&inp[..write_len]);
                 self.length += write_len;
-                if self.length % <Self as ::HashEngine>::BLOCK_SIZE == 0 {
+                if self.length % <Self as EngineTrait>::BLOCK_SIZE == 0 {
                     self.process_block();
                 }
-
-                Ok(write_len)
+                inp = &inp[write_len..];
             }
+        }
 
-            #[cfg(feature = "fuzztarget")]
-            fn write(&mut self, inp: &[u8]) -> ::std::io::Result<usize> {
-                for c in inp {
-                    self.buffer[0] ^= *c;
-                }
-                self.length += inp.len();
-                Ok(inp.len())
+        #[cfg(feature = "fuzztarget")]
+        fn input(&mut self, inp: &[u8]) {
+            for c in inp {
+                self.buffer[0] ^= *c;
             }
+            self.length += inp.len();
         }
     )
 );
