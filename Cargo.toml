@@ -14,7 +14,7 @@ path = "src/lib.rs"
 
 [features]
 default = [ "std" ]
-std = []
+std = ["byteorder/std", "serde/std"]
 unstable = []  # for benchmarking
 fuzztarget = [] # used by other rust-bitcoin projects to make hashes almost-noops, DON'T USE THIS
 
@@ -22,9 +22,9 @@ fuzztarget = [] # used by other rust-bitcoin projects to make hashes almost-noop
 serde_test = "1.0"
 
 [dependencies]
-byteorder = "1.2"
+byteorder = { version = "1.2", default-features = false }
 
 [dependencies.serde]
 version = "1.0"
 optional = true
-
+default-features = false
