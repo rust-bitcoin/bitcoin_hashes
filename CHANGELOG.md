@@ -1,3 +1,7 @@
+# 0.6.0 - 2019-07-10
+
+* Add `no_std` support, rearrange traits to not depend on `io::Write`
+
 # 0.5.0 - 2019-06-28
 
 * Fix panic when parsing hashes that contain multibyte characters
