@@ -172,8 +172,8 @@ macro_rules! process_block(
      $( par_round5: h_ordering $pf0:expr, $pf1:expr, $pf2:expr, $pf3:expr, $pf4:expr;
                     data_index $pdata_index5:expr; roll_shift $pbits5:expr; )*
     ) => ({
-        let mut bb = *$h;
-        let mut bbb = *$h;
+        let mut bb = $h;
+        let mut bbb = $h;
 
         // Round 1
         $( round!(bb[$f0], bb[$f1], bb[$f2], bb[$f3], bb[$f4],
@@ -246,7 +246,7 @@ impl HashEngine {
 
         let mut w = [0u32; 16];
         LittleEndian::read_u32_into(&self.buffer, &mut w);
-        process_block!(&mut self.h, &mut w,
+        process_block!(self.h, w,
             // Round 1
             round1: h_ordering 0, 1, 2, 3, 4; data_index  0; roll_shift 11;
             round1: h_ordering 4, 0, 1, 2, 3; data_index  1; roll_shift 14;
