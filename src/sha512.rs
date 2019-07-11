@@ -30,20 +30,11 @@ use Error;
 const BLOCK_SIZE: usize = 128;
 
 /// Engine to compute SHA512 hash function
+#[derive(Clone)]
 pub struct HashEngine {
     h: [u64; 8],
     length: usize,
     buffer: [u8; BLOCK_SIZE],
-}
-
-impl Clone for HashEngine {
-    fn clone(&self) -> HashEngine {
-        HashEngine {
-            h: self.h,
-            length: self.length,
-            buffer: self.buffer,
-        }
-    }
 }
 
 impl EngineTrait for HashEngine {
