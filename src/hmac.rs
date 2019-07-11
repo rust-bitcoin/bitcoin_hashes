@@ -54,6 +54,12 @@ pub struct HmacEngine<T: HashTrait> {
     oengine: T::Engine,
 }
 
+impl<T: HashTrait> Default for HmacEngine<T> {
+    fn default() -> Self {
+        HmacEngine::new(&[])
+    }
+}
+
 impl<T: HashTrait> HmacEngine<T> {
     /// Construct a new keyed HMAC with the given key. We only support underlying hashes
     /// whose block sizes are ≤ 128 bytes; larger hashes will result in panics.
@@ -169,10 +175,6 @@ impl<T: HashTrait> borrow::Borrow<[u8]> for Hmac<T> {
 impl<T: HashTrait> HashTrait for Hmac<T> {
     type Engine = HmacEngine<T>;
     type Inner = T::Inner;
-
-    fn engine() -> HmacEngine<T> {
-        HmacEngine::new(&[])
-    }
 
     fn from_engine(mut e: HmacEngine<T>) -> Hmac<T> {
         let ihash = T::from_engine(e.iengine);

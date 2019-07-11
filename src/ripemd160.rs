@@ -36,6 +36,16 @@ pub struct HashEngine {
     length: usize,
 }
 
+impl Default for HashEngine {
+    fn default() -> Self {
+        HashEngine {
+            h: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0],
+            length: 0,
+            buffer: [0; BLOCK_SIZE],
+        }
+    }
+}
+
 impl EngineTrait for HashEngine {
     type MidState = [u8; 20];
 
@@ -79,14 +89,6 @@ impl str::FromStr for Hash {
 impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 20];
-
-    fn engine() -> HashEngine {
-        HashEngine {
-            h: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0],
-            length: 0,
-            buffer: [0; BLOCK_SIZE],
-        }
-    }
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {

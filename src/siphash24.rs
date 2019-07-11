@@ -134,6 +134,12 @@ impl HashEngine {
     }
 }
 
+impl Default for HashEngine {
+    fn default() -> Self {
+        HashEngine::new()
+    }
+}
+
 impl EngineTrait for HashEngine {
     type MidState = State;
 
@@ -250,10 +256,6 @@ impl Hash {
 impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 8];
-
-    fn engine() -> HashEngine {
-        HashEngine::new()
-    }
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(e: HashEngine) -> Hash {
