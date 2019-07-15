@@ -17,30 +17,18 @@
 
 use core::fmt;
 
-/// Hex decoding error
-#[derive(Copy, Clone, PartialEq, Eq)]
+/// [bitcoin_hashes] error.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Error {
-    /// non-hexadecimal character
-    InvalidChar(u8),
-    /// purported hex string had odd length
-    OddLengthString(usize),
-    /// tried to parse fixed-length hash from a string with the wrong type (expected, got)
+    /// Tried to create a fixed-length hash from a slice with the wrong size (expected, got).
     InvalidLength(usize, usize),
-}
-
-impl fmt::Debug for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Error::InvalidChar(ch) => write!(f, "invalid hex character {}", ch),
-            Error::OddLengthString(ell) => write!(f, "odd hex string length {}", ell),
-            Error::InvalidLength(ell, ell2) => write!(f, "bad hex string length {} (expected {})", ell2, ell),
-        }
-    }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(self, f)
+        match *self {
+            Error::InvalidLength(ell, ell2) => write!(f, "bad slice length {} (expected {})", ell2, ell),
+        }
     }
 }
 
