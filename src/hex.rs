@@ -16,7 +16,28 @@
 //!
 
 use core::{fmt, str};
-use {Error, Hash};
+use Hash;
+
+/// Hex decoding error
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Error {
+    /// non-hexadecimal character
+    InvalidChar(u8),
+    /// purported hex string had odd length
+    OddLengthString(usize),
+    /// tried to parse fixed-length hash from a string with the wrong type (expected, got)
+    InvalidLength(usize, usize),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Error::InvalidChar(ch) => write!(f, "invalid hex character {}", ch),
+            Error::OddLengthString(ell) => write!(f, "odd hex string length {}", ell),
+            Error::InvalidLength(ell, ell2) => write!(f, "bad hex string length {} (expected {})", ell2, ell),
+        }
+    }
+}
 
 /// Trait for objects that can be serialized as hex strings
 #[cfg(any(test, feature = "std"))]
@@ -220,10 +241,9 @@ impl_fromhex_array!(512);
 
 #[cfg(test)]
 mod tests {
-    use core::fmt;
+    use super::*;
 
-    use super::{format_hex, format_hex_reverse, FromHex, ToHex};
-    use Error;
+    use core::fmt;
 
     #[test]
     fn hex_roundtrip() {

@@ -32,8 +32,8 @@ serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
 
 impl str::FromStr for Hash {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Error> {
+    type Err = ::hex::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         ::hex::FromHex::from_hex(s)
     }
 }

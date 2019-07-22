@@ -69,8 +69,8 @@ impl EngineTrait for HashEngine {
 pub struct Hash([u8; 32]);
 
 impl str::FromStr for Hash {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Error> {
+    type Err = ::hex::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         ::hex::FromHex::from_hex(s)
     }
 }
@@ -177,8 +177,8 @@ impl Midstate {
 }
 
 impl hex::FromHex for Midstate {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-        where I: Iterator<Item=Result<u8, Error>> +
+    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
+        where I: Iterator<Item=Result<u8, hex::Error>> +
             ExactSizeIterator +
             DoubleEndedIterator,
     {
