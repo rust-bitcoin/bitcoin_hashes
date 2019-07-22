@@ -127,7 +127,7 @@ pub fn format_hex(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     for _ in (2 * data.len())..width {
         f.write_str("0")?;
     }
-    for ch in data.into_iter().take(prec / 2) {
+    for ch in data.iter().take(prec / 2) {
         write!(f, "{:02x}", *ch)?;
     }
     if prec < 2 * data.len() && prec % 2 == 1 {

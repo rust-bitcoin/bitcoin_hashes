@@ -24,18 +24,19 @@ use Error;
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute SHA1 hash function
+#[derive(Clone)]
 pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
     h: [u32; 5],
     length: usize,
 }
 
-impl Clone for HashEngine {
-    fn clone(&self) -> HashEngine {
+impl Default for HashEngine {
+    fn default() -> Self {
         HashEngine {
-            h: self.h,
-            length: self.length,
-            buffer: self.buffer,
+            h: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0],
+            length: 0,
+            buffer: [0; BLOCK_SIZE],
         }
     }
 }
@@ -83,14 +84,6 @@ impl str::FromStr for Hash {
 impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 20];
-
-    fn engine() -> HashEngine {
-        HashEngine {
-            h: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0],
-            length: 0,
-            buffer: [0; BLOCK_SIZE],
-        }
-    }
 
     fn from_engine(mut e: HashEngine) -> Hash {
         // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining

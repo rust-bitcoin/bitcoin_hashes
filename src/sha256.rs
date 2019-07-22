@@ -25,18 +25,19 @@ use Error;
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute SHA256 hash function
+#[derive(Clone)]
 pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
     h: [u32; 8],
     length: usize,
 }
 
-impl Clone for HashEngine {
-    fn clone(&self) -> HashEngine {
+impl Default for HashEngine {
+    fn default() -> Self {
         HashEngine {
-            h: self.h,
-            length: self.length,
-            buffer: self.buffer,
+            h: [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19],
+            length: 0,
+            buffer: [0; BLOCK_SIZE],
         }
     }
 }
@@ -84,14 +85,6 @@ borrow_slice_impl!(Hash);
 impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
-
-    fn engine() -> HashEngine {
-        HashEngine {
-            h: [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19],
-            length: 0,
-            buffer: [0; BLOCK_SIZE],
-        }
-    }
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {

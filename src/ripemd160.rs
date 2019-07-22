@@ -29,18 +29,19 @@ use Error;
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute RIPEMD160 hash function
+#[derive(Clone)]
 pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
     h: [u32; 5],
     length: usize,
 }
 
-impl Clone for HashEngine {
-    fn clone(&self) -> HashEngine {
+impl Default for HashEngine {
+    fn default() -> Self {
         HashEngine {
-            h: self.h,
-            length: self.length,
-            buffer: self.buffer,
+            h: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0],
+            length: 0,
+            buffer: [0; BLOCK_SIZE],
         }
     }
 }
@@ -88,14 +89,6 @@ impl str::FromStr for Hash {
 impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 20];
-
-    fn engine() -> HashEngine {
-        HashEngine {
-            h: [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0],
-            length: 0,
-            buffer: [0; BLOCK_SIZE],
-        }
-    }
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {
@@ -179,8 +172,8 @@ macro_rules! process_block(
      $( par_round5: h_ordering $pf0:expr, $pf1:expr, $pf2:expr, $pf3:expr, $pf4:expr;
                     data_index $pdata_index5:expr; roll_shift $pbits5:expr; )*
     ) => ({
-        let mut bb = *$h;
-        let mut bbb = *$h;
+        let mut bb = $h;
+        let mut bbb = $h;
 
         // Round 1
         $( round!(bb[$f0], bb[$f1], bb[$f2], bb[$f3], bb[$f4],
@@ -253,7 +246,7 @@ impl HashEngine {
 
         let mut w = [0u32; 16];
         LittleEndian::read_u32_into(&self.buffer, &mut w);
-        process_block!(&mut self.h, &mut w,
+        process_block!(self.h, w,
             // Round 1
             round1: h_ordering 0, 1, 2, 3, 4; data_index  0; roll_shift 11;
             round1: h_ordering 4, 0, 1, 2, 3; data_index  1; roll_shift 14;
