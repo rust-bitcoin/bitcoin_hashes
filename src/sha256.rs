@@ -145,6 +145,13 @@ index_impl!(Midstate);
 serde_impl!(Midstate, 32);
 borrow_slice_impl!(Midstate);
 
+impl str::FromStr for Midstate {
+    type Err = ::hex::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        ::hex::FromHex::from_hex(s)
+    }
+}
+
 impl Midstate {
     /// Length of the midstate, in bytes.
     const LEN: usize = 32;
