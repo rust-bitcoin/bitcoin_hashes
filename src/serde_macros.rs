@@ -63,13 +63,10 @@ macro_rules! serde_impl(
                         where
                             E: ::serde::de::Error,
                         {
-                            if v.len() != $t::LEN {
-                                Err(E::invalid_length(v.len(), &stringify!($len)))
-                            } else {
-                                let mut ret = [0; $len];
-                                ret.copy_from_slice(v);
-                                Ok($t(ret))
-                            }
+                            $t::from_slice(v).map_err(|_| {
+                                // from_slice only errors on incorrect length
+                                E::invalid_length(v.len(), &stringify!($len))
+                            })
                         }
                     }
 

@@ -124,3 +124,66 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     /// Constructs a hash from the underlying byte array
     fn from_inner(inner: Self::Inner) -> Self;
 }
+
+/// Create a new newtype around a [Hash] type.
+#[macro_export]
+macro_rules! hash_newtype {
+    ($newtype:ident, $hash:ty, $len:expr, $docs:meta) => {
+        #[$docs]
+        #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+        pub struct $newtype($hash);
+
+        hex_fmt_impl!(Debug, $newtype);
+        hex_fmt_impl!(Display, $newtype);
+        hex_fmt_impl!(LowerHex, $newtype);
+        index_impl!($newtype);
+        serde_impl!($newtype, $len);
+        borrow_slice_impl!($newtype);
+
+        impl ::hex::FromHex for $newtype {
+            fn from_byte_iter<I>(iter: I) -> Result<Self, ::hex::Error>
+                where I: Iterator<Item=Result<u8, ::hex::Error>> +
+                    ExactSizeIterator +
+                    DoubleEndedIterator,
+            {
+                Ok($newtype(::hex::FromHex::from_byte_iter(iter)?))
+            }
+        }
+
+        impl ::std::str::FromStr for $newtype {
+            type Err = ::hex::Error;
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                ::hex::FromHex::from_hex(s)
+            }
+        }
+
+        impl $newtype {
+            /// The length in bytes.
+            pub const LEN: usize = <$hash as ::Hash>::LEN;
+
+            /// Whether this type should be displayed backwards.
+            pub const DISPLAY_BACKWARD: bool = <$hash as ::Hash>::DISPLAY_BACKWARD;
+
+            /// Construct from the inner value.
+            pub fn from_inner(inner: $hash) -> Self {
+                $newtype(inner)
+            }
+
+            /// Construct from a byte slice.
+            pub fn from_slice(sl: &[u8]) -> Result<$newtype, ::error::Error> {
+                Ok($newtype(<$hash as ::Hash>::from_slice(sl)?))
+            }
+
+            /// Unwraps and returns the underlying value.
+            pub fn into_inner(self) -> $hash {
+                self.0
+            }
+        }
+    };
+}
+
+#[cfg(test)]
+mod test {
+    hash_newtype!(TestNewtype, ::sha256d::Hash, 32, doc="A test newtype");
+}
+
