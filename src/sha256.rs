@@ -220,15 +220,15 @@ impl HashEngine {
     ///
     /// Be aware that this method panics when [length] is
     /// not a multiple of the block size.
-    pub fn from_midstate(midstate: Midstate, length: usize) -> HashEngine {
+    pub fn from_midstate(midstate: &Midstate, length: usize) -> HashEngine {
         assert!(length % BLOCK_SIZE == 0, "length is no multiple of the block size");
 
-        let mut ret = [0; 8];
-        BigEndian::read_u32_into(&midstate[..], &mut ret);
+        let mut h = [0; 8];
+        BigEndian::read_u32_into(&midstate[..], &mut h);
 
         HashEngine {
             buffer: [0; BLOCK_SIZE],
-            h: ret,
+            h: h,
             length: length,
         }
     }
@@ -424,7 +424,7 @@ mod tests {
     #[test]
     fn engine_with_state() {
         let mut engine = sha256::Hash::engine();
-        let midstate_engine = sha256::HashEngine::from_midstate(engine.midstate(), 0);
+        let midstate_engine = sha256::HashEngine::from_midstate(&engine.midstate(), 0);
         // Fresh engine and engine initialized with fresh state should have same state
         assert_eq!(engine.h, midstate_engine.h);
 
@@ -440,7 +440,7 @@ mod tests {
         for data in data_vec {
             let mut engine = engine.clone();
             let mut midstate_engine =
-                sha256::HashEngine::from_midstate(engine.midstate(), engine.length);
+                sha256::HashEngine::from_midstate(&engine.midstate(), engine.length);
             assert_eq!(engine.h, midstate_engine.h);
             assert_eq!(engine.length, midstate_engine.length);
             engine.input(&data);
@@ -465,7 +465,7 @@ mod tests {
             0xd5, 0x69, 0x09, 0x59,
         ];
         let midstate_engine =
-            sha256::HashEngine::from_midstate(sha256::Midstate::from_inner(MIDSTATE), 64);
+            sha256::HashEngine::from_midstate(&sha256::Midstate::from_inner(MIDSTATE), 64);
         let hash = sha256::Hash::from_engine(midstate_engine);
         assert_eq!(hash, sha256::Hash(HASH_EXPECTED));
     }
