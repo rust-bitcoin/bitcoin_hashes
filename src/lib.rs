@@ -31,9 +31,9 @@
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 #[cfg(all(test, feature = "unstable"))] extern crate test;
 
-#[cfg(any(test, feature="std"))] extern crate core;
-#[cfg(feature="serde")] extern crate serde;
-#[cfg(all(test,feature="serde"))] extern crate serde_test;
+#[cfg(any(test, feature="std"))] pub extern crate core;
+#[cfg(feature="serde")] pub extern crate serde;
+#[cfg(all(test, feature="serde"))] extern crate serde_test;
 extern crate byteorder;
 
 #[macro_use] mod util;
@@ -140,18 +140,18 @@ macro_rules! hash_newtype {
         serde_impl!($newtype, $len);
         borrow_slice_impl!($newtype);
 
-        impl ::hex::FromHex for $newtype {
-            fn from_byte_iter<I>(iter: I) -> Result<Self, ::hex::Error>
-                where I: Iterator<Item=Result<u8, ::hex::Error>> +
+        impl $crate::hex::FromHex for $newtype {
+            fn from_byte_iter<I>(iter: I) -> Result<Self, $crate::hex::Error>
+                where I: Iterator<Item=Result<u8, $crate::hex::Error>> +
                     ExactSizeIterator +
                     DoubleEndedIterator,
             {
-                Ok($newtype(::hex::FromHex::from_byte_iter(iter)?))
+                Ok($newtype($crate::hex::FromHex::from_byte_iter(iter)?))
             }
         }
 
         impl ::std::str::FromStr for $newtype {
-            type Err = ::hex::Error;
+            type Err = $crate::hex::Error;
             fn from_str(s: &str) -> Result<Self, Self::Err> {
                 ::hex::FromHex::from_hex(s)
             }
@@ -159,10 +159,10 @@ macro_rules! hash_newtype {
 
         impl $newtype {
             /// The length in bytes.
-            pub const LEN: usize = <$hash as ::Hash>::LEN;
+            pub const LEN: usize = <$hash as $crate::Hash>::LEN;
 
             /// Whether this type should be displayed backwards.
-            pub const DISPLAY_BACKWARD: bool = <$hash as ::Hash>::DISPLAY_BACKWARD;
+            pub const DISPLAY_BACKWARD: bool = <$hash as $crate::Hash>::DISPLAY_BACKWARD;
 
             /// Construct from the inner value.
             pub fn from_inner(inner: $hash) -> Self {
@@ -170,8 +170,8 @@ macro_rules! hash_newtype {
             }
 
             /// Construct from a byte slice.
-            pub fn from_slice(sl: &[u8]) -> Result<$newtype, ::error::Error> {
-                Ok($newtype(<$hash as ::Hash>::from_slice(sl)?))
+            pub fn from_slice(sl: &[u8]) -> Result<$newtype, $crate::Error> {
+                Ok($newtype(<$hash as $crate::Hash>::from_slice(sl)?))
             }
 
             /// Unwraps and returns the underlying value.
