@@ -34,7 +34,6 @@
 #[cfg(any(test, feature="std"))] extern crate core;
 #[cfg(feature="serde")] extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
-extern crate byteorder;
 
 #[macro_use] mod util;
 #[macro_use] mod serde_macros;

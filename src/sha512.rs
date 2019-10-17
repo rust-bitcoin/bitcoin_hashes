@@ -21,11 +21,10 @@
 
 use core::{cmp, hash, str};
 
-use byteorder::{ByteOrder, BigEndian};
-
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
+use util;
 
 const BLOCK_SIZE: usize = 128;
 
@@ -56,7 +55,9 @@ impl EngineTrait for HashEngine {
     #[cfg(not(feature = "fuzztarget"))]
     fn midstate(&self) -> [u8; 64] {
         let mut ret = [0; 64];
-        BigEndian::write_u64_into(&self.h, &mut ret);
+        for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(8)) {
+            ret_bytes.copy_from_slice(&util::u64_to_array_be(*val));
+        }
         ret
     }
 
@@ -149,10 +150,8 @@ impl HashTrait for Hash {
         e.input(&zeroes[..pad_length]);
         debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
 
-        let mut len_buf = [0; 8];
-        e.input(&len_buf);
-        BigEndian::write_u64(&mut len_buf, 8 * data_len);
-        e.input(&len_buf);
+        e.input(&[0; 8]);
+        e.input(&util::u64_to_array_be(8 * data_len));
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
         Hash(e.midstate())
@@ -214,7 +213,9 @@ impl HashEngine {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
 
         let mut w = [0u64; 16];
-        BigEndian::read_u64_into(&self.buffer, &mut w);
+        for (w_val, buff_bytes) in w.iter_mut().zip(self.buffer.chunks(8)) {
+            *w_val = util::slice_to_u64_be(buff_bytes);
+        }
 
         let mut a = self.h[0];
         let mut b = self.h[1];

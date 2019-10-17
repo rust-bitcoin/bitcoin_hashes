@@ -21,11 +21,10 @@
 
 use core::{cmp, mem, ptr, str};
 
-use byteorder::{ByteOrder, LittleEndian};
-
 use Error;
 use Hash as HashTrait;
 use HashEngine as EngineTrait;
+use util;
 
 macro_rules! compress {
     ($state:expr) => {{
@@ -242,14 +241,12 @@ impl Hash {
 
     /// Returns the (little endian) 64-bit integer representation of the hash value.
     pub fn as_u64(&self) -> u64 {
-        LittleEndian::read_u64(&self.0)
+        util::slice_to_u64_le(&self.0[..])
     }
 
     /// Create a hash from its (little endian) 64-bit integer representation.
     pub fn from_u64(hash: u64) -> Hash {
-        let mut ret = [0; 8];
-        LittleEndian::write_u64(&mut ret, hash);
-        Hash(ret)
+        Hash(util::u64_to_array_le(hash))
     }
 }
 
