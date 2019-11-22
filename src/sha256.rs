@@ -136,7 +136,7 @@ impl HashTrait for Hash {
 
 /// Output of the SHA256 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Midstate([u8; 32]);
+pub struct Midstate(pub [u8; 32]);
 
 hex_fmt_impl!(Debug, Midstate);
 hex_fmt_impl!(Display, Midstate);
