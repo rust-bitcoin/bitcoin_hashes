@@ -17,10 +17,12 @@ macro_rules! circular_lshift32 (
     ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (32 - $shift)))
 );
 
+/// Circular left-shift a 64-bit word
 macro_rules! circular_lshift64 (
     ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (64 - $shift)))
 );
 
+/// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`
 macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ident) => (
         impl ::core::fmt::$imp for $ty {
@@ -36,6 +38,7 @@ macro_rules! hex_fmt_impl(
     )
 );
 
+/// Adds `core::ops::Index` trait implementation to a given type `$ty`
 macro_rules! index_impl(
     ($ty:ty) => (
         impl ::core::ops::Index<usize> for $ty {
@@ -75,6 +78,7 @@ macro_rules! index_impl(
     )
 );
 
+/// Adds slicing traits implementations to a given type `$ty`
 macro_rules! borrow_slice_impl(
     ($ty:ty) => (
         impl ::core::borrow::Borrow<[u8]> for $ty {
