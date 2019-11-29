@@ -157,6 +157,18 @@ macro_rules! hash_newtype {
             }
         }
 
+        impl ::std::convert::From<$hash> for $newtype {
+            fn from(inner: $hash) -> Self {
+                Self::from_inner($hash)
+            }
+        }
+
+        impl ::std::convert::To<$hash> for $newtype {
+            fn to(&self) -> $hash {
+                Self::to_inner()
+            }
+        }
+
         impl $newtype {
             /// The length in bytes.
             pub const LEN: usize = <$hash as $crate::Hash>::LEN;
