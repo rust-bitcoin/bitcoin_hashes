@@ -1,4 +1,11 @@
 
+# 0.7.2 - 2019-11-29
+
+* Make the inner variable of `sha256::Midstat` public
+* Drop the `byteorder` dependency in favor of manual endianness implementations
+(later this will be in stdlib so we can drop even that)
+* Fix the `hash_newtype` macro, which did not compile before
+
 # 0.7.1 - 2019-08-14
 
 * Add hash_newtype macro that allows third parties to create newtype structs.
