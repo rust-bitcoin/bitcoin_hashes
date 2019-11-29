@@ -19,12 +19,12 @@
 
 //! # RIPEMD160
 
-use byteorder::{ByteOrder, LittleEndian};
 use core::{cmp, str};
 
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
+use util;
 
 const BLOCK_SIZE: usize = 64;
 
@@ -52,7 +52,9 @@ impl EngineTrait for HashEngine {
     #[cfg(not(feature = "fuzztarget"))]
     fn midstate(&self) -> [u8; 20] {
         let mut ret = [0; 20];
-        LittleEndian::write_u32_into(&self.h, &mut ret);
+        for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
+            ret_bytes.copy_from_slice(&util::u32_to_array_le(*val));
+        }
         ret
     }
 
@@ -104,9 +106,7 @@ impl HashTrait for Hash {
         e.input(&zeroes[..pad_length]);
         debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
 
-        let mut len_buf = [0; 8];
-        LittleEndian::write_u64(&mut len_buf, 8 * data_len);
-        e.input(&len_buf);
+        e.input(&util::u64_to_array_le(8 * data_len));
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
         Hash(e.midstate())
@@ -245,7 +245,10 @@ impl HashEngine {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
 
         let mut w = [0u32; 16];
-        LittleEndian::read_u32_into(&self.buffer, &mut w);
+        for (w_val, buff_bytes) in w.iter_mut().zip(self.buffer.chunks(4)) {
+            *w_val = util::slice_to_u32_le(buff_bytes);
+        }
+
         process_block!(self.h, w,
             // Round 1
             round1: h_ordering 0, 1, 2, 3, 4; data_index  0; roll_shift 11;
