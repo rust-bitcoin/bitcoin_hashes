@@ -78,9 +78,9 @@ macro_rules! serde_impl(
     )
 );
 
+/// Does an "empty" serde implementation for the configuration without serde feature
 #[macro_export]
 #[cfg(not(feature="serde"))]
-#[macro_export]
 macro_rules! serde_impl(
     ($t:ident, $len:expr) => ()
 );

@@ -1,19 +1,39 @@
 language: rust
+cache: 
+  cargo: true
+  directories:
+  - cargo_web
+
 rust:
   - stable
   - beta
   - nightly
   - 1.22.0
 
+jobs:
+  include:
+    - rust: stable
+      env: FUZZ=true
+    - rust: stable
+      env: WASM=true
+
+
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y binutils-dev libunwind8-dev
 
 script:
-  - cargo build --verbose
-  - cargo test --verbose
-  - cargo test --verbose --features "serde"
-  - cargo build --verbose --features "fuzztarget"
-  - cargo build --verbose --no-default-features
-  - if [ "$(rustup show | grep default | grep beta)" != "" ]; then cargo install --force cargo-web && cargo web build --target=asmjs-unknown-emscripten && cargo web test --target=asmjs-unknown-emscripten --nodejs; fi
-  - if [ "$(rustup show | grep default | grep stable)" != "" ]; then cd fuzz && cargo test --verbose && ./travis-fuzz.sh; fi
+  - |
+      if [ "$FUZZ" = "true" ]; then
+        cd fuzz && cargo test --verbose && ./travis-fuzz.sh;
+      elif [ "$WASM" = "true" ]; then
+        CARGO_TARGET_DIR=cargo_web cargo install --force cargo-web
+        cargo web build --target=asmjs-unknown-emscripten
+        cargo web test --target=asmjs-unknown-emscripten --nodejs
+      else
+        cargo build --verbose
+        cargo test --verbose
+        cargo test --verbose --features "serde"
+        cargo build --verbose --features "fuzztarget"
+        cargo build --verbose --no-default-features
+      fi
