@@ -140,55 +140,42 @@ macro_rules! hash_newtype {
         serde_impl!($newtype, $len);
         borrow_slice_impl!($newtype);
 
-        impl $crate::hex::FromHex for $newtype {
-            fn from_byte_iter<I>(iter: I) -> Result<Self, $crate::hex::Error>
-                where I: Iterator<Item=Result<u8, $crate::hex::Error>> +
-                    ExactSizeIterator +
-                    DoubleEndedIterator,
-            {
-                Ok($newtype($crate::hex::FromHex::from_byte_iter(iter)?))
-            }
-        }
-
-        impl ::std::str::FromStr for $newtype {
-            type Err = $crate::hex::Error;
-            fn from_str(s: &str) -> Result<Self, Self::Err> {
-                ::hex::FromHex::from_hex(s)
-            }
-        }
-
         impl ::std::convert::From<$hash> for $newtype {
-            fn from(inner: $hash) -> Self {
-                Self::from_inner($hash)
+            fn from(inner: $hash) -> $newtype {
+                Self(inner)
             }
         }
 
-        impl ::std::convert::To<$hash> for $newtype {
-            fn to(&self) -> $hash {
-                Self::to_inner()
+        impl ::std::convert::From<$newtype> for $hash {
+            fn from(hashtype: $newtype) -> $hash {
+                hashtype.0
             }
         }
 
-        impl $newtype {
-            /// The length in bytes.
-            pub const LEN: usize = <$hash as $crate::Hash>::LEN;
+        impl $crate::Hash for $newtype {
+            type Engine = <$hash as $crate::Hash>::Engine;
+            type Inner = <$hash as $crate::Hash>::Inner;
 
-            /// Whether this type should be displayed backwards.
-            pub const DISPLAY_BACKWARD: bool = <$hash as $crate::Hash>::DISPLAY_BACKWARD;
+            const LEN: usize = <$hash as $crate::Hash>::LEN;
+            const DISPLAY_BACKWARD: bool = <$hash as $crate::Hash>::DISPLAY_BACKWARD;
 
-            /// Construct from the inner value.
-            pub fn from_inner(inner: $hash) -> Self {
-                $newtype(inner)
+            fn from_engine(e: Self::Engine) -> Self {
+                Self(<$hash as $crate::Hash>::from_engine(e))
             }
 
-            /// Construct from a byte slice.
-            pub fn from_slice(sl: &[u8]) -> Result<$newtype, $crate::Error> {
+            #[inline]
+            fn from_slice(sl: &[u8]) -> Result<$newtype, $crate::Error> {
                 Ok($newtype(<$hash as $crate::Hash>::from_slice(sl)?))
             }
 
-            /// Unwraps and returns the underlying value.
-            pub fn into_inner(self) -> $hash {
-                self.0
+            #[inline]
+            fn from_inner(inner: Self::Inner) -> Self {
+                $newtype(<$hash as $crate::Hash>::from_inner(inner))
+            }
+
+            #[inline]
+            fn into_inner(self) -> Self::Inner {
+                self.0.into_inner()
             }
         }
     };
@@ -196,6 +183,7 @@ macro_rules! hash_newtype {
 
 #[cfg(test)]
 mod test {
+    use Hash;
     hash_newtype!(TestNewtype, ::sha256d::Hash, 32, doc="A test newtype");
 }
 
