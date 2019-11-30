@@ -147,7 +147,8 @@ macro_rules! hash_newtype {
 
         impl ::std::convert::From<$hash> for $newtype {
             fn from(inner: $hash) -> $newtype {
-                Self(inner)
+                // Due to rust 1.22 we have to use this instead of simple `Self(inner)`
+                Self { 0: inner }
             }
         }
 
@@ -165,7 +166,7 @@ macro_rules! hash_newtype {
             const DISPLAY_BACKWARD: bool = <$hash as $crate::Hash>::DISPLAY_BACKWARD;
 
             fn from_engine(e: Self::Engine) -> Self {
-                Self(<$hash as $crate::Hash>::from_engine(e))
+                Self::from(<$hash as $crate::Hash>::from_engine(e))
             }
 
             #[inline]
