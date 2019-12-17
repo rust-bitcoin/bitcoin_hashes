@@ -145,6 +145,14 @@ macro_rules! hash_newtype {
         serde_impl!($newtype, $len);
         borrow_slice_impl!($newtype);
 
+        impl $newtype {
+            /// Convert this type into the inner hash type.
+            pub fn as_hash(&self) -> $hash {
+                // Hashes implement Copy so don't need into_hash.
+                self.0
+            }
+        }
+
         impl ::std::convert::From<$hash> for $newtype {
             fn from(inner: $hash) -> $newtype {
                 // Due to rust 1.22 we have to use this instead of simple `Self(inner)`
@@ -191,5 +199,13 @@ macro_rules! hash_newtype {
 mod test {
     use Hash;
     hash_newtype!(TestNewtype, ::sha256d::Hash, 32, doc="A test newtype");
+    hash_newtype!(TestNewtype2, ::sha256d::Hash, 32, doc="A test newtype");
+
+    #[test]
+    fn convert_newtypes() {
+        let h1 = TestNewtype::hash(&[]);
+        let h2: TestNewtype2 = h1.as_hash().into();
+        assert_eq!(&h1[..], &h2[..]);
+    }
 }
 
