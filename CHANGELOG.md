@@ -1,4 +1,8 @@
 
+# 0.7.3 - 2019-12-18
+
+* Add `as_hash(&self) -> <inner>` method to hash newtypes.
+
 # 0.7.2 - 2019-11-29
 
 * Make the inner variable of `sha256::Midstat` public
