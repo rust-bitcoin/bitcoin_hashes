@@ -7,7 +7,7 @@ macro_rules! serde_impl(
     ($t:ident, $len:expr) => (
         impl $crate::serde::Serialize for $t {
             fn serialize<S: $crate::serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-                use hex::ToHex;
+                use $crate::hex::ToHex;
                 if s.is_human_readable() {
                     s.serialize_str(&self.to_hex())
                 } else {
@@ -18,7 +18,7 @@ macro_rules! serde_impl(
 
         impl<'de> $crate::serde::Deserialize<'de> for $t {
             fn deserialize<D: $crate::serde::Deserializer<'de>>(d: D) -> Result<$t, D::Error> {
-                use hex::FromHex;
+                use $crate::hex::FromHex;
 
                 if d.is_human_readable() {
                     struct HexVisitor;
