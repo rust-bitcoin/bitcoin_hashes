@@ -146,6 +146,11 @@ macro_rules! hash_newtype {
         borrow_slice_impl!($newtype);
 
         impl $newtype {
+            /// Create this type from the inner hash type.
+            pub fn from_hash(inner: $hash) -> $newtype {
+                $newtype(inner)
+            }
+
             /// Convert this type into the inner hash type.
             pub fn as_hash(&self) -> $hash {
                 // Hashes implement Copy so don't need into_hash.
