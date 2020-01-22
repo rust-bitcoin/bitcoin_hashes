@@ -199,11 +199,11 @@ impl FromHex for Vec<u8> {
 
 macro_rules! impl_fromhex_array {
     ($len:expr) => {
-        impl FromHex for [u8; $len] {
-            fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-                where I: Iterator<Item=Result<u8, Error>> +
-                    ExactSizeIterator +
-                    DoubleEndedIterator,
+        impl $crate::hex::FromHex for [u8; $len] {
+            fn from_byte_iter<I>(iter: I) -> Result<Self, $crate::hex::Error>
+                where I: ::std::iter::Iterator<Item=Result<u8, $crate::hex::Error>> +
+                    ::std::iter::ExactSizeIterator +
+                    ::std::iter::DoubleEndedIterator,
             {
                 if iter.len() == $len {
                     let mut ret = [0; $len];
@@ -212,7 +212,7 @@ macro_rules! impl_fromhex_array {
                     }
                     Ok(ret)
                 } else {
-                    Err(Error::InvalidLength(2 * $len, 2 * iter.len()))
+                    Err($crate::hex::Error::InvalidLength(2 * $len, 2 * iter.len()))
                 }
             }
         }
