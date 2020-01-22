@@ -26,8 +26,8 @@ macro_rules! circular_lshift64 (
 /// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`
 macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ident) => (
-        impl $crate::core::fmt::$imp for $ty {
-            fn fmt(&self, f: &mut $crate::core::fmt::Formatter) -> $crate::core::fmt::Result {
+        impl ::core::fmt::$imp for $ty {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
                 use $crate::hex::{format_hex, format_hex_reverse};
                 if $ty::DISPLAY_BACKWARD {
                     format_hex_reverse(&self.0, f)
@@ -43,37 +43,37 @@ macro_rules! hex_fmt_impl(
 #[macro_export]
 macro_rules! index_impl(
     ($ty:ty) => (
-        impl $crate::core::ops::Index<usize> for $ty {
+        impl ::core::ops::Index<usize> for $ty {
             type Output = u8;
             fn index(&self, index: usize) -> &u8 {
                 &self.0[index]
             }
         }
 
-        impl $crate::core::ops::Index<$crate::core::ops::Range<usize>> for $ty {
+        impl ::core::ops::Index<::core::ops::Range<usize>> for $ty {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::Range<usize>) -> &[u8] {
+            fn index(&self, index: ::core::ops::Range<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl $crate::core::ops::Index<$crate::core::ops::RangeFrom<usize>> for $ty {
+        impl ::core::ops::Index<::core::ops::RangeFrom<usize>> for $ty {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::RangeFrom<usize>) -> &[u8] {
+            fn index(&self, index: ::core::ops::RangeFrom<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl $crate::core::ops::Index<$crate::core::ops::RangeTo<usize>> for $ty {
+        impl ::core::ops::Index<::core::ops::RangeTo<usize>> for $ty {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::RangeTo<usize>) -> &[u8] {
+            fn index(&self, index: ::core::ops::RangeTo<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl $crate::core::ops::Index<$crate::core::ops::RangeFull> for $ty {
+        impl ::core::ops::Index<::core::ops::RangeFull> for $ty {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::RangeFull) -> &[u8] {
+            fn index(&self, index: ::core::ops::RangeFull) -> &[u8] {
                 &self.0[index]
             }
         }
@@ -84,19 +84,19 @@ macro_rules! index_impl(
 #[macro_export]
 macro_rules! borrow_slice_impl(
     ($ty:ty) => (
-        impl $crate::core::borrow::Borrow<[u8]> for $ty {
+        impl ::core::borrow::Borrow<[u8]> for $ty {
             fn borrow(&self) -> &[u8] {
                 &self[..]
             }
         }
 
-        impl $crate::core::convert::AsRef<[u8]> for $ty {
+        impl ::core::convert::AsRef<[u8]> for $ty {
             fn as_ref(&self) -> &[u8] {
                 &self[..]
             }
         }
 
-        impl $crate::core::ops::Deref for $ty {
+        impl ::core::ops::Deref for $ty {
             type Target = [u8];
 
             fn deref(&self) -> &Self::Target {
