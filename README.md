@@ -7,11 +7,12 @@ needed by Bitcoin. These are SHA1, SHA256, SHA256d, and RIPEMD160. As an
 ancilliary thing, it exposes hexadecimal serialization and deserialization,
 since these are needed to display hashes anway.
 
-Ok, there is one dependency -- `byteorder` -- which is used to manage endianness.
-
 [Documentation](https://docs.rs/bitcoin_hashes/)
+
+## Minimum Supported Rust Version (MSRV)
+This library should always compile with any combination of features on **Rust 1.22**.
+
 
 ## Contributions
 
 Contributions are welcome, including additional hash function implementations.
-
