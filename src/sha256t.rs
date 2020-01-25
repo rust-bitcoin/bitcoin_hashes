@@ -87,62 +87,68 @@ impl<T: Tag> ::serde::Serialize for Hash<T> {
 }
 
 #[cfg(feature="serde")]
+#[derive(Default)]
+struct HexVisitor<T: Tag>(PhantomData<T>);
+
+#[cfg(feature="serde")]
+impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
+    type Value = Hash<T>;
+
+    fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        formatter.write_str("an ASCII hex string")
+    }
+
+    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+        where
+            E: ::serde::de::Error,
+    {
+        use ::hex::FromHex;
+        if let Ok(hex) = ::std::str::from_utf8(v) {
+            Hash::<T>::from_hex(hex).map_err(E::custom)
+        } else {
+            return Err(E::invalid_value(::serde::de::Unexpected::Bytes(v), &self));
+        }
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: ::serde::de::Error,
+    {
+        use ::hex::FromHex;
+        Hash::<T>::from_hex(v).map_err(E::custom)
+    }
+}
+
+#[cfg(feature="serde")]
+#[derive(Default)]
+struct BytesVisitor<T: Tag>(PhantomData<T>);
+
+#[cfg(feature="serde")]
+impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
+    type Value = Hash<T>;
+
+    fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        formatter.write_str("a bytestring")
+    }
+
+    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+        where
+            E: ::serde::de::Error,
+    {
+        Hash::<T>::from_slice(v).map_err(|_| {
+            // from_slice only errors on incorrect length
+            E::invalid_length(v.len(), &"32")
+        })
+    }
+}
+
+#[cfg(feature="serde")]
 impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
     fn deserialize<D: ::serde::Deserializer<'de>>(d: D) -> Result<Hash<T>, D::Error> {
-        use ::hex::FromHex;
-
         if d.is_human_readable() {
-            struct HexVisitor;
-
-            impl<'de> ::serde::de::Visitor<'de> for HexVisitor {
-                type Value = Hash<T>;
-
-                fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                    formatter.write_str("an ASCII hex string")
-                }
-
-                fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-                where
-                    E: ::serde::de::Error,
-                {
-                    if let Ok(hex) = ::std::str::from_utf8(v) {
-                        Hash::<T>::from_hex(hex).map_err(E::custom)
-                    } else {
-                        return Err(E::invalid_value(::serde::de::Unexpected::Bytes(v), &self));
-                    }
-                }
-
-                fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-                where
-                    E: ::serde::de::Error,
-                {
-                    Hash::<T>::from_hex(v).map_err(E::custom)
-                }
-            }
-
-            d.deserialize_str(HexVisitor)
+            d.deserialize_str(HexVisitor::<T>::default())
         } else {
-            struct BytesVisitor;
-
-            impl<'de> ::serde::de::Visitor<'de> for BytesVisitor {
-                type Value = Hash<T>;
-
-                fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                    formatter.write_str("a bytestring")
-                }
-
-                fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-                where
-                    E: ::serde::de::Error,
-                {
-                    Hash::<T>::from_slice(v).map_err(|_| {
-                        // from_slice only errors on incorrect length
-                        E::invalid_length(v.len(), &"32")
-                    })
-                }
-            }
-
-            d.deserialize_bytes(BytesVisitor)
+            d.deserialize_bytes(BytesVisitor::<T>::default())
         }
     }
 }
