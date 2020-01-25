@@ -201,9 +201,9 @@ macro_rules! impl_fromhex_array {
     ($len:expr) => {
         impl $crate::hex::FromHex for [u8; $len] {
             fn from_byte_iter<I>(iter: I) -> Result<Self, $crate::hex::Error>
-                where I: ::std::iter::Iterator<Item=Result<u8, $crate::hex::Error>> +
-                    ::std::iter::ExactSizeIterator +
-                    ::std::iter::DoubleEndedIterator,
+                where I: ::core::iter::Iterator<Item=Result<u8, $crate::hex::Error>> +
+                    ::core::iter::ExactSizeIterator +
+                    ::core::iter::DoubleEndedIterator,
             {
                 if iter.len() == $len {
                     let mut ret = [0; $len];
