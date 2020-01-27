@@ -192,6 +192,13 @@ macro_rules! hash_newtype {
                 self.0.into_inner()
             }
         }
+
+        impl ::std::str::FromStr for $newtype {
+            type Err = <$hash as ::std::str::FromStr>::Err;
+            fn from_str(s: &str) -> ::std::result::Result<$newtype, Self::Err> {
+                s.parse().map($newtype)
+            }
+        }
     };
 }
 
@@ -206,6 +213,10 @@ mod test {
         let h1 = TestNewtype::hash(&[]);
         let h2: TestNewtype2 = h1.as_hash().into();
         assert_eq!(&h1[..], &h2[..]);
+
+        let h = ::sha256d::Hash::hash(&[]);
+        let h2: TestNewtype = h.to_string().parse().unwrap();
+        assert_eq!(h2.as_hash(), h);
     }
 }
 
