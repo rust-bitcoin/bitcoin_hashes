@@ -152,3 +152,34 @@ impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use ::{Hash, sha256, sha256t};
+    use ::hex::ToHex;
+
+    #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
+    pub struct TestHashTag;
+
+    impl sha256t::Tag for TestHashTag {
+        fn engine() -> sha256::HashEngine {
+            // The TapRoot TapLeaf midstate.
+            let midstate = sha256::Midstate::from_inner([
+               156, 224, 228, 230, 124, 17, 108, 57, 56, 179, 202, 242, 195, 15, 80, 137, 211, 243,
+               147, 108, 71, 99, 110, 96, 125, 179, 62, 234, 221, 198, 240, 201,
+            ]);
+            sha256::HashEngine::from_midstate(midstate, 64)
+        }
+    }
+
+    /// A hash tagged with `$name`.
+    pub type TestHash = sha256t::Hash<TestHashTag>;
+
+    #[test]
+    fn test_sha256t() {
+       assert_eq!(
+           TestHash::hash(&[0]).to_hex(),
+           "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
+       );
+    }
+}
