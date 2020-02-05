@@ -1,15 +1,15 @@
 [package]
-name = "bitcoin_hashes"
+name = "groestlcoin_hashes"
 version = "0.7.4"
-authors = ["Andrew Poelstra <apoelstra@wpsoftware.net>"]
+authors = ["Groestlcoin Developers <developers@groestlcoin.org>"]
 license = "CC0-1.0"
-description = "Hash functions used by rust-bitcoin which support rustc 1.14.0"
-documentation = "https://docs.rs/bitcoin_hashes/"
-keywords = [ "crypto", "bitcoin", "hash", "digest" ]
+description = "Hash functions used by rust-groestlcoin which support rustc 1.14.0"
+documentation = "https://docs.rs/groestlcoin_hashes/"
+keywords = [ "crypto", "groestlcoin", "hash", "digest" ]
 readme = "README.md"
 
 [lib]
-name = "bitcoin_hashes"
+name = "groestlcoin_hashes"
 path = "src/lib.rs"
 
 [features]
