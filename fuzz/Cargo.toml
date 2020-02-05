@@ -1,5 +1,5 @@
 [package]
-name = "bitcoin_hashes-fuzz"
+name = "groestlcoin_hashes-fuzz"
 version = "0.0.1"
 authors = ["copied from rust-bitcoin"]
 publish = false
@@ -12,7 +12,7 @@ honggfuzz_fuzz = ["honggfuzz"]
 
 [dependencies]
 honggfuzz = { version = "0.5", optional = true }
-bitcoin_hashes = { path = "..", features = ["serde"] }
+groestlcoin_hashes = { path = "..", features = ["serde"] }
 rust-crypto = "0.2"
 
 serde = "1.0"
