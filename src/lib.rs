@@ -54,6 +54,7 @@ pub mod sha256;
 pub mod sha512;
 pub mod sha256d;
 pub mod siphash24;
+pub mod groestld;
 pub mod cmp;
 
 use core::{borrow, fmt, hash, ops};
