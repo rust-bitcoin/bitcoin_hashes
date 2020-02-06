@@ -78,6 +78,12 @@ impl HashTrait for Hash {
     }
 }
 
+impl From<sha256::Hash> for Hash {
+    fn from(hash: sha256::Hash) -> Self {
+        Self(hash.into_inner())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use sha256d;
