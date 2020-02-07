@@ -80,7 +80,7 @@ impl HashTrait for Hash {
 
 impl From<sha256::Hash> for Hash {
     fn from(hash: sha256::Hash) -> Self {
-        Self(hash.into_inner())
+        Self::from_inner(hash.into_inner())
     }
 }
 
