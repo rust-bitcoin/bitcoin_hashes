@@ -18,7 +18,7 @@
 
 use std::{error, io};
 
-use {hex, sha1, sha256, sha512, ripemd160, siphash24};
+use {hex, sha1, sha256, sha512, ripemd160, siphash24, groestld};
 use HashEngine;
 use Error;
 
@@ -42,6 +42,15 @@ impl io::Write for sha1::HashEngine {
 }
 
 impl io::Write for sha256::HashEngine {
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.input(buf);
+        Ok(buf.len())
+    }
+}
+
+impl io::Write for groestld::HashEngine {
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
