@@ -25,7 +25,7 @@
 #![deny(non_camel_case_types)]
 #![deny(non_snake_case)]
 #![deny(unused_mut)]
-#![deny(missing_docs)]
+//#![deny(missing_docs)]
 
 // In general, rust is absolutely horrid at supporting users doing things like,
 // for example, compiling Rust code for real environments. Disable useless lints
@@ -40,6 +40,8 @@
 #[cfg(any(test, feature="std"))] pub extern crate core;
 #[cfg(feature="serde")] pub extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
+pub extern crate groestl;
+pub extern crate digest;
 
 #[macro_use] mod util;
 #[macro_use] mod serde_macros;

@@ -12,32 +12,35 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA256
+//! # Groestl512
 
-use core::{cmp, str};
-
+use core::str;
+use groestl::{Groestl512, Digest};
 use hex;
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
 use util;
+//use groestlstate;
+//use digest::generic_array::{ArrayLength, GenericArray};
 
-const BLOCK_SIZE: usize = 64;
 
-/// Engine to compute SHA256 hash function
+const BLOCK_SIZE: usize = 128;
+
+//use std::vec::Vec;
+//use digest::generic_array::{ArrayLength, GenericArray};
+
+
+/// Engine to compute Groestl512 hash function
 #[derive(Clone)]
 pub struct HashEngine {
-    buffer: [u8; BLOCK_SIZE],
-    h: [u32; 8],
-    length: usize,
+    buffer: Vec<u8>, 
 }
 
 impl Default for HashEngine {
     fn default() -> Self {
         HashEngine {
-            h: [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19],
-            length: 0,
-            buffer: [0; BLOCK_SIZE],
+            buffer: Vec::new(),
         }
     }
 }
@@ -47,26 +50,33 @@ impl EngineTrait for HashEngine {
 
     #[cfg(not(feature = "fuzztarget"))]
     fn midstate(&self) -> Midstate {
-        let mut ret = [0; 32];
-        for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
-            ret_bytes.copy_from_slice(&util::u32_to_array_be(*val));
-        }
+        let ret = [0; 32];
+        //for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
+        //    ret_bytes.copy_from_slice(&util::u32_to_array_be(*val));
+        //}
         Midstate(ret)
     }
 
     #[cfg(feature = "fuzztarget")]
     fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
-        ret.copy_from_slice(&self.buffer[..32]);
+        //ret.copy_from_slice(&self.buffer[..64]);
         Midstate(ret)
     }
 
     const BLOCK_SIZE: usize = 64;
 
-    engine_input_impl!();
+    //engine_input_impl!();
+
+    fn input(&mut self, inp: &[u8]) {
+        for c in inp {
+            self.buffer.push(*c);
+        }
+        //self.length += inp.len();
+    }
 }
 
-/// Output of the SHA256 hash function
+/// Output of the Groestl512 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Hash([u8; 32]);
 
@@ -74,6 +84,12 @@ impl str::FromStr for Hash {
     type Err = ::hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         ::hex::FromHex::from_hex(s)
+    }
+}
+
+impl Into<[u8; 32]> for Hash {
+    fn into(self) -> [u8; 32] {
+        self.0
     }
 }
 
@@ -88,29 +104,17 @@ impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
 
-    #[cfg(not(feature = "fuzztarget"))]
-    fn from_engine(mut e: HashEngine) -> Hash {
-        // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
-        let data_len = e.length as u64;
-
-        let zeroes = [0; BLOCK_SIZE - 8];
-        e.input(&[0x80]);
-        if e.length % BLOCK_SIZE > zeroes.len() {
-            e.input(&zeroes);
-        }
-        let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
-        e.input(&zeroes[..pad_length]);
-        debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
-
-        e.input(&util::u64_to_array_be(8 * data_len));
-        debug_assert_eq!(e.length % BLOCK_SIZE, 0);
-
-        Hash(e.midstate().into_inner())
-    }
-
-    #[cfg(feature = "fuzztarget")]
     fn from_engine(e: HashEngine) -> Hash {
-        Hash(e.midstate().into_inner())
+        let mut groestl_engine = Groestl512::new();
+        groestl_engine.input(e.buffer);
+        let first = groestl_engine.result();
+        let mut groestl_engine2 = Groestl512::new();
+        groestl_engine2.input(first);
+        let result = groestl_engine2.result();
+        let mut ret = [0; 32];
+        ret.copy_from_slice(result.as_slice());
+    
+        Hash(ret)
     }
 
     const LEN: usize = 32;
@@ -134,7 +138,7 @@ impl HashTrait for Hash {
     }
 }
 
-/// Output of the SHA256 hash function
+/// Output of the Groestl512 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Midstate(pub [u8; 32]);
 
@@ -142,7 +146,7 @@ hex_fmt_impl!(Debug, Midstate);
 hex_fmt_impl!(Display, Midstate);
 hex_fmt_impl!(LowerHex, Midstate);
 index_impl!(Midstate);
-serde_impl!(Midstate, 32);
+serde_impl!(Midstate, 64);
 borrow_slice_impl!(Midstate);
 
 impl str::FromStr for Midstate {
@@ -154,7 +158,7 @@ impl str::FromStr for Midstate {
 
 impl Midstate {
     /// Length of the midstate, in bytes.
-    const LEN: usize = 32;
+    const LEN: usize = 64;
 
     /// Flag indicating whether user-visible serializations of this hash
     /// should be backward. For some reason Satoshi decided this should be
@@ -194,13 +198,13 @@ impl hex::FromHex for Midstate {
     }
 }
 
-macro_rules! Ch( ($x:expr, $y:expr, $z:expr) => ($z ^ ($x & ($y ^ $z))) );
-macro_rules! Maj( ($x:expr, $y:expr, $z:expr) => (($x & $y) | ($z & ($x | $y))) );
-macro_rules! Sigma0( ($x:expr) => (circular_lshift32!(30, $x) ^ circular_lshift32!(19, $x) ^ circular_lshift32!(10, $x)) ); macro_rules! Sigma1( ($x:expr) => (circular_lshift32!(26, $x) ^ circular_lshift32!(21, $x) ^ circular_lshift32!(7, $x)) );
-macro_rules! sigma0( ($x:expr) => (circular_lshift32!(25, $x) ^ circular_lshift32!(14, $x) ^ ($x >> 3)) );
-macro_rules! sigma1( ($x:expr) => (circular_lshift32!(15, $x) ^ circular_lshift32!(13, $x) ^ ($x >> 10)) );
+//macro_rules! Ch( ($x:expr, $y:expr, $z:expr) => ($z ^ ($x & ($y ^ $z))) );
+//macro_rules! Maj( ($x:expr, $y:expr, $z:expr) => (($x & $y) | ($z & ($x | $y))) );
+//macro_rules! Sigma0( ($x:expr) => (circular_lshift32!(30, $x) ^ circular_lshift32!(19, $x) ^ circular_lshift32!(10, $x)) ); macro_rules! Sigma1( ($x:expr) => (circular_lshift32!(26, $x) ^ circular_lshift32!(21, $x) ^ circular_lshift32!(7, $x)) );
+//macro_rules! sigma0( ($x:expr) => (circular_lshift32!(25, $x) ^ circular_lshift32!(14, $x) ^ ($x >> 3)) );
+//macro_rules! sigma1( ($x:expr) => (circular_lshift32!(15, $x) ^ circular_lshift32!(13, $x) ^ ($x >> 10)) );
 
-macro_rules! round(
+/*macro_rules! round(
     // first round
     ($a:expr, $b:expr, $c:expr, $d:expr, $e:expr, $f:expr, $g:expr, $h:expr, $k:expr, $w:expr) => (
         let t1 = $h.wrapping_add(Sigma1!($e)).wrapping_add(Ch!($e, $f, $g)).wrapping_add($k).wrapping_add($w);
@@ -213,7 +217,7 @@ macro_rules! round(
         $w = $w.wrapping_add(sigma1!($w1)).wrapping_add($w2).wrapping_add(sigma0!($w3));
         round!($a, $b, $c, $d, $e, $f, $g, $h, $k, $w);
     )
-);
+);*/
 
 impl HashEngine {
     /// Create a new [HashEngine] from a midstate.
@@ -229,14 +233,12 @@ impl HashEngine {
         }
 
         HashEngine {
-            buffer: [0; BLOCK_SIZE],
-            h: ret,
-            length: length,
+            buffer: Vec::new(),
         }
     }
 
     // Algorithm copied from libsecp256k1
-    fn process_block(&mut self) {
+    /*fn process_block(&mut self) {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
 
         let mut w = [0u32; 16];
@@ -329,12 +331,12 @@ impl HashEngine {
         self.h[5] = self.h[5].wrapping_add(f);
         self.h[6] = self.h[6].wrapping_add(g);
         self.h[7] = self.h[7].wrapping_add(h);
-    }
+    }*/
 }
 
 #[cfg(test)]
 mod tests {
-    use sha256;
+    use Groestl512;
     use hex::{FromHex, ToHex};
     use {Hash, HashEngine};
 
@@ -383,17 +385,17 @@ mod tests {
 
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
-            let hash = sha256::Hash::hash(&test.input.as_bytes());
-            assert_eq!(hash, sha256::Hash::from_hex(test.output_str).expect("parse hex"));
+            let hash = Groestl512::Hash::hash(&test.input.as_bytes());
+            assert_eq!(hash, Groestl512::Hash::from_hex(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_hex(), &test.output_str);
 
             // Hash through engine, checking that we can input byte by byte
-            let mut engine = sha256::Hash::engine();
+            let mut engine = Groestl512::Hash::engine();
             for ch in test.input.as_bytes() {
                 engine.input(&[*ch]);
             }
-            let manual_hash = sha256::Hash::from_engine(engine);
+            let manual_hash = Groestl512::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
             assert_eq!(hash.into_inner()[..].as_ref(), test.output.as_slice());
         }
@@ -402,7 +404,7 @@ mod tests {
     #[test]
     fn midstate() {
         // Test vector obtained by doing an asset issuance on Elements
-        let mut engine = sha256::Hash::engine();
+        let mut engine = Groestl512::Hash::engine();
         // sha256dhash of outpoint
         // 73828cbc65fd68ab78dc86992b76ae50ae2bf8ceedbe8de0483172f0886219f7:0
         engine.input(&[
@@ -416,7 +418,7 @@ mod tests {
         assert_eq!(
             engine.midstate(),
             // RPC output
-            sha256::Midstate::from_inner([
+            Groestl512::Midstate::from_inner([
                 0x0b, 0xcf, 0xe0, 0xe5, 0x4e, 0x6c, 0xc7, 0xd3,
                 0x4f, 0x4f, 0x7c, 0x1d, 0xf0, 0xb0, 0xf5, 0x03,
                 0xf2, 0xf7, 0x12, 0x91, 0x2a, 0x06, 0x05, 0xb4,
@@ -427,8 +429,8 @@ mod tests {
 
     #[test]
     fn engine_with_state() {
-        let mut engine = sha256::Hash::engine();
-        let midstate_engine = sha256::HashEngine::from_midstate(engine.midstate(), 0);
+        let mut engine = Groestl512::Hash::engine();
+        let midstate_engine = Groestl512::HashEngine::from_midstate(engine.midstate(), 0);
         // Fresh engine and engine initialized with fresh state should have same state
         assert_eq!(engine.h, midstate_engine.h);
 
@@ -444,14 +446,14 @@ mod tests {
         for data in data_vec {
             let mut engine = engine.clone();
             let mut midstate_engine =
-                sha256::HashEngine::from_midstate(engine.midstate(), engine.length);
+                Groestl512::HashEngine::from_midstate(engine.midstate(), engine.length);
             assert_eq!(engine.h, midstate_engine.h);
             assert_eq!(engine.length, midstate_engine.length);
             engine.input(&data);
             midstate_engine.input(&data);
             assert_eq!(engine.h, midstate_engine.h);
-            let hash1 = sha256::Hash::from_engine(engine);
-            let hash2 = sha256::Hash::from_engine(midstate_engine);
+            let hash1 = Groestl512::Hash::from_engine(engine);
+            let hash2 = Groestl512::Hash::from_engine(midstate_engine);
             assert_eq!(hash1, hash2);
         }
 
@@ -469,9 +471,9 @@ mod tests {
             0xd5, 0x69, 0x09, 0x59,
         ];
         let midstate_engine =
-            sha256::HashEngine::from_midstate(sha256::Midstate::from_inner(MIDSTATE), 64);
-        let hash = sha256::Hash::from_engine(midstate_engine);
-        assert_eq!(hash, sha256::Hash(HASH_EXPECTED));
+            Groestl512::HashEngine::from_midstate(Groestl512::Midstate::from_inner(MIDSTATE), 64);
+        let hash = Groestl512::Hash::from_engine(midstate_engine);
+        assert_eq!(hash, Groestl512::Hash(HASH_EXPECTED));
     }
 
     #[cfg(feature="serde")]
@@ -486,7 +488,7 @@ mod tests {
             0xb7, 0x65, 0x44, 0x8c, 0x86, 0x35, 0xfb, 0x6c,
         ];
 
-        let hash = sha256::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        let hash = Groestl512::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_tokens(&hash.readable(), &[Token::Str("ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c")]);
     }
@@ -496,7 +498,7 @@ mod tests {
 mod benches {
     use test::Bencher;
 
-    use sha256;
+    use Groestl512;
     use Hash;
     use HashEngine;
 
@@ -511,8 +513,8 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256_1k(bh: & mut Bencher) {
-        let mut engine = sha256::Hash::engine();
+    pub fn Groestl512_1k(bh: & mut Bencher) {
+        let mut engine = Groestl512::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
             engine.input(&bytes);
@@ -521,8 +523,8 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256_64k(bh: & mut Bencher) {
-        let mut engine = sha256::Hash::engine();
+    pub fn Groestl512_64k(bh: & mut Bencher) {
+        let mut engine = Groestl512::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
             engine.input(&bytes);
