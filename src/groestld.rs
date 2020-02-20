@@ -141,6 +141,9 @@ impl HashTrait for Hash {
         }
     }
 
+    const DISPLAY_BACKWARD: bool = true;
+
+
     fn into_inner(self) -> Self::Inner {
         self.0
     }
@@ -372,7 +375,7 @@ mod tests {
                     0xa4, 0x7f, 0x12, 0x1e, 0xce, 0xb3, 0xa6, 0x5e,
 
                 ],
-                output_str: "fdfb14d386c6dff85715c50efb826c43e04205b18410497aa47f121eceb3a65e"
+                output_str: "5ea6b3ce1e127fa47a491084b10542e0436c82fb0ec51557f8dfc686d314fbfd"
             },
             Test {
                 input: "The quick brown fox jumps over the lazy dog",
@@ -382,7 +385,7 @@ mod tests {
                     0xef, 0xc1, 0x45, 0x9a, 0x9d, 0x40, 0x7c, 0xbf,
                     0xc7, 0xda, 0xf4, 0xf5, 0x42, 0x09, 0x34, 0x7f,
                 ],
-                output_str: "1209d229cfc9d7d6711369e2d7f369b0efc1459a9d407cbfc7daf4f54209347f",
+                output_str: "7f340942f5f4dac7bf7c409d9a45c1efb069f3d7e2691371d6d7c9cf29d20912",
             },
             Test {
                 input: "The quick brown fox jumps over the lazy dog.",
@@ -392,7 +395,7 @@ mod tests {
                     0x71, 0x3c, 0x4c, 0x24, 0xde, 0x61, 0xa3, 0x52, 
                     0x57, 0x00, 0xc1, 0x45, 0xc3, 0x45, 0x32, 0x77,
                 ],
-                output_str: "f3322dae351473fff342278c15202b0f713c4c24de61a3525700c145c3453277",
+                output_str: "773245c345c1005752a361de244c3c710f2b20158c2742f3ff731435ae2d32f3",
             },
         ];
 
