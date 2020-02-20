@@ -143,7 +143,6 @@ impl HashTrait for Hash {
 
     const DISPLAY_BACKWARD: bool = true;
 
-
     fn into_inner(self) -> Self::Inner {
         self.0
     }
