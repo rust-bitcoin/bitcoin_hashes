@@ -1,3 +1,6 @@
+# 0.7.4 (grs) - 2020-03-01
+
+* Add Groestl hash support
 
 # 0.7.3 - 2019-12-18
 

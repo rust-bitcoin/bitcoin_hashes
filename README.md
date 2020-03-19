@@ -1,9 +1,9 @@
-[![Status](https://travis-ci.org/rust-bitcoin/bitcoin_hashes.png?branch=master)](https://travis-ci.org/rust-bitcoin/bitcoin_hashes)
+[![Status](https://travis-ci.org/Groestlcoin/groestl_hashes.png?branch=master)](https://travis-ci.org/Groestlcoin/groestlcoin_hashes)
 
-# Bitcoin Hashes Library
+# Groestlcoin Hashes Library
 
-This is a simple, no-dependency library which implements the hash functions
-needed by Bitcoin. These are SHA1, SHA256, SHA256d, and RIPEMD160. As an
+This is a simple library which implements the hash functions needed by 
+Groestlcoin. These are Groestl, SHA1, SHA256, SHA256d, and RIPEMD160. As an
 ancilliary thing, it exposes hexadecimal serialization and deserialization,
 since these are needed to display hashes anway.
 
