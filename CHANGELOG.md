@@ -1,4 +1,10 @@
 
+# 0.7.5 - 2020-04-02
+
+* Add `sha256t` module for SHA-256-based tagged hashes.
+* Add `FromStr` for hash newtypes.
+* Add `from_hash` for hash newtypes.
+
 # 0.7.3 - 2019-12-18
 
 * Add `as_hash(&self) -> <inner>` method to hash newtypes.
