@@ -135,6 +135,9 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
 #[macro_export]
 macro_rules! hash_newtype {
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta) => {
+        hash_newtype!($newtype, $hash, $len, $docs, <$hash as $crate::Hash>::DISPLAY_BACKWARD);
+    };
+    ($newtype:ident, $hash:ty, $len:expr, $docs:meta, $reverse:expr) => {
         #[$docs]
         #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
         pub struct $newtype($hash);
@@ -177,7 +180,7 @@ macro_rules! hash_newtype {
             type Inner = <$hash as $crate::Hash>::Inner;
 
             const LEN: usize = <$hash as $crate::Hash>::LEN;
-            const DISPLAY_BACKWARD: bool = <$hash as $crate::Hash>::DISPLAY_BACKWARD;
+            const DISPLAY_BACKWARD: bool = $reverse;
 
             fn from_engine(e: Self::Engine) -> Self {
                 Self::from(<$hash as $crate::Hash>::from_engine(e))

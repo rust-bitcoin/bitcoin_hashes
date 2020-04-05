@@ -1,4 +1,8 @@
 
+# 0.7.6 - 2020-04-05
+
+* Support hash newtypes with reversed hex serialization.
+
 # 0.7.5 - 2020-04-02
 
 * Add `sha256t` module for SHA-256-based tagged hashes.
