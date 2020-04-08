@@ -67,6 +67,10 @@ impl EngineTrait for HashEngine {
 
     const BLOCK_SIZE: usize = 64;
 
+    fn n_bytes_hashed(&self) -> usize {
+        self.length
+    }
+
     engine_input_impl!();
 }
 

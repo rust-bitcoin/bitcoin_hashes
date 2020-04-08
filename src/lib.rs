@@ -77,6 +77,9 @@ pub trait HashEngine: Clone + Default {
 
     /// Add data to the hash engine
     fn input(&mut self, data: &[u8]);
+
+    /// Return the number of bytes already n_bytes_hashed(inputted)
+    fn n_bytes_hashed(&self) -> usize;
 }
 
 /// Trait which applies to hashes of all types
