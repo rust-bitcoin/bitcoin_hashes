@@ -203,9 +203,9 @@ macro_rules! hash_newtype {
         }
 
         impl ::std::str::FromStr for $newtype {
-            type Err = <$hash as ::std::str::FromStr>::Err;
+            type Err = ::hex::Error;
             fn from_str(s: &str) -> ::std::result::Result<$newtype, Self::Err> {
-                s.parse().map($newtype)
+                ::hex::FromHex::from_hex(s)
             }
         }
     };
