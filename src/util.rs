@@ -144,6 +144,16 @@ macro_rules! engine_input_impl(
     )
 );
 
+macro_rules! from_hash_for_inner_impl(
+    ($hash:ty) => (
+        impl From<$hash> for <$hash as HashTrait>::Inner {
+            fn from(hash: $hash) -> Self {
+                hash.into_inner()
+            }
+        }
+    )
+);
+
 
 
 macro_rules! define_slice_to_be {

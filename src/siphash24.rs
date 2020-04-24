@@ -208,6 +208,7 @@ hex_fmt_impl!(LowerHex, Hash);
 index_impl!(Hash);
 serde_impl!(Hash, 8);
 borrow_slice_impl!(Hash);
+from_hash_for_inner_impl!(Hash);
 
 impl str::FromStr for Hash {
     type Err = ::hex::Error;

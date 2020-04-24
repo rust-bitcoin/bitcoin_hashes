@@ -124,6 +124,12 @@ impl<T: Tag> HashTrait for Hash<T> {
     }
 }
 
+impl<T> From<Hash<T>> for <Hash<T> as HashTrait>::Inner where T: Tag {
+    fn from(hash: Hash<T>) -> Self {
+        hash.into_inner()
+    }
+}
+
 /// Macro used to define a newtype tagged hash.
 /// It creates two public types:
 /// - a sha246t::Tag struct,

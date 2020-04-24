@@ -181,6 +181,12 @@ macro_rules! hash_newtype {
             }
         }
 
+        impl ::std::convert::From<$newtype> for <$hash as $crate::Hash>::Inner {
+            fn from(hashtype: $newtype) -> <$hash as $crate::Hash>::Inner {
+                hashtype.0.into_inner()
+            }
+        }
+
         impl $crate::Hash for $newtype {
             type Engine = <$hash as $crate::Hash>::Engine;
             type Inner = <$hash as $crate::Hash>::Inner;
@@ -241,6 +247,17 @@ mod test {
         let h = ::sha256d::Hash::hash(&[]);
         let h2: TestNewtype = h.to_string().parse().unwrap();
         assert_eq!(h2.as_hash(), h);
+    }
+
+    #[test]
+    fn convert_using_std_into() {
+        fn i_accept_plain_arrays<T: Into<[u8; 32]>>(whatever: T) {
+            let _x = whatever.into();
+        }
+
+        let h1 = TestNewtype::hash(&[]);
+
+        i_accept_plain_arrays(h1);
     }
 }
 
