@@ -211,9 +211,9 @@ macro_rules! hash_newtype {
         }
 
         impl ::std::str::FromStr for $newtype {
-            type Err = ::hex::Error;
+            type Err = $crate::hex::Error;
             fn from_str(s: &str) -> ::std::result::Result<$newtype, Self::Err> {
-                ::hex::FromHex::from_hex(s)
+                $crate::hex::FromHex::from_hex(s)
             }
         }
     };
