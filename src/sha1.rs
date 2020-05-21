@@ -122,6 +122,10 @@ impl HashTrait for Hash {
         self.0
     }
 
+    fn as_inner(&self) -> &Self::Inner {
+        &self.0
+    }
+
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
