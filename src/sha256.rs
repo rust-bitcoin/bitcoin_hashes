@@ -129,6 +129,10 @@ impl HashTrait for Hash {
         self.0
     }
 
+    fn as_inner(&self) -> &Self::Inner {
+        &self.0
+    }
+
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
@@ -489,6 +493,19 @@ mod tests {
         let hash = sha256::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_tokens(&hash.readable(), &[Token::Str("ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c")]);
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    mod wasm_tests {
+        extern crate wasm_bindgen_test;
+        use super::*;
+        use self::wasm_bindgen_test::*;
+        #[wasm_bindgen_test]
+        fn sha256_tests() {
+            test();
+            midstate();
+            engine_with_state();
+        }
     }
 }
 

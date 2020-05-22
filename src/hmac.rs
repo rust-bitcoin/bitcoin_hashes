@@ -193,6 +193,10 @@ impl<T: HashTrait> HashTrait for Hmac<T> {
         self.0.into_inner()
     }
 
+    fn as_inner(&self) -> &Self::Inner {
+        self.0.as_inner()
+    }
+
     fn from_inner(inner: T::Inner) -> Self {
         Hmac(T::from_inner(inner))
     }

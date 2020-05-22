@@ -127,6 +127,9 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     /// Unwraps the hash and returns the underlying byte array
     fn into_inner(self) -> Self::Inner;
 
+    /// Unwraps the hash and returns a reference to the underlying byte array
+    fn as_inner(&self) -> &Self::Inner;
+
     /// Constructs a hash from the underlying byte array
     fn from_inner(inner: Self::Inner) -> Self;
 }
@@ -200,12 +203,17 @@ macro_rules! hash_newtype {
             fn into_inner(self) -> Self::Inner {
                 self.0.into_inner()
             }
+
+            #[inline]
+            fn as_inner(&self) -> &Self::Inner {
+                self.0.as_inner()
+            }
         }
 
         impl ::std::str::FromStr for $newtype {
-            type Err = ::hex::Error;
+            type Err = $crate::hex::Error;
             fn from_str(s: &str) -> ::std::result::Result<$newtype, Self::Err> {
-                ::hex::FromHex::from_hex(s)
+                $crate::hex::FromHex::from_hex(s)
             }
         }
     };

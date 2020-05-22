@@ -28,3 +28,6 @@ serde_test = "1.0"
 version = "1.0"
 optional = true
 default-features = false
+
+[target.wasm32-unknown-unknown.dev-dependencies]
+wasm-bindgen-test = "0.3"
