@@ -2,7 +2,7 @@ language: rust
 cache: 
   cargo: true
   directories:
-  - cargo_web
+  - wasm
 
 rust:
   - stable
@@ -20,16 +20,16 @@ jobs:
 
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y binutils-dev libunwind8-dev
+  - sudo apt-get install -y binutils-dev libunwind8-dev nodejs
 
 script:
   - |
       if [ "$FUZZ" = "true" ]; then
         cd fuzz && cargo test --verbose && ./travis-fuzz.sh;
       elif [ "$WASM" = "true" ]; then
-        CARGO_TARGET_DIR=cargo_web cargo install --force cargo-web
-        cargo web build --target=asmjs-unknown-emscripten
-        cargo web test --target=asmjs-unknown-emscripten --nodejs
+        CARGO_TARGET_DIR=wasm cargo install --verbose --force wasm-pack &&
+        sed -i 's/\[lib\]/[lib]\ncrate-type = ["cdylib", "rlib"]/' Cargo.toml &&
+        wasm-pack build && wasm-pack test --node
       else
         cargo build --verbose
         cargo test --verbose
