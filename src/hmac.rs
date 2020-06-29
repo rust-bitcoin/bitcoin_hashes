@@ -107,7 +107,11 @@ impl<T: HashTrait> EngineTrait for HmacEngine<T> {
     }
 
     const BLOCK_SIZE: usize = T::Engine::BLOCK_SIZE;
-    
+
+    fn n_bytes_hashed(&self) -> usize {
+        self.iengine.n_bytes_hashed()
+    }
+
     fn input(&mut self, buf: &[u8]) {
         self.iengine.input(buf)
     }

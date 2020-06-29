@@ -187,6 +187,11 @@ impl EngineTrait for HashEngine {
         self.tail = unsafe { u8to64_le(msg, i, left) };
         self.ntail = left;
     }
+
+    fn n_bytes_hashed(&self) -> usize {
+        self.length
+    }
+
 }
 
 /// Output of the SipHash24 hash function.
