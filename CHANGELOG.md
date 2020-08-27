@@ -1,4 +1,9 @@
 
+# 0.8.0 - 2020-08-26
+
+* Add `as_inner` method to `Hash` trait
+* Add `n_bytes_hashed` to `HashEngine` trait
+
 # 0.7.6 - 2020-04-05
 
 * Support hash newtypes with reversed hex serialization.
