@@ -1,4 +1,8 @@
 
+# 0.9.0 - 2020-08-27
+
+* **Update MSRV to 1.29.0**
+
 # 0.8.0 - 2020-08-26
 
 * Add `as_inner` method to `Hash` trait
