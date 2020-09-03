@@ -12,7 +12,8 @@ anyway.
 [Documentation](https://docs.rs/bitcoin_hashes/)
 
 ## Minimum Supported Rust Version (MSRV)
-This library should always compile with any combination of features on **Rust 1.22**.
+This library should always compile with any combination of features on 
+**Rust 1.29**.
 
 
 ## Contributions
