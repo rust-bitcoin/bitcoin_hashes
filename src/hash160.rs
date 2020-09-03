@@ -23,7 +23,7 @@ use core::str;
 
 use sha256;
 use ripemd160;
-use Hash as HashTrait;
+use Digest as HashTrait;
 use Error;
 
 /// Output of the Bitcoin HASH160 hash function
@@ -90,8 +90,8 @@ impl HashTrait for Hash {
 mod tests {
     use hash160;
     use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
     #[derive(Clone)]
     struct Test {
@@ -136,7 +136,7 @@ mod tests {
             for ch in test.input {
                 engine.input(&[ch]);
             }
-            let manual_hash = Hash::from_engine(engine);
+            let manual_hash = Digest::from_engine(engine);
             assert_eq!(hash, manual_hash);
             assert_eq!(hash.into_inner()[..].as_ref(), test.output.as_slice());
         }
@@ -166,8 +166,8 @@ mod benches {
     use test::Bencher;
 
     use hash160;
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
     #[bench]
     pub fn hash160_10(bh: & mut Bencher) {

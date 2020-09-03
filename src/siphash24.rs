@@ -22,8 +22,8 @@
 use core::{cmp, mem, ptr, str};
 
 use Error;
-use Hash as HashTrait;
-use HashEngine as EngineTrait;
+use Digest as HashTrait;
+use DigestEngine as EngineTrait;
 use util;
 
 macro_rules! compress {
@@ -322,7 +322,7 @@ unsafe fn u8to64_le(buf: &[u8], start: usize, len: usize) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use Hash as HashTrait;
+    use Digest as HashTrait;
 
     #[test]
     fn test_siphash_2_4() {
@@ -416,8 +416,8 @@ mod benches {
     use test::Bencher;
 
     use siphash24;
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
     #[bench]
     pub fn siphash24_1ki(bh: &mut Bencher) {

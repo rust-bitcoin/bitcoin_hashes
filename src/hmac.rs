@@ -23,8 +23,8 @@ use core::{borrow, fmt, ops, str};
 #[cfg(feature="serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
-use HashEngine as EngineTrait;
-use Hash as HashTrait;
+use DigestEngine as EngineTrait;
+use Digest as HashTrait;
 use Error;
 
 /// A hash computed from a RFC 2104 HMAC. Parameterized by the underlying hash function.
@@ -225,7 +225,7 @@ impl<'de, T: HashTrait + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
 mod tests {
     use sha256;
     #[cfg(feature="serde")] use sha512;
-    use {Hash, HashEngine, Hmac, HmacEngine};
+    use {Digest, DigestEngine, Hmac, HmacEngine};
 
     #[derive(Clone)]
     struct Test {
@@ -382,7 +382,7 @@ mod benches {
     use test::Bencher;
 
     use sha256;
-    use {Hmac, Hash, HashEngine};
+    use {Hmac, Digest, DigestEngine};
 
     #[bench]
     pub fn hmac_sha256_10(bh: & mut Bencher) {

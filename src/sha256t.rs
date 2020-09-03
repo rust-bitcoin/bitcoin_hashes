@@ -17,7 +17,7 @@
 use core::marker::PhantomData;
 
 use sha256;
-use Hash as HashTrait;
+use Digest as HashTrait;
 #[allow(unused)]
 use Error;
 
@@ -159,7 +159,7 @@ impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
 
 #[cfg(test)]
 mod tests {
-    use ::{Hash, sha256, sha256t};
+    use ::{Digest, sha256, sha256t};
     use ::hex::ToHex;
 
     #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]

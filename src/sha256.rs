@@ -17,8 +17,8 @@
 use core::{cmp, str};
 
 use hex;
-use HashEngine as EngineTrait;
-use Hash as HashTrait;
+use DigestEngine as EngineTrait;
+use Digest as HashTrait;
 use Error;
 use util;
 
@@ -344,7 +344,7 @@ impl HashEngine {
 mod tests {
     use sha256;
     use hex::{FromHex, ToHex};
-    use {Hash, HashEngine};
+    use {Digest, DigestEngine};
 
     #[derive(Clone)]
     struct Test {
@@ -518,8 +518,8 @@ mod benches {
     use test::Bencher;
 
     use sha256;
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
     #[bench]
     pub fn sha256_10(bh: & mut Bencher) {

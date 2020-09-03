@@ -65,7 +65,7 @@ pub use error::Error;
 /// A hashing engine which bytes can be serialized into. It is expected
 /// to implement the `io::Write` trait, but to never return errors under
 /// any conditions.
-pub trait HashEngine: Clone + Default {
+pub trait DigestEngine: Clone + Default {
     /// Byte array representing the internal state of the hash engine
     type MidState;
 
@@ -84,7 +84,7 @@ pub trait HashEngine: Clone + Default {
 }
 
 /// Trait which applies to hashes of all types
-pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
+pub trait Digest: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     hash::Hash + fmt::Debug + fmt::Display + fmt::LowerHex +
     ops::Index<ops::RangeFull, Output = [u8]> +
     ops::Index<ops::RangeFrom<usize>, Output = [u8]> +
@@ -96,7 +96,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     /// A hashing engine which bytes can be serialized into. It is expected
     /// to implement the `io::Write` trait, and to never return errors under
     /// any conditions.
-    type Engine: HashEngine;
+    type Engine: DigestEngine;
 
     /// The byte array that represents the hash internally
     type Inner: hex::FromHex;
@@ -141,7 +141,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
 #[macro_export]
 macro_rules! hash_newtype {
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta) => {
-        hash_newtype!($newtype, $hash, $len, $docs, <$hash as $crate::Hash>::DISPLAY_BACKWARD);
+        hash_newtype!($newtype, $hash, $len, $docs, <$hash as $crate::Digest>::DISPLAY_BACKWARD);
     };
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta, $reverse:expr) => {
         #[$docs]
@@ -181,25 +181,25 @@ macro_rules! hash_newtype {
             }
         }
 
-        impl $crate::Hash for $newtype {
-            type Engine = <$hash as $crate::Hash>::Engine;
-            type Inner = <$hash as $crate::Hash>::Inner;
+        impl $crate::Digest for $newtype {
+            type Engine = <$hash as $crate::Digest>::Engine;
+            type Inner = <$hash as $crate::Digest>::Inner;
 
-            const LEN: usize = <$hash as $crate::Hash>::LEN;
+            const LEN: usize = <$hash as $crate::Digest>::LEN;
             const DISPLAY_BACKWARD: bool = $reverse;
 
             fn from_engine(e: Self::Engine) -> Self {
-                Self::from(<$hash as $crate::Hash>::from_engine(e))
+                Self::from(<$hash as $crate::Digest>::from_engine(e))
             }
 
             #[inline]
             fn from_slice(sl: &[u8]) -> Result<$newtype, $crate::Error> {
-                Ok($newtype(<$hash as $crate::Hash>::from_slice(sl)?))
+                Ok($newtype(<$hash as $crate::Digest>::from_slice(sl)?))
             }
 
             #[inline]
             fn from_inner(inner: Self::Inner) -> Self {
-                $newtype(<$hash as $crate::Hash>::from_inner(inner))
+                $newtype(<$hash as $crate::Digest>::from_inner(inner))
             }
 
             #[inline]
@@ -224,7 +224,7 @@ macro_rules! hash_newtype {
 
 #[cfg(test)]
 mod test {
-    use Hash;
+    use Digest;
     hash_newtype!(TestNewtype, ::sha256d::Hash, 32, doc="A test newtype");
     hash_newtype!(TestNewtype2, ::sha256d::Hash, 32, doc="A test newtype");
 

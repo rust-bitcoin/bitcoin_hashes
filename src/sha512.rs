@@ -21,8 +21,8 @@
 
 use core::{cmp, hash, str};
 
-use HashEngine as EngineTrait;
-use Hash as HashTrait;
+use DigestEngine as EngineTrait;
+use Digest as HashTrait;
 use Error;
 use util;
 
@@ -334,8 +334,8 @@ impl HashEngine {
 mod tests {
     use sha512;
     use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
     #[derive(Clone)]
     struct Test {
@@ -443,8 +443,8 @@ mod benches {
     use test::Bencher;
 
     use sha512;
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
     #[bench]
     pub fn sha512_10(bh: & mut Bencher) {

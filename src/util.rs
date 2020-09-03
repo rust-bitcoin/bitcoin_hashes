@@ -211,7 +211,7 @@ define_le_to_array!(u64_to_array_le, u64, 8);
 
 #[cfg(test)]
 mod test {
-    use Hash;
+    use Digest;
     use sha256;
     use super::*;
 
