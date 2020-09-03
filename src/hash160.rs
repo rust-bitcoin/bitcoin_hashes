@@ -23,7 +23,7 @@ use core::str;
 
 use sha256;
 use ripemd160;
-use Digest as HashTrait;
+use Digest;
 use Error;
 
 /// Output of the Bitcoin HASH160 hash function
@@ -44,7 +44,7 @@ impl str::FromStr for Hash {
     }
 }
 
-impl HashTrait for Hash {
+impl Digest for Hash {
     type Engine = sha256::HashEngine;
     type Inner = [u8; 20];
 

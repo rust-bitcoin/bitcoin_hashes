@@ -22,8 +22,8 @@
 use core::{cmp, mem, ptr, str};
 
 use Error;
-use Digest as HashTrait;
-use DigestEngine as EngineTrait;
+use DigestEngine;
+use Digest;
 use util;
 
 macro_rules! compress {
@@ -139,7 +139,7 @@ impl Default for HashEngine {
     }
 }
 
-impl EngineTrait for HashEngine {
+impl DigestEngine for HashEngine {
     type MidState = State;
 
     fn midstate(&self) -> State {
@@ -255,7 +255,7 @@ impl Hash {
     }
 }
 
-impl HashTrait for Hash {
+impl Digest for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 8];
 
@@ -322,7 +322,6 @@ unsafe fn u8to64_le(buf: &[u8], start: usize, len: usize) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use Digest as HashTrait;
 
     #[test]
     fn test_siphash_2_4() {

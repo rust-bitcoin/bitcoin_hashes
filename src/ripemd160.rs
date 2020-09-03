@@ -21,8 +21,8 @@
 
 use core::{cmp, str};
 
-use DigestEngine as EngineTrait;
-use Digest as HashTrait;
+use DigestEngine;
+use Digest;
 use Error;
 use util;
 
@@ -46,7 +46,7 @@ impl Default for HashEngine {
     }
 }
 
-impl EngineTrait for HashEngine {
+impl DigestEngine for HashEngine {
     type MidState = [u8; 20];
 
     #[cfg(not(feature = "fuzztarget"))]
@@ -92,7 +92,7 @@ impl str::FromStr for Hash {
     }
 }
 
-impl HashTrait for Hash {
+impl Digest for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 20];
 

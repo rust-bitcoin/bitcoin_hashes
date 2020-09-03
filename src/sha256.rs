@@ -17,8 +17,8 @@
 use core::{cmp, str};
 
 use hex;
-use DigestEngine as EngineTrait;
-use Digest as HashTrait;
+use DigestEngine;
+use Digest;
 use Error;
 use util;
 
@@ -42,7 +42,7 @@ impl Default for HashEngine {
     }
 }
 
-impl EngineTrait for HashEngine {
+impl DigestEngine for HashEngine {
     type MidState = Midstate;
 
     #[cfg(not(feature = "fuzztarget"))]
@@ -88,7 +88,7 @@ index_impl!(Hash);
 serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
 
-impl HashTrait for Hash {
+impl Digest for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
 
