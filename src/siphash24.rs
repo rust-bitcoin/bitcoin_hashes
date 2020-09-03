@@ -140,7 +140,7 @@ impl Default for HashEngine {
 }
 
 impl DigestEngine for HashEngine {
-    type MidState = State;
+    type Midstate = State;
 
     fn midstate(&self) -> State {
         self.state.clone()

@@ -40,11 +40,11 @@ impl<T: Digest + str::FromStr> str::FromStr for Hmac<T> {
 
 /// Pair of underlying hash midstates which represent the current state
 /// of an `HmacEngine`
-pub struct HmacMidState<T: Digest> {
+pub struct HmacMidstate<T: Digest> {
     /// Midstate of the inner hash engine
-    pub inner: <T::Engine as DigestEngine>::MidState,
+    pub inner: <T::Engine as DigestEngine>::Midstate,
     /// Midstate of the outer hash engine
-    pub outer: <T::Engine as DigestEngine>::MidState,
+    pub outer: <T::Engine as DigestEngine>::Midstate,
 }
 
 /// Pair of underyling hash engines, used for the inner and outer hash of HMAC
@@ -97,10 +97,10 @@ impl<T: Digest> HmacEngine<T> {
 }
 
 impl<T: Digest> DigestEngine for HmacEngine<T> {
-    type MidState = HmacMidState<T>;
+    type Midstate = HmacMidstate<T>;
 
-    fn midstate(&self) -> Self::MidState {
-        HmacMidState {
+    fn midstate(&self) -> Self::Midstate {
+        HmacMidstate {
             inner: self.iengine.midstate(),
             outer: self.oengine.midstate(),
         }

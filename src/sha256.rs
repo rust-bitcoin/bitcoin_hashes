@@ -43,7 +43,7 @@ impl Default for HashEngine {
 }
 
 impl DigestEngine for HashEngine {
-    type MidState = Midstate;
+    type Midstate = Midstate;
 
     #[cfg(not(feature = "fuzztarget"))]
     fn midstate(&self) -> Midstate {
