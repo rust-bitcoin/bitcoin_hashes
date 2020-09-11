@@ -23,6 +23,7 @@ use core::{borrow, fmt, ops, str};
 #[cfg(feature="serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
+use hex::InnerHex;
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
@@ -178,7 +179,6 @@ impl<T: HashTrait> borrow::Borrow<[u8]> for Hmac<T> {
 
 impl<T: HashTrait> HashTrait for Hmac<T> {
     type Engine = HmacEngine<T>;
-    type Inner = T::Inner;
 
     fn from_engine(mut e: HmacEngine<T>) -> Hmac<T> {
         let ihash = T::from_engine(e.iengine);
@@ -192,6 +192,10 @@ impl<T: HashTrait> HashTrait for Hmac<T> {
     fn from_slice(sl: &[u8]) -> Result<Hmac<T>, Error> {
         T::from_slice(sl).map(Hmac)
     }
+}
+
+impl<T: HashTrait> InnerHex for Hmac<T> {
+    type Inner = T::Inner;
 
     fn into_inner(self) -> Self::Inner {
         self.0.into_inner()
@@ -223,6 +227,8 @@ impl<'de, T: HashTrait + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
 
 #[cfg(test)]
 mod tests {
+    use hex::InnerHex;
+
     use sha256;
     #[cfg(feature="serde")] use sha512;
     use {Hash, HashEngine, Hmac, HmacEngine};

@@ -16,6 +16,7 @@
 
 use core::marker::PhantomData;
 
+use hex::InnerHex;
 use sha256;
 use Hash as HashTrait;
 #[allow(unused)]
@@ -40,7 +41,6 @@ borrow_slice_impl!(Hash, T:Tag);
 
 impl<T: Tag> HashTrait for Hash<T> {
     type Engine = sha256::HashEngine;
-    type Inner = [u8; 32];
 
     fn engine() -> sha256::HashEngine {
         T::engine()
@@ -61,6 +61,10 @@ impl<T: Tag> HashTrait for Hash<T> {
             Ok(Hash::from_inner(ret))
         }
     }
+}
+
+impl<T: Tag> InnerHex for Hash<T> {
+    type Inner = [u8; 32];
 
     // NOTE! If this is changed, please make sure the serde serialization is still correct.
     const DISPLAY_BACKWARD: bool = true;

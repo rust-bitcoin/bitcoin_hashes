@@ -18,16 +18,11 @@
 
 use std::{error, io};
 
-use {hex, sha1, sha256, sha512, ripemd160, siphash24};
+use {sha1, sha256, sha512, ripemd160, siphash24};
 use HashEngine;
 use Error;
 
 impl error::Error for Error {
-    fn cause(&self) -> Option<&error::Error> { None }
-    fn description(&self) -> &str { "`std::error::description` is deprecated" }
-}
-
-impl error::Error for hex::Error {
     fn cause(&self) -> Option<&error::Error> { None }
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }

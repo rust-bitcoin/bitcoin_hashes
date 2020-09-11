@@ -16,6 +16,7 @@
 
 use core::{cmp, str};
 
+use hex::InnerHex;
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
@@ -89,7 +90,6 @@ impl str::FromStr for Hash {
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
-    type Inner = [u8; 20];
 
     fn from_engine(mut e: HashEngine) -> Hash {
         // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
@@ -121,6 +121,10 @@ impl HashTrait for Hash {
             Ok(Hash(ret))
         }
     }
+}
+
+impl InnerHex for Hash {
+    type Inner = [u8; 20];
 
     fn into_inner(self) -> Self::Inner {
         self.0
@@ -182,7 +186,7 @@ impl HashEngine {
 #[cfg(test)]
 mod tests {
     use sha1;
-    use hex::{FromHex, ToHex};
+    use hex::{FromHex, ToHex, InnerHex};
     use Hash;
     use HashEngine;
 

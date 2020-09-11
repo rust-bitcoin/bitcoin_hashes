@@ -40,12 +40,14 @@
 #[cfg(any(test, feature="std"))] pub extern crate core;
 #[cfg(feature="serde")] pub extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
+extern crate bitcoin_num as num;
+
+pub use num::hex as hex;
 
 #[macro_use] mod util;
 #[macro_use] mod serde_macros;
 #[cfg(any(test, feature = "std"))] mod std_impls;
 pub mod error;
-pub mod hex;
 pub mod hash160;
 pub mod hmac;
 pub mod ripemd160;
@@ -85,6 +87,7 @@ pub trait HashEngine: Clone + Default {
 
 /// Trait which applies to hashes of all types
 pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
+    hex::InnerHex +
     hash::Hash + fmt::Debug + fmt::Display + fmt::LowerHex +
     ops::Index<ops::RangeFull, Output = [u8]> +
     ops::Index<ops::RangeFrom<usize>, Output = [u8]> +
@@ -97,9 +100,6 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     /// to implement the `io::Write` trait, and to never return errors under
     /// any conditions.
     type Engine: HashEngine;
-
-    /// The byte array that represents the hash internally
-    type Inner: hex::FromHex;
 
     /// Construct a new engine
     fn engine() -> Self::Engine {
@@ -121,27 +121,13 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
         engine.input(data);
         Self::from_engine(engine)
     }
-
-    /// Flag indicating whether user-visible serializations of this hash
-    /// should be backward. For some reason Satoshi decided this should be
-    /// true for `Sha256dHash`, so here we are.
-    const DISPLAY_BACKWARD: bool = false;
-
-    /// Unwraps the hash and returns the underlying byte array
-    fn into_inner(self) -> Self::Inner;
-
-    /// Unwraps the hash and returns a reference to the underlying byte array
-    fn as_inner(&self) -> &Self::Inner;
-
-    /// Constructs a hash from the underlying byte array
-    fn from_inner(inner: Self::Inner) -> Self;
 }
 
 /// Create a new newtype around a [Hash] type.
 #[macro_export]
 macro_rules! hash_newtype {
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta) => {
-        hash_newtype!($newtype, $hash, $len, $docs, <$hash as $crate::Hash>::DISPLAY_BACKWARD);
+        hash_newtype!($newtype, $hash, $len, $docs, <$hash as $crate::hex::InnerHex>::DISPLAY_BACKWARD);
     };
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta, $reverse:expr) => {
         #[$docs]
@@ -183,10 +169,8 @@ macro_rules! hash_newtype {
 
         impl $crate::Hash for $newtype {
             type Engine = <$hash as $crate::Hash>::Engine;
-            type Inner = <$hash as $crate::Hash>::Inner;
 
             const LEN: usize = <$hash as $crate::Hash>::LEN;
-            const DISPLAY_BACKWARD: bool = $reverse;
 
             fn from_engine(e: Self::Engine) -> Self {
                 Self::from(<$hash as $crate::Hash>::from_engine(e))
@@ -196,10 +180,16 @@ macro_rules! hash_newtype {
             fn from_slice(sl: &[u8]) -> Result<$newtype, $crate::Error> {
                 Ok($newtype(<$hash as $crate::Hash>::from_slice(sl)?))
             }
+        }
+
+        impl $crate::hex::InnerHex for $newtype {
+            type Inner = <$hash as $crate::hex::InnerHex>::Inner;
+
+            const DISPLAY_BACKWARD: bool = $reverse;
 
             #[inline]
             fn from_inner(inner: Self::Inner) -> Self {
-                $newtype(<$hash as $crate::Hash>::from_inner(inner))
+                $newtype(<$hash as $crate::hex::InnerHex>::from_inner(inner))
             }
 
             #[inline]
