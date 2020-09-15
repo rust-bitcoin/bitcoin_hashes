@@ -85,7 +85,7 @@ impl<T: Hash> FromHex for T {
 }
 
 /// Iterator over a hex-encoded string slice which decodes hex and yields bytes.
-pub struct HexIterator<'a> {
+struct HexIterator<'a> {
     /// The `Bytes` iterator whose next two bytes will be decoded to yield
     /// the next byte.
     iter: str::Bytes<'a>,
