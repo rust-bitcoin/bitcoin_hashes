@@ -14,6 +14,7 @@
 
 //! # SHA256t (tagged SHA256)
 
+use core::str;
 use core::marker::PhantomData;
 
 use sha256;
@@ -31,6 +32,13 @@ pub trait Tag: Copy + Ord + Default + ::core::hash::Hash {
 /// Output of the SHA256t hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Hash<T: Tag>([u8; 32], PhantomData<T>);
+
+impl<T: Tag> str::FromStr for Hash<T> {
+    type Err = ::hex::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        ::hex::FromHex::from_hex(s)
+    }
+}
 
 hex_fmt_impl!(Debug, Hash, T:Tag);
 hex_fmt_impl!(Display, Hash, T:Tag);
