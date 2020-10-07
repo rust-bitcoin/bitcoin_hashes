@@ -76,7 +76,11 @@ impl EngineTrait for HashEngine {
 
 /// Output of the RIPEMD160 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Hash([u8; 20]);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_20"))]
+    [u8; 20]
+);
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
@@ -541,6 +545,24 @@ mod tests {
         let hash = ripemd160::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_tokens(&hash.readable(), &[Token::Str("132072df690933835eb8b6ad0b77e7b6f14acad7")]);
+    }
+
+    #[cfg(all(feature = "schemars",feature = "serde"))]
+    #[test]
+    fn jsonschema_accurate() {
+        static HASH_BYTES: [u8; 20] = [
+            0x13, 0x20, 0x72, 0xdf,
+            0x69, 0x09, 0x33, 0x83,
+            0x5e, 0xb8, 0xb6, 0xad,
+            0x0b, 0x77, 0xe7, 0xb6,
+            0xf1, 0x4a, 0xca, 0xd7,
+        ];
+
+        let hash = ripemd160::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        let js = serde_json::from_str(&serde_json::to_string(&hash).unwrap()).unwrap();
+        let s  = schemars::schema_for! (ripemd160::Hash);
+        let schema = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
+        assert!(jsonschema_valid::Config::from_schema(&schema, None).unwrap().validate(&js).is_ok());
     }
 }
 

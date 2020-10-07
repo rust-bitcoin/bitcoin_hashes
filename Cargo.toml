@@ -21,8 +21,14 @@ fuzztarget = [] # used by other rust-bitcoin projects to make hashes almost-noop
 
 [dev-dependencies]
 serde_test = "1.0"
+serde_json = "1.0"
+jsonschema-valid = "0.4.0"
 
 [dependencies]
+
+[dependencies.schemars]
+version = "0.8.0"
+optional = true
 
 [dependencies.serde]
 version = "1.0"
