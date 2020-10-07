@@ -1,4 +1,10 @@
 
+# 0.9.1 - 2020-10-07
+
+* Add `FromStr` impl to `sha256t::Hash`
+* Fix `Hash::engine()` implementation for hash newtypes
+* Add `sha256t_hash_newtype!` macro for creating tagged hashes
+
 # 0.9.0 - 2020-08-27
 
 * **Update MSRV to 1.29.0**
