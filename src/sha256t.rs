@@ -86,6 +86,28 @@ impl<T: Tag> HashTrait for Hash<T> {
     }
 }
 
+/// Macro used to define a newtype tagged hash.
+/// It creates two public types:
+/// - a sha246t::Tag struct,
+/// - a sha256t::Hash type alias.
+#[macro_export]
+macro_rules! sha256t_hash_newtype {
+    ($newtype:ident, $tag:ident, $midstate:ident, $midstate_len:expr, $docs:meta, $reverse: expr) => {
+        /// The tag used for [$newtype].
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
+        pub struct $tag;
+
+        impl $crate::sha256t::Tag for $tag {
+            fn engine() -> $crate::sha256::HashEngine {
+                let midstate = $crate::sha256::Midstate::from_inner($midstate);
+                $crate::sha256::HashEngine::from_midstate(midstate, $midstate_len)
+            }
+        }
+
+        $crate::hash_newtype!($newtype, $crate::sha256t::Hash<$tag>, 32, $docs, $reverse);
+    };
+}
+
 #[cfg(feature="serde")]
 impl<T: Tag> ::serde::Serialize for Hash<T> {
     fn serialize<S: ::serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
@@ -170,16 +192,18 @@ mod tests {
     use ::{Hash, sha256, sha256t};
     use ::hex::ToHex;
 
+    const TEST_MIDSTATE: [u8; 32] = [
+       156, 224, 228, 230, 124, 17, 108, 57, 56, 179, 202, 242, 195, 15, 80, 137, 211, 243,
+       147, 108, 71, 99, 110, 96, 125, 179, 62, 234, 221, 198, 240, 201,
+    ];
+
     #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
     pub struct TestHashTag;
 
     impl sha256t::Tag for TestHashTag {
         fn engine() -> sha256::HashEngine {
             // The TapRoot TapLeaf midstate.
-            let midstate = sha256::Midstate::from_inner([
-               156, 224, 228, 230, 124, 17, 108, 57, 56, 179, 202, 242, 195, 15, 80, 137, 211, 243,
-               147, 108, 71, 99, 110, 96, 125, 179, 62, 234, 221, 198, 240, 201,
-            ]);
+            let midstate = sha256::Midstate::from_inner(TEST_MIDSTATE);
             sha256::HashEngine::from_midstate(midstate, 64)
         }
     }
@@ -187,10 +211,16 @@ mod tests {
     /// A hash tagged with `$name`.
     pub type TestHash = sha256t::Hash<TestHashTag>;
 
+    sha256t_hash_newtype!(NewTypeHash, NewTypeTag, TEST_MIDSTATE, 64, doc="test hash", true);
+
     #[test]
     fn test_sha256t() {
        assert_eq!(
            TestHash::hash(&[0]).to_hex(),
+           "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
+       );
+       assert_eq!(
+           NewTypeHash::hash(&[0]).to_hex(),
            "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
        );
     }
