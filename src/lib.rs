@@ -188,6 +188,10 @@ macro_rules! hash_newtype {
             const LEN: usize = <$hash as $crate::Hash>::LEN;
             const DISPLAY_BACKWARD: bool = $reverse;
 
+            fn engine() -> Self::Engine {
+                <$hash as $crate::Hash>::engine()
+            }
+
             fn from_engine(e: Self::Engine) -> Self {
                 Self::from(<$hash as $crate::Hash>::from_engine(e))
             }
