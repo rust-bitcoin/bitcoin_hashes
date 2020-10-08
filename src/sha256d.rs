@@ -17,7 +17,7 @@
 use core::str;
 
 use sha256;
-use Hash as HashTrait;
+use Digest;
 use Error;
 
 /// Output of the SHA256d hash function
@@ -38,7 +38,7 @@ impl str::FromStr for Hash {
     }
 }
 
-impl HashTrait for Hash {
+impl Digest for Hash {
     type Engine = sha256::HashEngine;
     type Inner = [u8; 32];
 
@@ -86,8 +86,8 @@ impl HashTrait for Hash {
 mod tests {
     use sha256d;
     use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
 #[derive(Clone)]
     struct Test {
@@ -153,8 +153,8 @@ mod benches {
     use test::Bencher;
 
     use sha256d;
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
     #[bench]
     pub fn sha256d_10(bh: & mut Bencher) {

@@ -85,7 +85,7 @@ mod benches {
 
     use sha256;
     use sha512;
-    use Hash;
+    use Digest;
     use cmp::fixed_time_eq;
 
     #[bench]

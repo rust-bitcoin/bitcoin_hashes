@@ -16,8 +16,8 @@
 
 use core::{cmp, str};
 
-use HashEngine as EngineTrait;
-use Hash as HashTrait;
+use DigestEngine;
+use Digest;
 use Error;
 use util;
 
@@ -41,8 +41,8 @@ impl Default for HashEngine {
     }
 }
 
-impl EngineTrait for HashEngine {
-    type MidState = [u8; 20];
+impl DigestEngine for HashEngine {
+    type Midstate = [u8; 20];
 
     #[cfg(not(feature = "fuzztarget"))]
     fn midstate(&self) -> [u8; 20] {
@@ -87,7 +87,7 @@ impl str::FromStr for Hash {
     }
 }
 
-impl HashTrait for Hash {
+impl Digest for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 20];
 
@@ -183,8 +183,8 @@ impl HashEngine {
 mod tests {
     use sha1;
     use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
     #[derive(Clone)]
     struct Test {
@@ -274,8 +274,8 @@ mod benches {
     use test::Bencher;
 
     use sha1;
-    use Hash;
-    use HashEngine;
+    use Digest;
+    use DigestEngine;
 
     #[bench]
     pub fn sha1_10(bh: & mut Bencher) {

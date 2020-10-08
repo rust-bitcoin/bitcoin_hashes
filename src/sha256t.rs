@@ -18,7 +18,7 @@ use core::str;
 use core::marker::PhantomData;
 
 use sha256;
-use Hash as HashTrait;
+use Digest;
 #[allow(unused)]
 use Error;
 
@@ -46,7 +46,7 @@ hex_fmt_impl!(LowerHex, Hash, T:Tag);
 index_impl!(Hash, T:Tag);
 borrow_slice_impl!(Hash, T:Tag);
 
-impl<T: Tag> HashTrait for Hash<T> {
+impl<T: Tag> Digest for Hash<T> {
     type Engine = sha256::HashEngine;
     type Inner = [u8; 32];
 
@@ -189,7 +189,7 @@ impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
 
 #[cfg(test)]
 mod tests {
-    use ::{Hash, sha256, sha256t};
+    use ::{Digest, sha256, sha256t};
     use ::hex::ToHex;
 
     const TEST_MIDSTATE: [u8; 32] = [

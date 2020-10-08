@@ -16,7 +16,7 @@
 //!
 
 use core::{fmt, str};
-use Hash;
+use Digest;
 
 /// Hex decoding error
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -68,7 +68,7 @@ impl<T: fmt::LowerHex> ToHex for T {
     }
 }
 
-impl<T: Hash> FromHex for T {
+impl<T: Digest> FromHex for T {
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
         where I: Iterator<Item=Result<u8, Error>> +
             ExactSizeIterator +
@@ -80,7 +80,7 @@ impl<T: Hash> FromHex for T {
         } else {
             inner = T::Inner::from_byte_iter(iter)?;
         }
-        Ok(Hash::from_inner(inner))
+        Ok(Digest::from_inner(inner))
     }
 }
 

@@ -19,7 +19,7 @@
 use std::{error, io};
 
 use {hex, sha1, sha256, sha512, ripemd160, siphash24};
-use HashEngine;
+use DigestEngine;
 use Error;
 
 impl error::Error for Error {
@@ -82,7 +82,7 @@ mod tests {
     use std::io::Write;
 
     use {sha1, sha256, sha256d, sha512, ripemd160, hash160, siphash24};
-    use Hash;
+    use Digest;
 
     macro_rules! write_test {
         ($mod:ident, $exp_empty:expr, $exp_256:expr, $exp_64k:expr,) => {
