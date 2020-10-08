@@ -16,6 +16,7 @@
 
 use core::str;
 
+use hex::InnerHex;
 use sha256;
 use Hash as HashTrait;
 use Error;
@@ -40,7 +41,6 @@ impl str::FromStr for Hash {
 
 impl HashTrait for Hash {
     type Engine = sha256::HashEngine;
-    type Inner = [u8; 32];
 
     fn engine() -> sha256::HashEngine {
         sha256::Hash::engine()
@@ -66,6 +66,10 @@ impl HashTrait for Hash {
             Ok(Hash(ret))
         }
     }
+}
+
+impl InnerHex for Hash {
+    type Inner = [u8; 32];
 
     const DISPLAY_BACKWARD: bool = true;
 
@@ -85,7 +89,7 @@ impl HashTrait for Hash {
 #[cfg(test)]
 mod tests {
     use sha256d;
-    use hex::{FromHex, ToHex};
+    use hex::{FromHex, ToHex, InnerHex};
     use Hash;
     use HashEngine;
 

@@ -21,6 +21,7 @@
 
 use core::{cmp, mem, ptr, str};
 
+use hex::InnerHex;
 use Error;
 use Hash as HashTrait;
 use HashEngine as EngineTrait;
@@ -257,7 +258,6 @@ impl Hash {
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
-    type Inner = [u8; 8];
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(e: HashEngine) -> Hash {
@@ -281,6 +281,10 @@ impl HashTrait for Hash {
             Ok(Hash(ret))
         }
     }
+}
+
+impl InnerHex for Hash {
+    type Inner = [u8; 8];
 
     fn into_inner(self) -> Self::Inner {
         self.0

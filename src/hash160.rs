@@ -21,6 +21,7 @@
 
 use core::str;
 
+use hex::InnerHex;
 use sha256;
 use ripemd160;
 use Hash as HashTrait;
@@ -46,7 +47,6 @@ impl str::FromStr for Hash {
 
 impl HashTrait for Hash {
     type Engine = sha256::HashEngine;
-    type Inner = [u8; 20];
 
     fn engine() -> sha256::HashEngine {
         sha256::Hash::engine()
@@ -72,6 +72,10 @@ impl HashTrait for Hash {
             Ok(Hash(ret))
         }
     }
+}
+
+impl InnerHex for Hash {
+    type Inner = [u8; 20];
 
     fn into_inner(self) -> Self::Inner {
         self.0
@@ -89,7 +93,7 @@ impl HashTrait for Hash {
 #[cfg(test)]
 mod tests {
     use hash160;
-    use hex::{FromHex, ToHex};
+    use hex::{FromHex, ToHex, InnerHex};
     use Hash;
     use HashEngine;
 

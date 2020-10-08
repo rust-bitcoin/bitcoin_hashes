@@ -23,6 +23,7 @@ fuzztarget = [] # used by other rust-bitcoin projects to make hashes almost-noop
 serde_test = "1.0"
 
 [dependencies]
+bitcoin_num = "0.1.0"
 
 [dependencies.serde]
 version = "1.0"

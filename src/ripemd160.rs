@@ -21,6 +21,7 @@
 
 use core::{cmp, str};
 
+use hex::InnerHex;
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
@@ -94,7 +95,6 @@ impl str::FromStr for Hash {
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
-    type Inner = [u8; 20];
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {
@@ -134,6 +134,10 @@ impl HashTrait for Hash {
             Ok(Hash(ret))
         }
     }
+}
+
+impl InnerHex for Hash {
+    type Inner = [u8; 20];
 
     fn into_inner(self) -> Self::Inner {
         self.0
@@ -444,7 +448,7 @@ impl HashEngine {
 #[cfg(test)]
 mod tests {
     use ripemd160;
-    use hex::{FromHex, ToHex};
+    use hex::{FromHex, ToHex, InnerHex};
     use Hash;
     use HashEngine;
 

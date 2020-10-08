@@ -16,6 +16,7 @@
 
 use core::{cmp, str};
 
+use hex::InnerHex;
 use hex;
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
@@ -90,7 +91,6 @@ borrow_slice_impl!(Hash);
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
-    type Inner = [u8; 32];
 
     #[cfg(not(feature = "fuzztarget"))]
     fn from_engine(mut e: HashEngine) -> Hash {
@@ -128,6 +128,10 @@ impl HashTrait for Hash {
             Ok(Hash(ret))
         }
     }
+}
+
+impl InnerHex for Hash {
+    type Inner = [u8; 32];
 
     fn into_inner(self) -> Self::Inner {
         self.0
@@ -343,7 +347,7 @@ impl HashEngine {
 #[cfg(test)]
 mod tests {
     use sha256;
-    use hex::{FromHex, ToHex};
+    use hex::{FromHex, ToHex, InnerHex};
     use {Hash, HashEngine};
 
     #[derive(Clone)]
