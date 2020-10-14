@@ -14,7 +14,7 @@
 
 //! # SHA256t (tagged SHA256)
 
-use core::str;
+use core::{cmp, str};
 use core::marker::PhantomData;
 
 use sha256;
@@ -23,15 +23,47 @@ use Hash as HashTrait;
 use Error;
 
 /// Trait representing a tag that can be used as a context for SHA256t hashes.
-pub trait Tag: Copy + Ord + Default + ::core::hash::Hash {
+pub trait Tag {
     /// Returns a hash engine that is pre-tagged and is ready
     /// to be used for the data.
     fn engine() -> sha256::HashEngine;
 }
 
 /// Output of the SHA256t hash function.
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Hash<T: Tag>([u8; 32], PhantomData<T>);
+
+impl<T: Tag> Copy for Hash<T> {}
+impl<T: Tag> Clone for Hash<T> {
+    fn clone(&self) -> Self {
+        Hash(self.0, self.1)
+    }
+}
+impl<T: Tag> PartialEq for Hash<T> {
+    fn eq(&self, other: &Hash<T>) -> bool {
+        self.0 == other.0
+    }
+}
+impl<T: Tag> Eq for Hash<T> {}
+impl<T: Tag> Default for Hash<T> {
+    fn default() -> Self {
+        Hash([0; 32], PhantomData)
+    }
+}
+impl<T: Tag> PartialOrd for Hash<T> {
+    fn partial_cmp(&self, other: &Hash<T>) -> Option<cmp::Ordering> {
+        Some(cmp::Ord::cmp(self, other))
+    }
+}
+impl<T: Tag> Ord for Hash<T> {
+    fn cmp(&self, other: &Hash<T>) -> cmp::Ordering {
+        cmp::Ord::cmp(&self.0, &other.0)
+    }
+}
+impl<T: Tag> ::core::hash::Hash for Hash<T> {
+    fn hash<H: ::core::hash::Hasher>(&self, h: &mut H) {
+        self.0.hash(h)
+    }
+}
 
 impl<T: Tag> str::FromStr for Hash<T> {
     type Err = ::hex::Error;
@@ -94,7 +126,6 @@ impl<T: Tag> HashTrait for Hash<T> {
 macro_rules! sha256t_hash_newtype {
     ($newtype:ident, $tag:ident, $midstate:ident, $midstate_len:expr, $docs:meta, $reverse: expr) => {
         /// The tag used for [$newtype].
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
         pub struct $tag;
 
         impl $crate::sha256t::Tag for $tag {
@@ -121,8 +152,12 @@ impl<T: Tag> ::serde::Serialize for Hash<T> {
 }
 
 #[cfg(feature="serde")]
-#[derive(Default)]
 struct HexVisitor<T: Tag>(PhantomData<T>);
+
+#[cfg(feature="serde")]
+impl<T: Tag> Default for HexVisitor<T> {
+    fn default() -> Self { HexVisitor(PhantomData) }
+}
 
 #[cfg(feature="serde")]
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
@@ -154,8 +189,12 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
 }
 
 #[cfg(feature="serde")]
-#[derive(Default)]
 struct BytesVisitor<T: Tag>(PhantomData<T>);
+
+#[cfg(feature="serde")]
+impl<T: Tag> Default for BytesVisitor<T> {
+    fn default() -> Self { BytesVisitor(PhantomData) }
+}
 
 #[cfg(feature="serde")]
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
