@@ -1,4 +1,21 @@
+// Bitcoin Hashes Library
+// Written in 2018 by
+//   Andrew Poelstra <apoelstra@wpsoftware.net>
+//
+// To the extent possible under law, the author(s) have dedicated all
+// copyright and related and neighboring rights to this software to
+// the public domain worldwide. This software is distributed without
+// any warranty.
+//
+// You should have received a copy of the CC0 Public Domain Dedication
+// along with this software.
+// If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+//
+
+//! Macros for serde trait impls, and supporting code
+
 #[cfg(feature = "serde")]
+/// Functions used by serde impls of all hashes
 pub mod serde_details {
     use Error;
 
@@ -60,6 +77,7 @@ pub mod serde_details {
         }
     }
 
+    /// Default serialization/deserialization methods
     pub trait SerdeHash
     where
         Self: Sized
@@ -68,9 +86,13 @@ pub mod serde_details {
             + std::ops::Index<usize, Output = u8>
             + std::ops::Index<std::ops::RangeFull, Output = [u8]>
     {
+        /// Size, in bits, of the hash
         const N: usize;
 
+        /// helper function to turn a deserialized slice into the correct hash type
         fn from_slice_delegated(sl: &[u8]) -> Result<Self, Error>;
+
+        /// serde serialization
         fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
             if s.is_human_readable() {
                 s.serialize_str(&self.to_hex())
@@ -79,6 +101,7 @@ pub mod serde_details {
             }
         }
 
+        /// serde deserialization
         fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
             if d.is_human_readable() {
                 d.deserialize_str(HexVisitor::<Self>(PhantomData))
