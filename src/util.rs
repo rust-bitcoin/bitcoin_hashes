@@ -209,6 +209,29 @@ define_slice_to_le!(slice_to_u64_le, u64);
 define_le_to_array!(u32_to_array_le, u32, 4);
 define_le_to_array!(u64_to_array_le, u64, 8);
 
+#[cfg(feature = "schemars")]
+pub mod json_hex_string {
+    use schemars::schema::{Schema, SchemaObject};
+    use schemars::{gen::SchemaGenerator, JsonSchema};
+    macro_rules! define_custom_hex {
+        ($name:ident, $len:expr) => {
+            pub fn $name(gen: &mut SchemaGenerator) -> Schema {
+                let mut schema: SchemaObject = <String>::json_schema(gen).into();
+                schema.string = Some(Box::new(schemars::schema::StringValidation {
+                    max_length: Some($len * 2),
+                    min_length: Some($len * 2),
+                    pattern: Some("[0-9a-fA-F]+".to_owned()),
+                }));
+                schema.into()
+            }
+        };
+    }
+    define_custom_hex!(len_8, 8);
+    define_custom_hex!(len_20, 20);
+    define_custom_hex!(len_32, 32);
+    define_custom_hex!(len_64, 64);
+}
+
 #[cfg(test)]
 mod test {
     use Hash;

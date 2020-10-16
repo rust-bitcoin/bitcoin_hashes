@@ -78,7 +78,11 @@ impl EngineTrait for HashEngine {
 }
 
 /// Output of the SHA256 hash function
-pub struct Hash([u8; 64]);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_64"))]
+    [u8; 64]
+);
 
 impl Copy for Hash {}
 
@@ -435,6 +439,27 @@ mod tests {
                  fffb8088ccf85497121ad4499e0845b876f6dd6640088a2f0b2d8a600bdf4c0c"
             )],
         );
+    }
+
+    #[cfg(all(feature = "schemars",feature = "serde"))]
+    #[test]
+    fn jsonschema_accurate() {
+        static HASH_BYTES: [u8; 64] = [
+            0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21,
+            0x11, 0x3c, 0x52, 0xff, 0x18, 0x2a, 0x1b, 0x8e,
+            0x0a, 0x19, 0x57, 0x54, 0xaa, 0x52, 0x7f, 0xcd,
+            0x00, 0xa4, 0x11, 0x62, 0x0b, 0x46, 0xf2, 0x0f,
+            0xff, 0xfb, 0x80, 0x88, 0xcc, 0xf8, 0x54, 0x97,
+            0x12, 0x1a, 0xd4, 0x49, 0x9e, 0x08, 0x45, 0xb8,
+            0x76, 0xf6, 0xdd, 0x66, 0x40, 0x08, 0x8a, 0x2f,
+            0x0b, 0x2d, 0x8a, 0x60, 0x0b, 0xdf, 0x4c, 0x0c,
+        ];
+
+        let hash = sha512::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        let js = serde_json::from_str(&serde_json::to_string(&hash).unwrap()).unwrap();
+        let s  = schemars::schema_for! (sha512::Hash);
+        let schema = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
+        assert!(jsonschema_valid::Config::from_schema(&schema, None).unwrap().validate(&js).is_ok());
     }
 }
 
