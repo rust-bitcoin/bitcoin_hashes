@@ -64,9 +64,7 @@ use core::{borrow, fmt, hash, ops};
 pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
 
-/// A hashing engine which bytes can be serialized into. It is expected
-/// to implement the `io::Write` trait, but to never return errors under
-/// any conditions.
+/// A hashing engine which bytes can be serialized into
 pub trait HashEngine: Clone + Default {
     /// Byte array representing the internal state of the hash engine
     type MidState;
