@@ -19,18 +19,19 @@
 pub mod serde_details {
     use Error;
 
-    use std::marker::PhantomData;
+    use core::marker::PhantomData;
+    use core::{fmt, ops};
     struct HexVisitor<ValueT>(PhantomData<ValueT>);
     use serde::{de, Serializer, Deserializer};
-    use hex;
+    use hex::{FromHex, ToHex};
 
     impl<'de, ValueT> de::Visitor<'de> for HexVisitor<ValueT>
     where
-        ValueT: hex::FromHex,
+        ValueT: FromHex,
     {
         type Value = ValueT;
 
-        fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter.write_str("an ASCII hex string")
         }
 
@@ -62,7 +63,7 @@ pub mod serde_details {
     where ValueT : SerdeHash {
         type Value = ValueT;
 
-        fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter.write_str("a bytestring")
         }
 
@@ -81,10 +82,10 @@ pub mod serde_details {
     pub trait SerdeHash
     where
         Self: Sized
-            + hex::ToHex
-            + hex::FromHex
-            + std::ops::Index<usize, Output = u8>
-            + std::ops::Index<std::ops::RangeFull, Output = [u8]>
+            + ToHex
+            + FromHex
+            + ops::Index<usize, Output = u8>
+            + ops::Index<ops::RangeFull, Output = [u8]>
     {
         /// Size, in bits, of the hash
         const N: usize;
