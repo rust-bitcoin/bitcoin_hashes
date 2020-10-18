@@ -44,7 +44,7 @@
 #[cfg(feature = "schemars")] extern crate schemars;
 
 #[macro_use] mod util;
-#[macro_use] mod serde_macros;
+#[macro_use] pub mod serde_macros;
 #[cfg(any(test, feature = "std"))] mod std_impls;
 pub mod error;
 pub mod hex;

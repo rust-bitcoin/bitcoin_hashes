@@ -1,4 +1,8 @@
 
+# 0.9.2 - 2020-10-16
+
+* Fix visibility issue with serde macros
+
 # 0.9.1 - 2020-10-07
 
 * Add `FromStr` impl to `sha256t::Hash`
