@@ -96,6 +96,15 @@ impl<T: HashTrait> HmacEngine<T> {
         EngineTrait::input(&mut ret.oengine, &opad[..T::Engine::BLOCK_SIZE]);
         ret
     }
+
+    /// A special constructor giving direct access to the underlying
+    /// "inner" and "outer" engines.
+    pub fn from_inner_engines(iengine: T::Engine, oengine: T::Engine) -> HmacEngine<T> {
+        HmacEngine {
+            iengine: iengine,
+            oengine: oengine,
+        }
+    }
 }
 
 impl<T: HashTrait> EngineTrait for HmacEngine<T> {
