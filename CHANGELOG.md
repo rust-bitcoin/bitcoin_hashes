@@ -1,4 +1,12 @@
 
+# 0.9.4 - 2020-10-23
+
+* Add `Hmac::from_inner_engines`
+
+# 0.9.3 - 2020-10-19
+
+* More serde macro fixes
+
 # 0.9.2 - 2020-10-18
 
 * Fix rustc 1.29.0 downstream issues with serde macros
