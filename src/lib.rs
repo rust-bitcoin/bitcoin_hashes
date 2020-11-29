@@ -37,6 +37,9 @@
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 #[cfg(all(test, feature = "unstable"))] extern crate test;
 
+#[macro_use] pub extern crate alloc;
+#[cfg(feature="bare-io")] extern crate bare_io;
+
 #[cfg(any(test, feature="std"))] pub extern crate core;
 #[cfg(feature="serde")] pub extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
@@ -45,7 +48,7 @@
 
 #[macro_use] mod util;
 #[macro_use] pub mod serde_macros;
-#[cfg(any(test, feature = "std"))] mod std_impls;
+pub mod impls;
 pub mod error;
 pub mod hex;
 pub mod hash160;
@@ -217,9 +220,9 @@ macro_rules! hash_newtype {
             }
         }
 
-        impl ::std::str::FromStr for $newtype {
+        impl ::core::str::FromStr for $newtype {
             type Err = $crate::hex::Error;
-            fn from_str(s: &str) -> ::std::result::Result<$newtype, Self::Err> {
+            fn from_str(s: &str) -> ::core::result::Result<$newtype, Self::Err> {
                 $crate::hex::FromHex::from_hex(s)
             }
         }

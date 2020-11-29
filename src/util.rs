@@ -29,8 +29,8 @@ macro_rules! hex_fmt_impl(
         hex_fmt_impl!($imp, $ty, );
     );
     ($imp:ident, $ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::core::fmt::$imp for $ty<$($gen),*> {
-            fn fmt(&self, f: &mut $crate::core::fmt::Formatter) -> $crate::core::fmt::Result {
+        impl<$($gen: $gent),*> ::core::fmt::$imp for $ty<$($gen),*> {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
                 use $crate::hex::{format_hex, format_hex_reverse};
                 if $ty::<$($gen),*>::DISPLAY_BACKWARD {
                     format_hex_reverse(&self.0, f)
@@ -49,37 +49,37 @@ macro_rules! index_impl(
         index_impl!($ty, );
     );
     ($ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::core::ops::Index<usize> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> ::core::ops::Index<usize> for $ty<$($gen),*> {
             type Output = u8;
             fn index(&self, index: usize) -> &u8 {
                 &self.0[index]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Index<$crate::core::ops::Range<usize>> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> ::core::ops::Index<::core::ops::Range<usize>> for $ty<$($gen),*> {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::Range<usize>) -> &[u8] {
+            fn index(&self, index: ::core::ops::Range<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Index<$crate::core::ops::RangeFrom<usize>> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> ::core::ops::Index<::core::ops::RangeFrom<usize>> for $ty<$($gen),*> {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::RangeFrom<usize>) -> &[u8] {
+            fn index(&self, index: ::core::ops::RangeFrom<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Index<$crate::core::ops::RangeTo<usize>> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> ::core::ops::Index<::core::ops::RangeTo<usize>> for $ty<$($gen),*> {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::RangeTo<usize>) -> &[u8] {
+            fn index(&self, index: ::core::ops::RangeTo<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Index<$crate::core::ops::RangeFull> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> ::core::ops::Index<::core::ops::RangeFull> for $ty<$($gen),*> {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::RangeFull) -> &[u8] {
+            fn index(&self, index: ::core::ops::RangeFull) -> &[u8] {
                 &self.0[index]
             }
         }
@@ -93,19 +93,19 @@ macro_rules! borrow_slice_impl(
         borrow_slice_impl!($ty, );
     );
     ($ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::core::borrow::Borrow<[u8]> for $ty<$($gen),*>  {
+        impl<$($gen: $gent),*> ::core::borrow::Borrow<[u8]> for $ty<$($gen),*>  {
             fn borrow(&self) -> &[u8] {
                 &self[..]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::convert::AsRef<[u8]> for $ty<$($gen),*>  {
+        impl<$($gen: $gent),*> ::core::convert::AsRef<[u8]> for $ty<$($gen),*>  {
             fn as_ref(&self) -> &[u8] {
                 &self[..]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Deref for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> ::core::ops::Deref for $ty<$($gen),*> {
             type Target = [u8];
 
             fn deref(&self) -> &Self::Target {

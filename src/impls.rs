@@ -16,17 +16,23 @@
 //!
 //! impls of traits defined in `std` and not `core`
 
+#[cfg(feature="std")]
 use std::{error, io};
+#[cfg(feature="bare-io")]
+use bare_io as io;
 
 use {hex, sha1, sha256, sha512, ripemd160, siphash24};
 use HashEngine;
 use Error;
 
+
+#[cfg(feature="std")]
 impl error::Error for Error {
     fn cause(&self) -> Option<&error::Error> { None }
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }
 
+#[cfg(feature="std")]
 impl error::Error for hex::Error {
     fn cause(&self) -> Option<&error::Error> { None }
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
@@ -79,7 +85,10 @@ impl io::Write for siphash24::HashEngine {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature="std")]
     use std::io::Write;
+    #[cfg(feature="bare-io")]
+    use bare_io::Write;
 
     use {sha1, sha256, sha256d, sha512, ripemd160, hash160, siphash24};
     use Hash;
