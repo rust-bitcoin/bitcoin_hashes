@@ -146,6 +146,7 @@ macro_rules! hash_newtype {
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta, $reverse:expr) => {
         #[$docs]
         #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+        #[repr(transparent)]
         pub struct $newtype($hash);
 
         hex_fmt_impl!(Debug, $newtype);

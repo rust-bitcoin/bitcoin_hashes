@@ -197,6 +197,7 @@ impl EngineTrait for HashEngine {
 /// Output of the SipHash24 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
 pub struct Hash(
     #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_8"))]
     [u8; 8]
