@@ -15,6 +15,7 @@
 //! # SHA256t (tagged SHA256)
 
 use core::{cmp, str};
+#[cfg(feature="serde")] use core::fmt;
 use core::marker::PhantomData;
 
 use sha256;
@@ -146,9 +147,8 @@ macro_rules! sha256t_hash_newtype {
 #[cfg(feature="serde")]
 impl<T: Tag> ::serde::Serialize for Hash<T> {
     fn serialize<S: ::serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        use ::hex::ToHex;
         if s.is_human_readable() {
-            s.serialize_str(&self.to_hex())
+            s.collect_str(self)
         } else {
             s.serialize_bytes(&self[..])
         }
@@ -167,7 +167,7 @@ impl<T: Tag> Default for HexVisitor<T> {
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
     type Value = Hash<T>;
 
-    fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("an ASCII hex string")
     }
 
@@ -176,7 +176,7 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
             E: ::serde::de::Error,
     {
         use ::hex::FromHex;
-        if let Ok(hex) = ::std::str::from_utf8(v) {
+        if let Ok(hex) = str::from_utf8(v) {
             Hash::<T>::from_hex(hex).map_err(E::custom)
         } else {
             return Err(E::invalid_value(::serde::de::Unexpected::Bytes(v), &self));
@@ -204,7 +204,7 @@ impl<T: Tag> Default for BytesVisitor<T> {
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
     type Value = Hash<T>;
 
-    fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("a bytestring")
     }
 

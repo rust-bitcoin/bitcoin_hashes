@@ -20,10 +20,10 @@ pub mod serde_details {
     use Error;
 
     use core::marker::PhantomData;
-    use core::{fmt, ops};
+    use core::{fmt, ops, str};
     struct HexVisitor<ValueT>(PhantomData<ValueT>);
     use serde::{de, Serializer, Deserializer};
-    use hex::{FromHex, ToHex};
+    use hex::FromHex;
 
     impl<'de, ValueT> de::Visitor<'de> for HexVisitor<ValueT>
     where
@@ -39,7 +39,7 @@ pub mod serde_details {
         where
             E: de::Error,
         {
-            if let Ok(hex) = ::std::str::from_utf8(v) {
+            if let Ok(hex) = str::from_utf8(v) {
                 Self::Value::from_hex(hex).map_err(E::custom)
             } else {
                 return Err(E::invalid_value(
@@ -82,8 +82,8 @@ pub mod serde_details {
     pub trait SerdeHash
     where
         Self: Sized
-            + ToHex
             + FromHex
+            + fmt::Display
             + ops::Index<usize, Output = u8>
             + ops::Index<ops::RangeFull, Output = [u8]>
     {
@@ -96,7 +96,7 @@ pub mod serde_details {
         /// serde serialization
         fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
             if s.is_human_readable() {
-                s.serialize_str(&self.to_hex())
+                s.collect_str(self)
             } else {
                 s.serialize_bytes(&self[..])
             }
