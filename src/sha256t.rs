@@ -175,9 +175,9 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
         where
             E: ::serde::de::Error,
     {
-        use ::hex::FromHex;
+        use core::str::FromStr;
         if let Ok(hex) = str::from_utf8(v) {
-            Hash::<T>::from_hex(hex).map_err(E::custom)
+            Hash::<T>::from_str(hex).map_err(E::custom)
         } else {
             return Err(E::invalid_value(::serde::de::Unexpected::Bytes(v), &self));
         }
@@ -187,8 +187,8 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
         where
             E: ::serde::de::Error,
     {
-        use ::hex::FromHex;
-        Hash::<T>::from_hex(v).map_err(E::custom)
+        use core::str::FromStr;
+        Hash::<T>::from_str(v).map_err(E::custom)
     }
 }
 
