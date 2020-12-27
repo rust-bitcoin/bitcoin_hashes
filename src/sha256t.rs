@@ -31,6 +31,7 @@ pub trait Tag {
 
 /// Output of the SHA256t hash function.
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
 pub struct Hash<T: Tag>(
     #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
     [u8; 32],

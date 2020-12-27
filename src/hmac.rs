@@ -31,6 +31,7 @@ use Error;
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schemars", schemars(transparent))]
+#[repr(transparent)]
 pub struct Hmac<T: HashTrait>(T);
 
 impl<T: HashTrait + str::FromStr> str::FromStr for Hmac<T> {

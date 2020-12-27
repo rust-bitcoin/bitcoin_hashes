@@ -77,6 +77,7 @@ impl EngineTrait for HashEngine {
 /// Output of the RIPEMD160 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
 pub struct Hash(
     #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_20"))]
     [u8; 20]

@@ -79,6 +79,7 @@ impl EngineTrait for HashEngine {
 
 /// Output of the SHA256 hash function
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
 pub struct Hash(
     #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_64"))]
     [u8; 64]
