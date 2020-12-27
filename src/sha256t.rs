@@ -139,7 +139,7 @@ macro_rules! sha256t_hash_newtype {
             }
         }
 
-        $crate::hash_newtype!($newtype, $crate::sha256t::Hash<$tag>, 32, $docs, $reverse);
+        hash_newtype!($newtype, $crate::sha256t::Hash<$tag>, 32, $docs, $reverse);
     };
 }
 
