@@ -15,6 +15,7 @@
 //! # SHA256t (tagged SHA256)
 
 use core::{cmp, str};
+#[cfg(feature="serde")] use core::fmt;
 use core::marker::PhantomData;
 
 use sha256;
@@ -30,12 +31,9 @@ pub trait Tag {
 }
 
 /// Output of the SHA256t hash function.
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash<T: Tag>(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
     [u8; 32],
-    #[cfg_attr(feature = "schemars", schemars(skip))]
     PhantomData<T>
 );
 
@@ -142,16 +140,15 @@ macro_rules! sha256t_hash_newtype {
             }
         }
 
-        $crate::hash_newtype!($newtype, $crate::sha256t::Hash<$tag>, 32, $docs, $reverse);
+        hash_newtype!($newtype, $crate::sha256t::Hash<$tag>, 32, $docs, $reverse);
     };
 }
 
 #[cfg(feature="serde")]
 impl<T: Tag> ::serde::Serialize for Hash<T> {
     fn serialize<S: ::serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        use ::hex::ToHex;
         if s.is_human_readable() {
-            s.serialize_str(&self.to_hex())
+            s.collect_str(self)
         } else {
             s.serialize_bytes(&self[..])
         }
@@ -170,7 +167,7 @@ impl<T: Tag> Default for HexVisitor<T> {
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
     type Value = Hash<T>;
 
-    fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("an ASCII hex string")
     }
 
@@ -178,9 +175,9 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
         where
             E: ::serde::de::Error,
     {
-        use ::hex::FromHex;
-        if let Ok(hex) = ::std::str::from_utf8(v) {
-            Hash::<T>::from_hex(hex).map_err(E::custom)
+        use core::str::FromStr;
+        if let Ok(hex) = str::from_utf8(v) {
+            Hash::<T>::from_str(hex).map_err(E::custom)
         } else {
             return Err(E::invalid_value(::serde::de::Unexpected::Bytes(v), &self));
         }
@@ -190,8 +187,8 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
         where
             E: ::serde::de::Error,
     {
-        use ::hex::FromHex;
-        Hash::<T>::from_hex(v).map_err(E::custom)
+        use core::str::FromStr;
+        Hash::<T>::from_str(v).map_err(E::custom)
     }
 }
 
@@ -207,7 +204,7 @@ impl<T: Tag> Default for BytesVisitor<T> {
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
     type Value = Hash<T>;
 
-    fn expecting(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("a bytestring")
     }
 
@@ -244,7 +241,6 @@ mod tests {
     ];
 
     #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
-    #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
     pub struct TestHashTag;
 
     impl sha256t::Tag for TestHashTag {
@@ -270,22 +266,5 @@ mod tests {
            NewTypeHash::hash(&[0]).to_hex(),
            "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
        );
-    }
-
-    #[cfg(all(feature = "schemars",feature = "serde"))]
-    #[test]
-    fn jsonschema_accurate() {
-        static HASH_BYTES: [u8; 32] = [
-            0xef, 0x53, 0x7f, 0x25, 0xc8, 0x95, 0xbf, 0xa7,
-            0x82, 0x52, 0x65, 0x29, 0xa9, 0xb6, 0x3d, 0x97,
-            0xaa, 0x63, 0x15, 0x64, 0xd5, 0xd7, 0x89, 0xc2,
-            0xb7, 0x65, 0x44, 0x8c, 0x86, 0x35, 0xfb, 0x6c,
-        ];
-
-        let hash = TestHash::from_slice(&HASH_BYTES).expect("right number of bytes");
-        let js = serde_json::from_str(&serde_json::to_string(&hash).unwrap()).unwrap();
-        let s  = schemars::schema_for! (TestHash);
-        let schema = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
-        assert!(jsonschema_valid::Config::from_schema(&schema, None).unwrap().validate(&js).is_ok());
     }
 }

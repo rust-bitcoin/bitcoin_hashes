@@ -196,12 +196,8 @@ impl EngineTrait for HashEngine {
 
 /// Output of the SipHash24 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
-pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_8"))]
-    [u8; 8]
-);
+pub struct Hash([u8; 8]);
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
@@ -413,20 +409,6 @@ mod tests {
             assert_eq!(vec, inc, "vec #{}", i);
             state_inc.input(&[i as u8]);
         }
-    }
-
-    #[cfg(all(feature = "schemars",feature = "serde"))]
-    #[test]
-    fn jsonschema_accurate() {
-        static HASH_BYTES: [u8; 8] = [
-            0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21,
-        ];
-
-        let hash = Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
-        let js = serde_json::from_str(&serde_json::to_string(&hash).unwrap()).unwrap();
-        let s  = schemars::schema_for! (Hash);
-        let schema = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
-        assert!(jsonschema_valid::Config::from_schema(&schema, None).unwrap().validate(&js).is_ok());
     }
 }
 

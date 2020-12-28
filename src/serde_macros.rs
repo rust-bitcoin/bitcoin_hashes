@@ -20,14 +20,15 @@ pub mod serde_details {
     use Error;
 
     use core::marker::PhantomData;
-    use core::{fmt, ops};
+    use core::{fmt, ops, str};
+    use core::str::FromStr;
     struct HexVisitor<ValueT>(PhantomData<ValueT>);
     use serde::{de, Serializer, Deserializer};
-    use hex::{FromHex, ToHex};
 
     impl<'de, ValueT> de::Visitor<'de> for HexVisitor<ValueT>
     where
-        ValueT: FromHex,
+        ValueT: FromStr,
+        <ValueT as FromStr>::Err: fmt::Display,
     {
         type Value = ValueT;
 
@@ -39,8 +40,8 @@ pub mod serde_details {
         where
             E: de::Error,
         {
-            if let Ok(hex) = ::std::str::from_utf8(v) {
-                Self::Value::from_hex(hex).map_err(E::custom)
+            if let Ok(hex) = str::from_utf8(v) {
+                Self::Value::from_str(hex).map_err(E::custom)
             } else {
                 return Err(E::invalid_value(
                     de::Unexpected::Bytes(v),
@@ -53,14 +54,17 @@ pub mod serde_details {
         where
             E: de::Error,
         {
-            Self::Value::from_hex(v).map_err(E::custom)
+            Self::Value::from_str(v).map_err(E::custom)
         }
     }
 
     struct BytesVisitor<ValueT>(PhantomData<ValueT>);
 
     impl<'de, ValueT> de::Visitor<'de> for BytesVisitor<ValueT>
-    where ValueT : SerdeHash {
+    where
+        ValueT: SerdeHash,
+        <ValueT as FromStr>::Err: fmt::Display,
+    {
         type Value = ValueT;
 
         fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -82,10 +86,11 @@ pub mod serde_details {
     pub trait SerdeHash
     where
         Self: Sized
-            + ToHex
-            + FromHex
+            + FromStr
+            + fmt::Display
             + ops::Index<usize, Output = u8>
-            + ops::Index<ops::RangeFull, Output = [u8]>
+            + ops::Index<ops::RangeFull, Output = [u8]>,
+        <Self as FromStr>::Err: fmt::Display,
     {
         /// Size, in bits, of the hash
         const N: usize;
@@ -96,7 +101,7 @@ pub mod serde_details {
         /// serde serialization
         fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
             if s.is_human_readable() {
-                s.serialize_str(&self.to_hex())
+                s.collect_str(self)
             } else {
                 s.serialize_bytes(&self[..])
             }
