@@ -19,7 +19,7 @@ use core::{fmt, str};
 use Hash;
 
 /// Hex decoding error
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Error {
     /// non-hexadecimal character
     InvalidChar(u8),
