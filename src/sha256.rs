@@ -115,7 +115,13 @@ impl HashTrait for Hash {
 
     #[cfg(fuzzing)]
     fn from_engine(e: HashEngine) -> Hash {
-        Hash(e.midstate().into_inner())
+        let mut hash = e.midstate().into_inner();
+        if hash == [0; 32] {
+            // Assume sha256 is secure and never generate 0-hashes (which represent invalid
+            // secp256k1 secret keys, causing downstream application breakage).
+            hash[0] = 1;
+        }
+        Hash(hash)
     }
 
     const LEN: usize = 32;
