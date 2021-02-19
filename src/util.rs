@@ -117,7 +117,7 @@ macro_rules! borrow_slice_impl(
 
 macro_rules! engine_input_impl(
     () => (
-        #[cfg(not(feature = "fuzztarget"))]
+        #[cfg(not(fuzzing))]
         fn input(&mut self, mut inp: &[u8]) {
             while !inp.is_empty() {
                 let buf_idx = self.length % <Self as EngineTrait>::BLOCK_SIZE;
@@ -134,7 +134,7 @@ macro_rules! engine_input_impl(
             }
         }
 
-        #[cfg(feature = "fuzztarget")]
+        #[cfg(fuzzing)]
         fn input(&mut self, inp: &[u8]) {
             for c in inp {
                 self.buffer[0] ^= *c;
