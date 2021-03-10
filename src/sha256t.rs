@@ -125,7 +125,7 @@ impl<T: Tag> HashTrait for Hash<T> {
 
 /// Macro used to define a newtype tagged hash.
 /// It creates two public types:
-/// - a sha246t::Tag struct,
+/// - a sha256t::Tag struct,
 /// - a sha256t::Hash type alias.
 #[macro_export]
 macro_rules! sha256t_hash_newtype {
