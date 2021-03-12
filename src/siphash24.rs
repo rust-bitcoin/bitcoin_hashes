@@ -260,12 +260,12 @@ impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 8];
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn from_engine(e: HashEngine) -> Hash {
         Hash::from_u64(Hash::from_engine_to_u64(e))
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn from_engine(e: HashEngine) -> Hash {
         let state = e.midstate();
         Hash::from_u64(state.v0 ^ state.v1 ^ state.v2 ^ state.v3)

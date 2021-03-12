@@ -52,7 +52,7 @@ impl Default for HashEngine {
 impl EngineTrait for HashEngine {
     type MidState = [u8; 64];
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn midstate(&self) -> [u8; 64] {
         let mut ret = [0; 64];
         for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(8)) {
@@ -61,7 +61,7 @@ impl EngineTrait for HashEngine {
         ret
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn midstate(&self) -> [u8; 64] {
         let mut ret = [0; 64];
         ret.copy_from_slice(&self.buffer[..64]);
@@ -141,7 +141,7 @@ impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 64];
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn from_engine(mut e: HashEngine) -> Hash {
         // pad buffer with a single 1-bit then all 0s, until there are exactly 16 bytes remaining
         let data_len = e.length as u64;
@@ -162,7 +162,7 @@ impl HashTrait for Hash {
         Hash(e.midstate())
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn from_engine(e: HashEngine) -> Hash {
         let mut hash = e.midstate();
         hash[0] ^= 0xff; // Make this distinct from SHA-256

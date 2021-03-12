@@ -45,7 +45,7 @@ impl Default for HashEngine {
 impl EngineTrait for HashEngine {
     type MidState = Midstate;
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
@@ -54,7 +54,7 @@ impl EngineTrait for HashEngine {
         Midstate(ret)
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         ret.copy_from_slice(&self.buffer[..32]);
@@ -93,7 +93,7 @@ impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn from_engine(mut e: HashEngine) -> Hash {
         // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
         let data_len = e.length as u64;
@@ -113,9 +113,15 @@ impl HashTrait for Hash {
         Hash(e.midstate().into_inner())
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn from_engine(e: HashEngine) -> Hash {
-        Hash(e.midstate().into_inner())
+        let mut hash = e.midstate().into_inner();
+        if hash == [0; 32] {
+            // Assume sha256 is secure and never generate 0-hashes (which represent invalid
+            // secp256k1 secret keys, causing downstream application breakage).
+            hash[0] = 1;
+        }
+        Hash(hash)
     }
 
     const LEN: usize = 32;

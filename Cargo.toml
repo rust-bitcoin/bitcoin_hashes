@@ -19,7 +19,6 @@ default = [ "std" ]
 std = []
 serde-std = ["serde/std"]
 unstable = []  # for benchmarking
-fuzztarget = [] # used by other rust-bitcoin projects to make hashes almost-noops, DON'T USE THIS
 
 [dependencies]
 serde = { version = "1.0", default-features = false, optional = true }

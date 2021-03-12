@@ -44,7 +44,7 @@ impl Default for HashEngine {
 impl EngineTrait for HashEngine {
     type MidState = [u8; 20];
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn midstate(&self) -> [u8; 20] {
         let mut ret = [0; 20];
         for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
@@ -53,7 +53,7 @@ impl EngineTrait for HashEngine {
         ret
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn midstate(&self) -> [u8; 20] {
         let mut ret = [0; 20];
         ret.copy_from_slice(&self.buffer[..20]);
