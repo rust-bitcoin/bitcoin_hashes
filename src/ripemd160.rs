@@ -563,7 +563,7 @@ mod tests {
         let js = serde_json::from_str(&serde_json::to_string(&hash).unwrap()).unwrap();
         let s  = schemars::schema_for! (ripemd160::Hash);
         let schema = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
-        assert!(jsonschema_valid::Config::from_schema(&schema, None).unwrap().validate(&js).is_ok());
+        assert!(jsonschema_valid_compat::Config::from_schema(&schema, None).unwrap().validate(&js).is_ok());
     }
 }
 
