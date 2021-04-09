@@ -13,7 +13,6 @@ use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch
 use cortex_m_rt::entry;
 use cortex_m_semihosting::{debug, hprintln};
 use bitcoin_hashes::sha256;
-use core::str::FromStr;
 use bitcoin_hashes::Hash;
 
 hash_newtype!(TestType, sha256::Hash, 32, doc="test");
