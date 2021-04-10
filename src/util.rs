@@ -241,14 +241,14 @@ macro_rules! hash_newtype {
             }
         }
 
-        impl ::std::convert::From<$hash> for $newtype {
+        impl ::core::convert::From<$hash> for $newtype {
             fn from(inner: $hash) -> $newtype {
                 // Due to rust 1.22 we have to use this instead of simple `Self(inner)`
                 Self { 0: inner }
             }
         }
 
-        impl ::std::convert::From<$newtype> for $hash {
+        impl ::core::convert::From<$newtype> for $hash {
             fn from(hashtype: $newtype) -> $hash {
                 hashtype.0
             }
@@ -290,9 +290,9 @@ macro_rules! hash_newtype {
             }
         }
 
-        impl ::std::str::FromStr for $newtype {
+        impl ::core::str::FromStr for $newtype {
             type Err = $crate::hex::Error;
-            fn from_str(s: &str) -> ::std::result::Result<$newtype, Self::Err> {
+            fn from_str(s: &str) -> ::core::result::Result<$newtype, Self::Err> {
                 $crate::hex::FromHex::from_hex(s)
             }
         }
