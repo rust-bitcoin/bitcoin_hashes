@@ -33,17 +33,23 @@
 #![allow(bare_trait_objects)]
 #![allow(ellipsis_inclusive_range_patterns)]
 
-#![cfg_attr(all(not(test), not(feature = "std")), no_std)]
+#![cfg_attr(all(not(test), feature = "no_std"), no_std)]
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 #[cfg(all(test, feature = "unstable"))] extern crate test;
 
-#[cfg(any(test, feature="std"))] extern crate core;
+#[cfg(any(test, not(feature="no_std")))] extern crate core;
 #[cfg(feature="serde")] pub extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
 
+#[cfg(all(feature = "no_std", not(test)))]
+extern crate alloc;
+
+#[cfg(all(feature = "no_std", not(test)))]
+pub extern crate core2;
+
 #[macro_use] mod util;
 #[macro_use] pub mod serde_macros;
-#[cfg(any(test, feature = "std"))] mod std_impls;
+mod impls;
 pub mod error;
 pub mod hex;
 pub mod hash160;

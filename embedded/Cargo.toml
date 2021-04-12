@@ -10,7 +10,8 @@ cortex-m = "0.6.0"
 cortex-m-rt = "0.6.10"
 cortex-m-semihosting = "0.3.3"
 panic-halt = "0.2.0"
-bitcoin_hashes = { path="../", default-features = false }
+bitcoin_hashes = { path="../", features = ["no_std"] }
+alloc-cortex-m = "0.4.1"
 
 # Uncomment for the panic example.
 # panic-itm = "0.4.1"

@@ -18,6 +18,9 @@
 use core::{fmt, str};
 use Hash;
 
+#[cfg(all(feature = "no_std", not(test)))]
+use alloc::{string::String, format, vec::Vec};
+
 /// Hex decoding error
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Error {
@@ -40,7 +43,6 @@ impl fmt::Display for Error {
 }
 
 /// Trait for objects that can be serialized as hex strings
-#[cfg(any(test, feature = "std"))]
 pub trait ToHex {
     /// Hex representation of the object
     fn to_hex(&self) -> String;
@@ -60,7 +62,6 @@ pub trait FromHex: Sized {
     }
 }
 
-#[cfg(any(test, feature = "std"))]
 impl<T: fmt::LowerHex> ToHex for T {
     /// Outputs the hash in hexadecimal form
     fn to_hex(&self) -> String {
@@ -174,7 +175,6 @@ pub fn format_hex_reverse(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     Ok(())
 }
 
-#[cfg(any(test, feature = "std"))]
 impl ToHex for [u8] {
     fn to_hex(&self) -> String {
         use core::fmt::Write;
@@ -186,7 +186,6 @@ impl ToHex for [u8] {
     }
 }
 
-#[cfg(any(test, feature = "std"))]
 impl FromHex for Vec<u8> {
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
         where I: Iterator<Item=Result<u8, Error>> +

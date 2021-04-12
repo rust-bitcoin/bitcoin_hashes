@@ -16,18 +16,25 @@
 //!
 //! impls of traits defined in `std` and not `core`
 
+#[cfg(any(not(feature="no_std"), test))]
 use std::{error, io};
+#[cfg(all(feature = "no_std", not(test)))]
+use core2::io as io;
 
-use {hex, sha1, sha256, sha512, ripemd160, siphash24};
+use {sha1, sha256, sha512, ripemd160, siphash24};
 use HashEngine;
+
+#[cfg(not(feature="no_std"))]
 use Error;
 
+#[cfg(not(feature="no_std"))]
 impl error::Error for Error {
     fn cause(&self) -> Option<&error::Error> { None }
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }
 
-impl error::Error for hex::Error {
+#[cfg(not(feature="no_std"))]
+impl error::Error for ::hex::Error {
     fn cause(&self) -> Option<&error::Error> { None }
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }

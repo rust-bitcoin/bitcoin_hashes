@@ -15,13 +15,13 @@ name = "bitcoin_hashes"
 path = "src/lib.rs"
 
 [features]
-default = [ "std" ]
-std = []
+no_std = ["core2"]
 serde-std = ["serde/std"]
 unstable = []  # for benchmarking
 
 [dependencies]
 serde = { version = "1.0", default-features = false, optional = true }
+core2 = { version = "0.3.0-alpha.1", default-features = false, optional = true }
 
 [dev-dependencies]
 serde_test = "1.0"
