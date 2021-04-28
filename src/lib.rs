@@ -41,6 +41,8 @@
 #[cfg(feature="serde")] pub extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
 
+#[cfg(feature = "schemars")] extern crate schemars;
+
 #[macro_use] mod util;
 #[macro_use] pub mod serde_macros;
 #[cfg(any(test, feature = "std"))] mod std_impls;

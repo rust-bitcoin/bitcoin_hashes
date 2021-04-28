@@ -31,9 +31,12 @@ pub trait Tag {
 }
 
 /// Output of the SHA256t hash function.
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash<T: Tag>(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
     [u8; 32],
+    #[cfg_attr(feature = "schemars", schemars(skip))]
     PhantomData<T>
 );
 
@@ -241,6 +244,7 @@ mod tests {
     ];
 
     #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
+    #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
     pub struct TestHashTag;
 
     impl sha256t::Tag for TestHashTag {

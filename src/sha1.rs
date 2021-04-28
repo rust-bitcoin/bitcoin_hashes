@@ -71,8 +71,12 @@ impl EngineTrait for HashEngine {
 
 /// Output of the SHA1 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
-pub struct Hash([u8; 20]);
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_20"))]
+    [u8; 20]
+);
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
