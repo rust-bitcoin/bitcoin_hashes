@@ -36,6 +36,10 @@ if [ "$DO_FEATURE_MATRIX" = true ]; then
     cargo test --all --features="serde-std"
 fi
 
+if [ "$DO_SCHEMARS_TESTS" = true ]; then
+    (cd extended_tests/schemars && cargo test)
+fi
+
 # Docs
 if [ "$DO_DOCS" = true ]; then
     cargo doc --all --features="$FEATURES"

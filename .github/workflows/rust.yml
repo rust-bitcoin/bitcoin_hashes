@@ -78,5 +78,6 @@ jobs:
       - name: Running cargo
         env:
           DO_FEATURE_MATRIX: true
+          DO_SCHEMARS_TESTS: ${{matrix.rust != '1.29.0'}}
         run: ./contrib/test.sh
 
