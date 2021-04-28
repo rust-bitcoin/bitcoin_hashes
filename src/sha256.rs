@@ -510,23 +510,6 @@ mod tests {
         assert_tokens(&hash.readable(), &[Token::Str("ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c")]);
     }
 
-    #[cfg(all(feature = "schemars",feature = "serde"))]
-    #[test]
-    fn jsonschema_accurate() {
-        static HASH_BYTES: [u8; 32] = [
-            0xef, 0x53, 0x7f, 0x25, 0xc8, 0x95, 0xbf, 0xa7,
-            0x82, 0x52, 0x65, 0x29, 0xa9, 0xb6, 0x3d, 0x97,
-            0xaa, 0x63, 0x15, 0x64, 0xd5, 0xd7, 0x89, 0xc2,
-            0xb7, 0x65, 0x44, 0x8c, 0x86, 0x35, 0xfb, 0x6c,
-        ];
-
-        let hash = sha256::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
-        let js = serde_json::from_str(&serde_json::to_string(&hash).unwrap()).unwrap();
-        let s  = schemars::schema_for! (sha256::Hash);
-        let schema = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
-        assert!(jsonschema_valid_compat::Config::from_schema(&schema, None).unwrap().validate(&js).is_ok());
-    }
-
     #[cfg(target_arch = "wasm32")]
     mod wasm_tests {
         extern crate wasm_bindgen_test;

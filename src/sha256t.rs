@@ -271,21 +271,4 @@ mod tests {
            "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
        );
     }
-
-    #[cfg(all(feature = "schemars",feature = "serde"))]
-    #[test]
-    fn jsonschema_accurate() {
-        static HASH_BYTES: [u8; 32] = [
-            0xef, 0x53, 0x7f, 0x25, 0xc8, 0x95, 0xbf, 0xa7,
-            0x82, 0x52, 0x65, 0x29, 0xa9, 0xb6, 0x3d, 0x97,
-            0xaa, 0x63, 0x15, 0x64, 0xd5, 0xd7, 0x89, 0xc2,
-            0xb7, 0x65, 0x44, 0x8c, 0x86, 0x35, 0xfb, 0x6c,
-        ];
-
-        let hash = TestHash::from_slice(&HASH_BYTES).expect("right number of bytes");
-        let js = serde_json::from_str(&serde_json::to_string(&hash).unwrap()).unwrap();
-        let s  = schemars::schema_for! (TestHash);
-        let schema = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
-        assert!(jsonschema_valid_compat::Config::from_schema(&schema, None).unwrap().validate(&js).is_ok());
-    }
 }

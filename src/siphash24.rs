@@ -414,20 +414,6 @@ mod tests {
             state_inc.input(&[i as u8]);
         }
     }
-
-    #[cfg(all(feature = "schemars",feature = "serde"))]
-    #[test]
-    fn jsonschema_accurate() {
-        static HASH_BYTES: [u8; 8] = [
-            0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21,
-        ];
-
-        let hash = Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
-        let js = serde_json::from_str(&serde_json::to_string(&hash).unwrap()).unwrap();
-        let s  = schemars::schema_for! (Hash);
-        let schema = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
-        assert!(jsonschema_valid_compat::Config::from_schema(&schema, None).unwrap().validate(&js).is_ok());
-    }
 }
 
 #[cfg(all(test, feature = "unstable"))]
