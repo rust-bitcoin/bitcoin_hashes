@@ -1,4 +1,13 @@
 
+# 0.9.5 - 2021-04-28
+
+* Add [`#[repr(transparent)]` to all newtype wrappers](https://github.com/rust-bitcoin/bitcoin_hashes/pull/108/)
+* Add [missing `#derive`s](https://github.com/rust-bitcoin/bitcoin_hashes/pull/110/)
+* Replace `fuzztarget` feature with [use of `cfg(fuzzing)`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/111/)
+* Use [`core` rather than `std`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/118/) and [fix `no_std` compilation](https://github.com/rust-bitcoin/bitcoin_hashes/pull/122/)
+
+Note that we have stopped re-exporting the `core` crate when compiling without `std`. This is technically a breaking change but it is hard to imagine what user might be affected.
+
 # 0.9.4 - 2020-10-23
 
 * Add `Hmac::from_inner_engines`
