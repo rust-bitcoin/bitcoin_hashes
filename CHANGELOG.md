@@ -1,4 +1,8 @@
 
+# 0.9.6 - 2021-05-03
+
+* Re-export `core` as `_export::_core`. This resolves an issue when calling several exported macros with the `std` feature.
+
 # 0.9.5 - 2021-04-28
 
 * Add [`#[repr(transparent)]` to all newtype wrappers](https://github.com/rust-bitcoin/bitcoin_hashes/pull/108/)

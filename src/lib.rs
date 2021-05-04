@@ -41,6 +41,14 @@
 #[cfg(feature="serde")] pub extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
 
+#[doc(hidden)]
+pub mod _export {
+    /// A re-export of ::core::*
+    pub mod _core {
+        pub use ::core::*;
+    }
+}
+
 #[cfg(feature = "schemars")] extern crate schemars;
 
 #[macro_use] mod util;
