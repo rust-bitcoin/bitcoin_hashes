@@ -29,8 +29,8 @@ macro_rules! hex_fmt_impl(
         hex_fmt_impl!($imp, $ty, );
     );
     ($imp:ident, $ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::core::fmt::$imp for $ty<$($gen),*> {
-            fn fmt(&self, f: &mut $crate::core::fmt::Formatter) -> $crate::core::fmt::Result {
+        impl<$($gen: $gent),*> $crate::_export::_core::fmt::$imp for $ty<$($gen),*> {
+            fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
                 use $crate::hex::{format_hex, format_hex_reverse};
                 if $ty::<$($gen),*>::DISPLAY_BACKWARD {
                     format_hex_reverse(&self.0, f)
@@ -49,37 +49,37 @@ macro_rules! index_impl(
         index_impl!($ty, );
     );
     ($ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::core::ops::Index<usize> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<usize> for $ty<$($gen),*> {
             type Output = u8;
             fn index(&self, index: usize) -> &u8 {
                 &self.0[index]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Index<$crate::core::ops::Range<usize>> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::Range<usize>> for $ty<$($gen),*> {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::Range<usize>) -> &[u8] {
+            fn index(&self, index: $crate::_export::_core::ops::Range<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Index<$crate::core::ops::RangeFrom<usize>> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeFrom<usize>> for $ty<$($gen),*> {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::RangeFrom<usize>) -> &[u8] {
+            fn index(&self, index: $crate::_export::_core::ops::RangeFrom<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Index<$crate::core::ops::RangeTo<usize>> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeTo<usize>> for $ty<$($gen),*> {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::RangeTo<usize>) -> &[u8] {
+            fn index(&self, index: $crate::_export::_core::ops::RangeTo<usize>) -> &[u8] {
                 &self.0[index]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Index<$crate::core::ops::RangeFull> for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeFull> for $ty<$($gen),*> {
             type Output = [u8];
-            fn index(&self, index: $crate::core::ops::RangeFull) -> &[u8] {
+            fn index(&self, index: $crate::_export::_core::ops::RangeFull) -> &[u8] {
                 &self.0[index]
             }
         }
@@ -93,19 +93,19 @@ macro_rules! borrow_slice_impl(
         borrow_slice_impl!($ty, );
     );
     ($ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::core::borrow::Borrow<[u8]> for $ty<$($gen),*>  {
+        impl<$($gen: $gent),*> $crate::_export::_core::borrow::Borrow<[u8]> for $ty<$($gen),*>  {
             fn borrow(&self) -> &[u8] {
                 &self[..]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::convert::AsRef<[u8]> for $ty<$($gen),*>  {
+        impl<$($gen: $gent),*> $crate::_export::_core::convert::AsRef<[u8]> for $ty<$($gen),*>  {
             fn as_ref(&self) -> &[u8] {
                 &self[..]
             }
         }
 
-        impl<$($gen: $gent),*> $crate::core::ops::Deref for $ty<$($gen),*> {
+        impl<$($gen: $gent),*> $crate::_export::_core::ops::Deref for $ty<$($gen),*> {
             type Target = [u8];
 
             fn deref(&self) -> &Self::Target {
@@ -241,14 +241,14 @@ macro_rules! hash_newtype {
             }
         }
 
-        impl ::core::convert::From<$hash> for $newtype {
+        impl $crate::_export::_core::convert::From<$hash> for $newtype {
             fn from(inner: $hash) -> $newtype {
                 // Due to rust 1.22 we have to use this instead of simple `Self(inner)`
                 Self { 0: inner }
             }
         }
 
-        impl ::core::convert::From<$newtype> for $hash {
+        impl $crate::_export::_core::convert::From<$newtype> for $hash {
             fn from(hashtype: $newtype) -> $hash {
                 hashtype.0
             }
@@ -290,9 +290,9 @@ macro_rules! hash_newtype {
             }
         }
 
-        impl ::core::str::FromStr for $newtype {
+        impl $crate::_export::_core::str::FromStr for $newtype {
             type Err = $crate::hex::Error;
-            fn from_str(s: &str) -> ::core::result::Result<$newtype, Self::Err> {
+            fn from_str(s: &str) -> $crate::_export::_core::result::Result<$newtype, Self::Err> {
                 $crate::hex::FromHex::from_hex(s)
             }
         }
