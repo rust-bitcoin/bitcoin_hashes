@@ -16,62 +16,61 @@
 //!
 //! impls of traits defined in `std` and not `core`
 
-use std::{error, io};
+use {sha1, sha256, sha512, ripemd160, siphash24};
+use ::{HashEngine, literacy};
 
-use {hex, sha1, sha256, sha512, ripemd160, siphash24};
-use HashEngine;
-use Error;
-
-impl error::Error for Error {
-    fn cause(&self) -> Option<&error::Error> { None }
+#[cfg(any(test, feature = "std"))]
+impl ::std::error::Error for ::Error {
+    fn cause(&self) -> Option<&::std::error::Error> { None }
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }
 
-impl error::Error for hex::Error {
-    fn cause(&self) -> Option<&error::Error> { None }
+#[cfg(any(test, feature = "std"))]
+impl ::std::error::Error for ::hex::Error {
+    fn cause(&self) -> Option<&::std::error::Error> { None }
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }
 
-impl io::Write for sha1::HashEngine {
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+impl literacy::Write for sha1::HashEngine {
+    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error> { Ok(()) }
 
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error>  {
         self.input(buf);
         Ok(buf.len())
     }
 }
 
-impl io::Write for sha256::HashEngine {
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+impl literacy::Write for sha256::HashEngine {
+    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error>  { Ok(()) }
 
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error>  {
         self.input(buf);
         Ok(buf.len())
     }
 }
 
-impl io::Write for sha512::HashEngine {
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+impl literacy::Write for sha512::HashEngine {
+    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error>  { Ok(()) }
 
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error>  {
         self.input(buf);
         Ok(buf.len())
     }
 }
 
-impl io::Write for ripemd160::HashEngine {
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+impl literacy::Write for ripemd160::HashEngine {
+    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error>  { Ok(()) }
 
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error>  {
         self.input(buf);
         Ok(buf.len())
     }
 }
 
-impl io::Write for siphash24::HashEngine {
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+impl literacy::Write for siphash24::HashEngine {
+    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error>  { Ok(()) }
 
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error> {
         self.input(buf);
         Ok(buf.len())
     }
@@ -79,8 +78,7 @@ impl io::Write for siphash24::HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
-
+    use ::literacy::Write;
     use {sha1, sha256, sha256d, sha512, ripemd160, hash160, siphash24};
     use Hash;
 

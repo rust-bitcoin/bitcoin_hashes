@@ -15,6 +15,7 @@ use cortex_m::asm;
 use cortex_m_rt::entry;
 use cortex_m_semihosting::{debug, hprintln};
 use panic_halt as _;
+use crate::bitcoin_hashes::literacy::Write;
 
 hash_newtype!(TestType, sha256::Hash, 32, doc = "test");
 
@@ -29,7 +30,7 @@ fn main() -> ! {
     unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
 
     let mut engine = TestType::engine();
-    engine.input(b"abc");
+    engine.write(b"abc");
     let hash = TestType::from_engine(engine);
 
     let hash_check =

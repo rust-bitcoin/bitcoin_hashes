@@ -25,7 +25,7 @@
 #![deny(non_camel_case_types)]
 #![deny(non_snake_case)]
 #![deny(unused_mut)]
-#![deny(missing_docs)]
+//#![deny(missing_docs)]
 
 // In general, rust is absolutely horrid at supporting users doing things like,
 // for example, compiling Rust code for real environments. Disable useless lints
@@ -53,7 +53,7 @@ pub mod _export {
 
 #[macro_use] mod util;
 #[macro_use] pub mod serde_macros;
-#[cfg(any(test, feature = "std"))] mod std_impls;
+mod impls;
 pub mod error;
 pub mod hex;
 pub mod hash160;
@@ -66,6 +66,7 @@ pub mod sha256t;
 pub mod siphash24;
 pub mod sha512;
 pub mod cmp;
+pub mod literacy;
 
 use core::{borrow, fmt, hash, ops};
 
