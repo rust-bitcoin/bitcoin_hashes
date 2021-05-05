@@ -9,6 +9,7 @@ extern crate alloc;
 
 use alloc_cortex_m::CortexMHeap;
 use bitcoin_hashes::{sha256, Hash, HashEngine};
+use bitcoin_hashes::literacy::Write;
 use core::alloc::Layout;
 use core::str::FromStr;
 use cortex_m::asm;
@@ -29,7 +30,7 @@ fn main() -> ! {
     unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
 
     let mut engine = TestType::engine();
-    engine.input(b"abc");
+    engine.write(b"abc").unwrap();
     let hash = TestType::from_engine(engine);
 
     let hash_check =
