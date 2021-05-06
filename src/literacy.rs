@@ -1,37 +1,24 @@
 #[cfg(all(feature = "std", feature = "use-core2"))]
 compile_error!("feature \"std\" and \"use-core2\" cannot be enabled together.");
 
-#[derive(Debug)]
-pub enum Error {
-    #[cfg(feature = "std")]
-    Std(::std::io::Error),
-
-    #[cfg(feature = "use-core2")]
-    Core2(core2::io::Error),
-
-    // Needed for write_all blanket implementation
-    WriteZero,
-    Interrupted,
-
-    Other,
-}
 
 pub trait Read{
-    fn read(&mut self, buf: &mut [u8]) -> ::core::result::Result<usize, Error>;
+    type Error;
+    fn read(&mut self, buf: &mut [u8]) -> ::core::result::Result<usize, Self::Error>;
 }
 
 pub trait Write {
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, Error>;
-    fn flush(&mut self) -> ::core::result::Result<(), Error>;
-
-    fn write_all(&mut self, mut buf: &[u8]) -> ::core::result::Result<(), Error> {
+    type Error;
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, Self::Error>;
+    fn flush(&mut self) -> ::core::result::Result<(), Self::Error>;
+    fn write_all(&mut self, mut buf: &[u8]) -> ::core::result::Result<(), Self::Error> {
         while !buf.is_empty() {
             match self.write(buf) {
-                Ok(0) => {
-                    return Err(Error::WriteZero);
-                }
+                /*Ok(0) => {
+                    return Err(Error::new(ErrorKind::WriteZero, "failed to write whole buffer"));
+                }*/
                 Ok(n) => buf = &buf[n..],
-                Err(Error::Interrupted) => {}
+                //Err(ref e) if e.kind() == ErrorKind::Interrupted => {}
                 Err(e) => return Err(e),
             }
         }
@@ -41,61 +28,49 @@ pub trait Write {
 
 #[cfg(feature = "std")]
 mod std_impl {
-    use super::{Read, Write, Error};
-
-    impl From<::std::io::Error> for Error {
-        fn from(error: ::std::io::Error) -> Self {
-            if let ::std::io::ErrorKind::Interrupted = error.kind() {
-                Error::Interrupted
-            } else {
-                Error::Std(error)
-            }
-        }
-    }
+    use super::{Read, Write};
 
     impl<R: ::std::io::Read> Read for R {
-        fn read(&mut self, buf: &mut [u8]) -> Result<usize, Error> {
+        type Error = ::std::io::Error;
+
+        fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
             Ok(<Self as ::std::io::Read>::read(self, buf)?)
         }
     }
 
     impl<W: ::std::io::Write> Write for W {
-        fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
-            Ok(<Self as ::std::io::Write>::write(self, buf)?)
+        type Error = ::std::io::Error;
+
+        fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+            <Self as ::std::io::Write>::write(self, buf)
         }
 
-        fn flush(&mut self) -> Result<(), Error> {
-            Ok(<Self as ::std::io::Write>::flush(self)?)
+        fn flush(&mut self) -> Result<(), Self::Error> {
+            <Self as ::std::io::Write>::flush(self)
         }
     }
 }
 
 #[cfg(feature = "use-core2")]
 mod core2_impl {
-    use super::{Read, Write, Error};
-
-    impl From<core2::io::Error> for Error {
-        fn from(error: core2::io::Error) -> Self {
-            if let core2::io::ErrorKind::Interrupted = error.kind() {
-                Error::Interrupted
-            } else {
-                Error::Core2(error)
-            }
-        }
-    }
+    use super::{Read, Write};
 
     impl<R: core2::io::Read> Read for R {
-        fn read(&mut self, buf: &mut [u8]) -> Result<usize, Error> {
+        type Error = core2::io::Error;
+
+        fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
             Ok(<Self as core2::io::Read>::read(self, buf)?)
         }
     }
 
     impl<W: core2::io::Write> Write for W {
-        fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
+        type Error = core2::io::Error;
+
+        fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
             Ok(<Self as core2::io::Write>::write(self, buf)?)
         }
 
-        fn flush(&mut self) -> Result<(), Error> {
+        fn flush(&mut self) -> Result<(), Self::Error> {
             Ok(<Self as core2::io::Write>::flush(self)?)
         }
     }

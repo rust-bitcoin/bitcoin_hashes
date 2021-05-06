@@ -32,45 +32,55 @@ impl ::std::error::Error for ::hex::Error {
 }
 
 impl literacy::Write for sha1::HashEngine {
-    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error> { Ok(()) }
+    type Error = ();
 
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error>  {
+    fn flush(&mut self) -> ::core::result::Result<(), ()> { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
         self.input(buf);
         Ok(buf.len())
     }
 }
 
 impl literacy::Write for sha256::HashEngine {
-    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error>  { Ok(()) }
+    type Error = ();
 
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error>  {
+    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
         self.input(buf);
         Ok(buf.len())
     }
 }
 
 impl literacy::Write for sha512::HashEngine {
-    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error>  { Ok(()) }
+    type Error = ();
 
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error>  {
+    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
         self.input(buf);
         Ok(buf.len())
     }
 }
 
 impl literacy::Write for ripemd160::HashEngine {
-    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error>  { Ok(()) }
+    type Error = ();
 
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error>  {
+    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
         self.input(buf);
         Ok(buf.len())
     }
 }
 
 impl literacy::Write for siphash24::HashEngine {
-    fn flush(&mut self) -> ::core::result::Result<(), literacy::Error>  { Ok(()) }
+    type Error = ();
 
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, literacy::Error> {
+    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()> {
         self.input(buf);
         Ok(buf.len())
     }
