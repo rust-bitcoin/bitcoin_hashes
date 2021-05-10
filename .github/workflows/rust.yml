@@ -63,6 +63,7 @@ jobs:
           - 1.29.0
           - beta
           - stable
+      fail-fast: false
     steps:
       - name: Checkout Crate
         uses: actions/checkout@v2

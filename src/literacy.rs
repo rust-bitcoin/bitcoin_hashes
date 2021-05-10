@@ -3,18 +3,14 @@ compile_error!("feature \"std\" and \"use-core2\" cannot be enabled together.");
 
 #[derive(Debug)]
 pub enum Error {
-    #[cfg(feature = "std")]
-    Std(::std::io::Error),
-
-    #[cfg(feature = "use-core2")]
-    Core2(core2::io::Error),
+    Wrapped(::alloc::boxed::Box<dyn Marker>),
 
     // Needed for write_all blanket implementation
     WriteZero,
     Interrupted,
-
-    Other,
 }
+
+pub trait Marker: ::core::fmt::Display + ::core::fmt::Debug {}
 
 pub trait Read{
     fn read(&mut self, buf: &mut [u8]) -> ::core::result::Result<usize, Error>;
@@ -41,14 +37,16 @@ pub trait Write {
 
 #[cfg(feature = "std")]
 mod std_impl {
-    use super::{Read, Write, Error};
+    use super::{Read, Write, Error, Marker};
+
+    impl Marker for ::std::io::Error {}
 
     impl From<::std::io::Error> for Error {
         fn from(error: ::std::io::Error) -> Self {
             if let ::std::io::ErrorKind::Interrupted = error.kind() {
                 Error::Interrupted
             } else {
-                Error::Std(error)
+                Error::Wrapped(::std::boxed::Box::new(error))
             }
         }
     }
@@ -72,14 +70,16 @@ mod std_impl {
 
 #[cfg(feature = "use-core2")]
 mod core2_impl {
-    use super::{Read, Write, Error};
+    use super::{Read, Write, Error, Marker};
+
+    impl Marker for core2::io::Error {}
 
     impl From<core2::io::Error> for Error {
         fn from(error: core2::io::Error) -> Self {
             if let core2::io::ErrorKind::Interrupted = error.kind() {
                 Error::Interrupted
             } else {
-                Error::Core2(error)
+                Error::Wrapped(::alloc::boxed::Box::new(error))
             }
         }
     }

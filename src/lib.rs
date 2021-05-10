@@ -40,6 +40,7 @@
 #[cfg(any(test, feature="std"))] extern crate core;
 #[cfg(feature="serde")] pub extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
+extern crate alloc;
 
 #[doc(hidden)]
 pub mod _export {
