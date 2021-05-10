@@ -1,9 +1,15 @@
 #[cfg(all(feature = "std", feature = "use-core2"))]
 compile_error!("feature \"std\" and \"use-core2\" cannot be enabled together.");
 
+#[cfg(not(feature = "std"))]
+use alloc::boxed::Box;
+
+#[cfg(feature = "std")]
+use std::boxed::Box;
+
 #[derive(Debug)]
 pub enum Error {
-    Wrapped(::alloc::boxed::Box<dyn Marker>),
+    Wrapped(Box<dyn Marker>),
 
     // Needed for write_all blanket implementation
     WriteZero,

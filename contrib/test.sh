@@ -1,10 +1,11 @@
-#!/bin/sh -ex
+#!/bin/bash -ex
 
-FEATURES="serde serde-std"
+# Combination of features to test, should be every features combination but std and core2 together
+# note std has a comma in the end so that following regex avoid matching serde-std
+FEATURES=("" "std," "use-core2" "std,serde-std" "use-core2,serde-std")
 
 # Use toolchain if explicitly specified
-if [ -n "$TOOLCHAIN" ]
-then
+if [[ -n "$TOOLCHAIN" ]]; then
     alias cargo="cargo +$TOOLCHAIN"
 fi
 
@@ -18,35 +19,27 @@ export CARGO_TERM_VERBOSE=true
 cargo build --all
 cargo test --all
 
-if [ "$DO_FEATURE_MATRIX" = true ]; then
-    cargo build --all --no-default-features
-    cargo test --all --no-default-features
-
-    # All features
-    cargo build --all --no-default-features --features="$FEATURES"
-    cargo test --all --features="$FEATURES"
-    # Single features
-    for feature in ${FEATURES}
-    do
-        cargo build --all --no-default-features --features="$feature"
-        cargo test --all --features="$feature"
-    done
-
-    # Other combos
-    cargo test --all --features="serde-std"
+if [[ "$DO_FEATURE_MATRIX" = true ]]; then
+  for feature in "${FEATURES[@]}"
+  do
+      # On rust 1.29.0 we are only testing with std lib
+      if [[ "$ON_1_29_0" = false && ${feature} =~ "std," ]]; then
+          echo "--------------$feature----------------"
+          cargo build --no-default-features --features="$feature"
+          if [[ ${feature} =~ "std," ]] ; then
+              cargo test --no-default-features --features="$feature"
+          fi
+          cargo doc --no-default-features --features="$feature"
+      fi
+  done
 fi
 
-if [ "$DO_SCHEMARS_TESTS" = true ]; then
+if [[ "$ON_1_29_0" = false ]]; then
     (cd extended_tests/schemars && cargo test)
 fi
 
-# Docs
-if [ "$DO_DOCS" = true ]; then
-    cargo doc --all --features="$FEATURES"
-fi
-
 # Webassembly stuff
-if [ "$DO_WASM" = true ]; then
+if [[ "$DO_WASM" = true ]]; then
     clang --version &&
     CARGO_TARGET_DIR=wasm cargo install --force wasm-pack &&
     printf '\n[lib]\ncrate-type = ["cdylib", "rlib"]\n' >> Cargo.toml &&
@@ -55,20 +48,20 @@ if [ "$DO_WASM" = true ]; then
 fi
 
 # Address Sanitizer
-if [ "$DO_ASAN" = true ]; then
+if [[ "$DO_ASAN" = true ]]; then
     cargo clean
     CC='clang -fsanitize=address -fno-omit-frame-pointer'                                        \
     RUSTFLAGS='-Zsanitizer=address -Clinker=clang -Cforce-frame-pointers=yes'                    \
     ASAN_OPTIONS='detect_leaks=1 detect_invalid_pointer_pairs=1 detect_stack_use_after_return=1' \
-    cargo test --lib --all --features="$FEATURES" -Zbuild-std --target x86_64-unknown-linux-gnu
+    cargo test --lib --all -Zbuild-std --target x86_64-unknown-linux-gnu
     cargo clean
     CC='clang -fsanitize=memory -fno-omit-frame-pointer'                                         \
     RUSTFLAGS='-Zsanitizer=memory -Zsanitizer-memory-track-origins -Cforce-frame-pointers=yes'   \
-    cargo test --lib --all --features="$FEATURES" -Zbuild-std --target x86_64-unknown-linux-gnu
+    cargo test --lib --all -Zbuild-std --target x86_64-unknown-linux-gnu
 fi
 
 # Bench
-if [ "$DO_BENCH" = true ]; then
+if [[ "$DO_BENCH" = true ]]; then
     cargo bench --all --features="unstable"
 fi
 
