@@ -34,56 +34,81 @@ impl ::std::error::Error for ::hex::Error {
 impl literacy::Write for sha1::HashEngine {
     type Error = ();
 
-    fn flush(&mut self) -> ::core::result::Result<(), ()> { Ok(()) }
-
     fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
         self.input(buf);
         Ok(buf.len())
     }
+
+    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
+        self.write(buf)?;
+        Ok(())
+    }
+
+    fn flush(&mut self) -> ::core::result::Result<(), ()> { Ok(()) }
 }
 
 impl literacy::Write for sha256::HashEngine {
     type Error = ();
 
-    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
-
     fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
         self.input(buf);
         Ok(buf.len())
     }
+
+    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
+        self.write(buf)?;
+        Ok(())
+    }
+
+    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
 }
 
 impl literacy::Write for sha512::HashEngine {
     type Error = ();
 
-    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
-
     fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
         self.input(buf);
         Ok(buf.len())
     }
+
+    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
+        self.write(buf)?;
+        Ok(())
+    }
+
+    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
 }
 
 impl literacy::Write for ripemd160::HashEngine {
     type Error = ();
 
-    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
-
     fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
         self.input(buf);
         Ok(buf.len())
     }
+
+    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
+        self.write(buf)?;
+        Ok(())
+    }
+
+    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
 }
 
 impl literacy::Write for siphash24::HashEngine {
     type Error = ();
 
-    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
-
     fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()> {
         self.input(buf);
         Ok(buf.len())
     }
+
+    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
+        self.write(buf)?;
+        Ok(())
+    }
+
+    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
 }
 
 #[cfg(test)]
