@@ -11,7 +11,7 @@ jobs:
         rust:
           - nightly
     steps:
-      - name: Checkout Crate 
+      - name: Checkout Crate
         uses: actions/checkout@v2
       - name: Checkout Toolchain
         uses: actions-rs/toolchain@v1
@@ -29,7 +29,7 @@ jobs:
           DO_BENCH: true
         run: ./contrib/test.sh
 
-  wasm: 
+  wasm:
     name: Stable - Docs / WebAssembly Build
     runs-on: ubuntu-latest
     strategy:
@@ -79,7 +79,7 @@ jobs:
       - name: Running cargo
         env:
           DO_FEATURE_MATRIX: true
-          DO_SCHEMARS_TESTS: ${{matrix.rust != '1.29.0'}}
+          ON_1_29_0: ${{matrix.rust == '1.29.0'}}
         run: ./contrib/test.sh
 
   Embedded:
@@ -102,5 +102,4 @@ jobs:
           RUSTFLAGS: "-C link-arg=-Tlink.x"
           CARGO_TARGET_THUMBV7M_NONE_EABI_RUNNER: "qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel"
         run: cd embedded && cargo run --target thumbv7m-none-eabi
-
 
