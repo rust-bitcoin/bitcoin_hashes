@@ -2,7 +2,7 @@
 
 # Combination of features to test, should be every features combination but std and core2 together
 # note std has a comma in the end so that following regex avoid matching serde-std
-FEATURES=("" "std," "use-core2" "std,serde-std" "use-core2,serde-std")
+FEATURES=("" "std," "use-core2" "use-core2-std" "std,use-core2" "std,serde-std" "use-core2,serde-std")
 
 # Use toolchain if explicitly specified
 if [[ -n "$TOOLCHAIN" ]]; then
@@ -22,8 +22,8 @@ cargo test --all
 if [[ "$DO_FEATURE_MATRIX" = true ]]; then
   for feature in "${FEATURES[@]}"
   do
-      # On rust 1.29.0 we are only testing with std lib
-      if [[ "$ON_1_29_0" = false || ${feature} =~ "std," ]]; then
+      # On rust 1.29.0 we are only testing with std lib and without use-core2
+      if [[ "$ON_1_29_0" = false || (${feature} =~ "std," && ! ${feature} =~ "use-core2") ]]; then
           echo "--------------$feature----------------"
           cargo build --no-default-features --features="$feature"
           if [[ ${feature} =~ "std," ]] ; then
@@ -53,11 +53,11 @@ if [[ "$DO_ASAN" = true ]]; then
     CC='clang -fsanitize=address -fno-omit-frame-pointer'                                        \
     RUSTFLAGS='-Zsanitizer=address -Clinker=clang -Cforce-frame-pointers=yes'                    \
     ASAN_OPTIONS='detect_leaks=1 detect_invalid_pointer_pairs=1 detect_stack_use_after_return=1' \
-    cargo test --lib --all -Zbuild-std --target x86_64-unknown-linux-gnu
+    cargo test --lib --all --all-features -Zbuild-std --target x86_64-unknown-linux-gnu
     cargo clean
     CC='clang -fsanitize=memory -fno-omit-frame-pointer'                                         \
     RUSTFLAGS='-Zsanitizer=memory -Zsanitizer-memory-track-origins -Cforce-frame-pointers=yes'   \
-    cargo test --lib --all -Zbuild-std --target x86_64-unknown-linux-gnu
+    cargo test --lib --all --all-features -Zbuild-std --target x86_64-unknown-linux-gnu
 fi
 
 # Bench

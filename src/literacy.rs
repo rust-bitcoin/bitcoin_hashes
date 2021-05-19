@@ -1,5 +1,3 @@
-#[cfg(all(feature = "std", feature = "use-core2"))]
-compile_error!("feature \"std\" and \"use-core2\" cannot be enabled together.");
 
 pub trait Read {
     type Error;
@@ -12,10 +10,9 @@ pub trait Write {
     fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, Self::Error>;
     fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), Self::Error>;
     fn flush(&mut self) -> ::core::result::Result<(), Self::Error>;
-
 }
 
-#[cfg(feature = "std")]
+#[cfg(all(feature = "std", not(feature = "use-core2")))]
 mod std_impl {
     use super::{Read, Write};
 
@@ -23,11 +20,11 @@ mod std_impl {
         type Error = ::std::io::Error;
 
         fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
-            Ok(<Self as ::std::io::Read>::read(self, buf)?)
+            <Self as ::std::io::Read>::read(self, buf)
         }
 
         fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), Self::Error> {
-            Ok(<Self as ::std::io::Read>::read_exact(self, buf)?)
+            <Self as ::std::io::Read>::read_exact(self, buf)
         }
     }
 
@@ -56,11 +53,11 @@ mod core2_impl {
         type Error = core2::io::Error;
 
         fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
-            Ok(<Self as core2::io::Read>::read(self, buf)?)
+            <Self as core2::io::Read>::read(self, buf)
         }
 
         fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), Self::Error> {
-            Ok(<Self as core2::io::Read>::read_exact(self, buf)?)
+            <Self as core2::io::Read>::read_exact(self, buf)
         }
     }
 
@@ -68,7 +65,7 @@ mod core2_impl {
         type Error = core2::io::Error;
 
         fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
-            Ok(<Self as core2::io::Write>::write(self, buf)?)
+            <Self as core2::io::Write>::write(self, buf)
         }
 
         fn write_all(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
@@ -76,7 +73,7 @@ mod core2_impl {
         }
 
         fn flush(&mut self) -> Result<(), Self::Error> {
-            Ok(<Self as core2::io::Write>::flush(self)?)
+            <Self as core2::io::Write>::flush(self)
         }
     }
 }
@@ -152,7 +149,7 @@ mod default_impl {
 #[cfg(test)]
 mod tests {
 
-    #[cfg(feature = "std")]
+    #[cfg(all(feature = "std", not(feature = "use-core2")))]
     mod std_test {
         use ::literacy::{Read, Write};
 
@@ -186,11 +183,20 @@ mod tests {
         }
 
         #[test]
-        fn test_core2_write() {
+        #[cfg(feature = "use-core2-std")]
+        fn test_core2_write_cursor() {
             let mut cursor = core2::io::Cursor::new(vec![]);
             let mut buf = [10u8; 1];
             cursor.write(&mut buf).unwrap();
             assert_eq!(cursor.into_inner(), vec![10u8]);
+        }
+
+        #[test]
+        fn test_core2_write() {
+            let mut write_buf = [0u8; 1];
+            let mut buf = [10u8; 1];
+            (&mut write_buf[..]).write(&mut buf).unwrap();
+            assert_eq!(write_buf, [10u8; 1]);
         }
     }
 }

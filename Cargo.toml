@@ -20,6 +20,7 @@ std = []
 serde-std = ["serde/std"]
 unstable = []  # for benchmarking
 use-core2 = ["core2"]
+use-core2-std = ["use-core2", "core2/std"]
 
 [dependencies]
 serde = { version = "1.0", default-features = false, optional = true }
