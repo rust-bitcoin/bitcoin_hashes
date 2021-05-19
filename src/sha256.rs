@@ -237,7 +237,7 @@ macro_rules! round(
 impl HashEngine {
     /// Create a new [HashEngine] from a midstate.
     ///
-    /// Be aware that this method panics when [length] is
+    /// Be aware that this method panics when `length` is
     /// not a multiple of the block size.
     pub fn from_midstate(midstate: Midstate, length: usize) -> HashEngine {
         assert!(length % BLOCK_SIZE == 0, "length is no multiple of the block size");

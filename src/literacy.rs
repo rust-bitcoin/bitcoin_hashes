@@ -1,14 +1,46 @@
+// Bitcoin Hashes Library
+// Written in 2021 by
+//   The rust-bitcoin developers.
+//
+// To the extent possible under law, the author(s) have dedicated all
+// copyright and related and neighboring rights to this software to
+// the public domain worldwide. This software is distributed without
+// any warranty.
+//
+// You should have received a copy of the CC0 Public Domain Dedication
+// along with this software.
+// If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+//
 
+//! # Literacy traits
+//!
+//! literacy: "the ability to [Read] and [Write]."
+//!
+//! * With `std` enabled, traits are automatically implemented for `std::io::{Read, Write}`
+//! * Without `std` but using feature `use-core2`, they are implemented for `core2::io::{Read, Write}`
+//! * Without neither `std` and nor `core2` default implementation `impl Read for &[u8]`
+//!   and `impl Write for ::alloc::vec::Vec<u8>` are provided
+//!
+
+/// The Read trait allows for reading bytes from a source.
 pub trait Read {
+    /// The error type returned in Result
     type Error;
+    /// see [std::io::Read::read]
     fn read(&mut self, buf: &mut [u8]) -> ::core::result::Result<usize, Self::Error>;
+    /// see [std::io::Read::read_exact]
     fn read_exact(&mut self, buf: &mut [u8]) -> ::core::result::Result<(), Self::Error>;
 }
 
+/// The Write trait allows to write bytes in the object implementing it.
 pub trait Write {
+    /// The error type returned in Result
     type Error;
+    /// see [std::io::Write::write]
     fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, Self::Error>;
+    /// see [std::io::Write::write_all]
     fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), Self::Error>;
+    /// see [std::io::Write::flush]
     fn flush(&mut self) -> ::core::result::Result<(), Self::Error>;
 }
 
