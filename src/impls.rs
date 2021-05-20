@@ -19,6 +19,42 @@
 use {sha1, sha256, sha512, ripemd160, siphash24};
 use ::{HashEngine, literacy};
 
+macro_rules! write_impl {
+    ($HashEngine: ty) => {
+        impl literacy::Write for $HashEngine {
+            type Error = ();
+
+            fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
+                self.input(buf);
+                Ok(buf.len())
+            }
+
+            fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
+                self.write(buf)?;
+                Ok(())
+            }
+
+            fn flush(&mut self) -> ::core::result::Result<(), ()> { Ok(()) }
+        }
+
+        impl<'a> literacy::Write for &'a mut $HashEngine {
+            type Error = ();
+
+            fn write<'b>(&'b mut self, buf: &'b [u8]) -> ::core::result::Result<usize, ()>  {
+                self.input(buf);
+                Ok(buf.len())
+            }
+
+            fn write_all<'b>(&'b mut self, buf: &'b [u8]) -> ::core::result::Result<(), ()> {
+                self.write(buf)?;
+                Ok(())
+            }
+
+            fn flush<'b>(&'b mut self) -> ::core::result::Result<(), ()> { Ok(()) }
+        }
+    };
+}
+
 #[cfg(any(test, feature = "std"))]
 impl ::std::error::Error for ::Error {
     fn cause(&self) -> Option<&::std::error::Error> { None }
@@ -31,85 +67,11 @@ impl ::std::error::Error for ::hex::Error {
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }
 
-impl literacy::Write for sha1::HashEngine {
-    type Error = ();
-
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
-        self.input(buf);
-        Ok(buf.len())
-    }
-
-    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
-        self.write(buf)?;
-        Ok(())
-    }
-
-    fn flush(&mut self) -> ::core::result::Result<(), ()> { Ok(()) }
-}
-
-impl literacy::Write for sha256::HashEngine {
-    type Error = ();
-
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
-        self.input(buf);
-        Ok(buf.len())
-    }
-
-    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
-        self.write(buf)?;
-        Ok(())
-    }
-
-    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
-}
-
-impl literacy::Write for sha512::HashEngine {
-    type Error = ();
-
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
-        self.input(buf);
-        Ok(buf.len())
-    }
-
-    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
-        self.write(buf)?;
-        Ok(())
-    }
-
-    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
-}
-
-impl literacy::Write for ripemd160::HashEngine {
-    type Error = ();
-
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
-        self.input(buf);
-        Ok(buf.len())
-    }
-
-    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
-        self.write(buf)?;
-        Ok(())
-    }
-
-    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
-}
-
-impl literacy::Write for siphash24::HashEngine {
-    type Error = ();
-
-    fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()> {
-        self.input(buf);
-        Ok(buf.len())
-    }
-
-    fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
-        self.write(buf)?;
-        Ok(())
-    }
-
-    fn flush(&mut self) -> ::core::result::Result<(), ()>  { Ok(()) }
-}
+write_impl!(sha1::HashEngine);
+write_impl!(sha256::HashEngine);
+write_impl!(sha512::HashEngine);
+write_impl!(ripemd160::HashEngine);
+write_impl!(siphash24::HashEngine);
 
 #[cfg(test)]
 mod tests {
