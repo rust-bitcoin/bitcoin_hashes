@@ -27,7 +27,7 @@ pub trait Read {
     /// The error type returned in Result
     type Error;
     /// The type to implement limited reads
-    type Take;
+    type Take: Read;
     /// see [std::io::Read::read]
     fn read(&mut self, buf: &mut [u8]) -> ::core::result::Result<usize, Self::Error>;
     /// see [std::io::Read::read_exact]
