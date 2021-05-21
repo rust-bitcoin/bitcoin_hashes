@@ -49,6 +49,9 @@ pub trait Write {
 }
 
 #[cfg(all(feature = "std", not(feature = "use-core2")))]
+pub use ::std::io::Error;
+
+#[cfg(all(feature = "std", not(feature = "use-core2")))]
 mod std_impl {
     use super::{Read, Write};
 
@@ -86,6 +89,9 @@ mod std_impl {
         }
     }
 }
+
+#[cfg(feature = "use-core2")]
+pub use core2::io::Error;
 
 #[cfg(feature = "use-core2")]
 mod core2_impl {
@@ -126,16 +132,19 @@ mod core2_impl {
 }
 
 #[cfg(all(not(feature = "use-core2"), not(feature = "std")))]
-mod default_impl {
-    use super::{Read, Write};
+#[derive(Debug)]
+/// The Error for the default implementation
+pub enum Error {
+    /// Unexpected "end of file"
+    UnexpectedEof,
+}
 
-    #[derive(Debug)]
-    pub enum DefaultError {
-        UnexpectedEof,
-    }
+#[cfg(all(not(feature = "use-core2"), not(feature = "std")))]
+mod default_impl {
+    use super::{Read, Write, Error};
 
     impl<'a> Read for &'a [u8] {
-        type Error = DefaultError;
+        type Error = Error;
         type Take = &'a [u8];
 
         fn read(&mut self, buf: &mut [u8]) -> ::core::result::Result<usize, Self::Error> {
@@ -180,7 +189,7 @@ mod default_impl {
     }
 
     impl Write for ::alloc::vec::Vec<u8> {
-        type Error = DefaultError;
+        type Error = Error;
 
         fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, Self::Error> {
             self.extend_from_slice(buf);
@@ -197,7 +206,6 @@ mod default_impl {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
