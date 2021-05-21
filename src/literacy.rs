@@ -26,10 +26,14 @@
 pub trait Read {
     /// The error type returned in Result
     type Error;
+    /// The type to implement limited reads
+    type Take;
     /// see [std::io::Read::read]
     fn read(&mut self, buf: &mut [u8]) -> ::core::result::Result<usize, Self::Error>;
     /// see [std::io::Read::read_exact]
     fn read_exact(&mut self, buf: &mut [u8]) -> ::core::result::Result<(), Self::Error>;
+    /// see [std::io::Read::take]
+    fn take(self, limit: u64) -> Self::Take;
 }
 
 /// The Write trait allows to write bytes in the object implementing it.
@@ -50,6 +54,7 @@ mod std_impl {
 
     impl<R: ::std::io::Read> Read for R {
         type Error = ::std::io::Error;
+        type Take = ::std::io::Take<R>;
 
         fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
             <Self as ::std::io::Read>::read(self, buf)
@@ -58,6 +63,11 @@ mod std_impl {
         fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), Self::Error> {
             <Self as ::std::io::Read>::read_exact(self, buf)
         }
+
+        fn take(self, limit: u64) -> Self::Take {
+            <Self as ::std::io::Read>::take(self, limit)
+        }
+
     }
 
     impl<W: ::std::io::Write> Write for W {
@@ -83,6 +93,7 @@ mod core2_impl {
 
     impl<R: core2::io::Read> Read for R {
         type Error = core2::io::Error;
+        type Take = core2::io::Take<R>;
 
         fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
             <Self as core2::io::Read>::read(self, buf)
@@ -90,6 +101,10 @@ mod core2_impl {
 
         fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), Self::Error> {
             <Self as core2::io::Read>::read_exact(self, buf)
+        }
+
+        fn take(self, limit: u64) -> Self::Take {
+            <Self as core2::io::Read>::take(self, limit)
         }
     }
 
@@ -114,12 +129,14 @@ mod core2_impl {
 mod default_impl {
     use super::{Read, Write};
 
+    #[derive(Debug)]
     pub enum DefaultError {
         UnexpectedEof,
     }
 
-    impl Read for &[u8] {
+    impl<'a> Read for &'a [u8] {
         type Error = DefaultError;
+        type Take = &'a [u8];
 
         fn read(&mut self, buf: &mut [u8]) -> ::core::result::Result<usize, Self::Error> {
             let amt = ::core::cmp::min(buf.len(), self.len());
@@ -155,6 +172,10 @@ mod default_impl {
 
             *self = b;
             Ok(())
+        }
+
+        fn take(self, limit: u64) -> Self::Take {
+            &self[..limit as usize]
         }
     }
 
