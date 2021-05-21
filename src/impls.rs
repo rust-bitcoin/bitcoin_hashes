@@ -15,6 +15,9 @@
 //! `std` Impls
 //!
 //! impls of traits defined in `std` and not `core`
+//!
+//! Note engines implementation cannot error, however, we use [crate::literacy::Error] type for
+//! more ergonomic use inside other methods returning errors.
 
 use {sha1, sha256, sha512, ripemd160, siphash24};
 use ::{HashEngine, literacy};
@@ -22,35 +25,35 @@ use ::{HashEngine, literacy};
 macro_rules! write_impl {
     ($HashEngine: ty) => {
         impl literacy::Write for $HashEngine {
-            type Error = ();
+            type Error = literacy::Error;
 
-            fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, ()>  {
+            fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, Self::Error>  {
                 self.input(buf);
                 Ok(buf.len())
             }
 
-            fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), ()> {
+            fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), Self::Error> {
                 self.write(buf)?;
                 Ok(())
             }
 
-            fn flush(&mut self) -> ::core::result::Result<(), ()> { Ok(()) }
+            fn flush(&mut self) -> ::core::result::Result<(), Self::Error> { Ok(()) }
         }
 
         impl<'a> literacy::Write for &'a mut $HashEngine {
-            type Error = ();
+            type Error = literacy::Error;
 
-            fn write<'b>(&'b mut self, buf: &'b [u8]) -> ::core::result::Result<usize, ()>  {
+            fn write<'b>(&'b mut self, buf: &'b [u8]) -> ::core::result::Result<usize, Self::Error>  {
                 self.input(buf);
                 Ok(buf.len())
             }
 
-            fn write_all<'b>(&'b mut self, buf: &'b [u8]) -> ::core::result::Result<(), ()> {
+            fn write_all<'b>(&'b mut self, buf: &'b [u8]) -> ::core::result::Result<(), Self::Error> {
                 self.write(buf)?;
                 Ok(())
             }
 
-            fn flush<'b>(&'b mut self) -> ::core::result::Result<(), ()> { Ok(()) }
+            fn flush<'b>(&'b mut self) -> ::core::result::Result<(), Self::Error> { Ok(()) }
         }
     };
 }
