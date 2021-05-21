@@ -1,8 +1,8 @@
 #!/bin/bash -ex
 
-# Combination of features to test, should be every features combination but std and core2 together
+# Combination of features to test
 # note std has a comma in the end so that following regex avoid matching serde-std
-FEATURES=("" "std," "use-core2" "use-core2-std" "std,use-core2" "std,serde-std" "use-core2,serde-std")
+FEATURES=("" "std," "std,serde" "serde" "use-core2,serde" "use-core2" "use-core2-std" "std,use-core2" "std,serde-std" "use-core2,serde-std")
 
 # Use toolchain if explicitly specified
 if [[ -n "$TOOLCHAIN" ]]; then
