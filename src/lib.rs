@@ -52,7 +52,7 @@ pub mod _export {
 
 #[cfg(feature = "schemars")] extern crate schemars;
 
-#[cfg(all(not(feature = "use-core2"), not(feature = "std")))]
+#[cfg(not(feature = "std"))]
 extern crate alloc;
 
 #[macro_use] mod util;

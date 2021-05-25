@@ -22,12 +22,20 @@
 //!   and `impl Write for ::alloc::vec::Vec<u8>` are provided
 //!
 
+#[cfg(feature = "std")]
+use std::boxed::Box as AllocBox;
+
+#[cfg(not(feature = "std"))]
+use alloc::boxed::Box as AllocBox;
+
 /// The Read trait allows for reading bytes from a source.
 pub trait Read {
     /// The error type returned in Result
-    type Error;
+    type Error: ErrorTrait;
+
     /// see [std::io::Read::read]
     fn read(&mut self, buf: &mut [u8]) -> ::core::result::Result<usize, Self::Error>;
+
     /// see [std::io::Read::read_exact]
     fn read_exact(&mut self, buf: &mut [u8]) -> ::core::result::Result<(), Self::Error>;
 }
@@ -35,17 +43,92 @@ pub trait Read {
 /// The Write trait allows to write bytes in the object implementing it.
 pub trait Write {
     /// The error type returned in Result
-    type Error;
+    type Error: ErrorTrait;
+
     /// see [std::io::Write::write]
     fn write(&mut self, buf: &[u8]) -> ::core::result::Result<usize, Self::Error>;
+
     /// see [std::io::Write::write_all]
     fn write_all(&mut self, buf: &[u8]) -> ::core::result::Result<(), Self::Error>;
+
     /// see [std::io::Write::flush]
     fn flush(&mut self) -> ::core::result::Result<(), Self::Error>;
 }
 
+/// The literacy Error trait, custom errors must implement this
+pub trait ErrorTrait {
+    /// The error category
+    fn kind(&self) -> ErrorKind;
+}
+
+/// Same as [std::io::ErrorKind] that we have to duplicate because ErrorKind is not in `core`
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[allow(missing_docs)]
+pub enum ErrorKind {
+    NotFound,
+    PermissionDenied,
+    ConnectionRefused,
+    ConnectionReset,
+    ConnectionAborted,
+    NotConnected,
+    AddrInUse,
+    AddrNotAvailable,
+    BrokenPipe,
+    AlreadyExists,
+    WouldBlock,
+    InvalidInput,
+    InvalidData,
+    TimedOut,
+    WriteZero,
+    Interrupted,
+    Other,
+    UnexpectedEof,
+}
+
+/// The Error type in case we are not using [std::io::Error] or [core2::io::Error]
+#[derive(Debug)]
+pub struct Error {
+    kind: ErrorKind,
+
+    error: AllocBox<dyn InnerError>,
+}
+
+trait InnerError: ::core::fmt::Debug + ::core::any::Any {}
+
+impl InnerError for () {}
+
+impl ErrorTrait for Error {
+    fn kind(&self) -> ErrorKind {
+        self.kind
+    }
+}
+
 #[cfg(all(feature = "std", not(feature = "use-core2")))]
-pub use ::std::io::Error;
+impl ErrorTrait for ::std::io::Error {
+    fn kind(&self) -> ErrorKind {
+        match self.kind() {
+            ::std::io::ErrorKind::NotFound => ErrorKind::NotFound,
+            ::std::io::ErrorKind::PermissionDenied => ErrorKind::PermissionDenied,
+            ::std::io::ErrorKind::ConnectionRefused => ErrorKind::ConnectionRefused,
+            ::std::io::ErrorKind::ConnectionReset => ErrorKind::ConnectionReset,
+            ::std::io::ErrorKind::ConnectionAborted => ErrorKind::ConnectionAborted,
+            ::std::io::ErrorKind::NotConnected => ErrorKind::NotConnected,
+            ::std::io::ErrorKind::AddrInUse => ErrorKind::AddrInUse,
+            ::std::io::ErrorKind::AddrNotAvailable => ErrorKind::AddrNotAvailable,
+            ::std::io::ErrorKind::BrokenPipe => ErrorKind::BrokenPipe,
+            ::std::io::ErrorKind::AlreadyExists => ErrorKind::AlreadyExists,
+            ::std::io::ErrorKind::WouldBlock => ErrorKind::WouldBlock,
+            ::std::io::ErrorKind::InvalidInput => ErrorKind::InvalidInput,
+            ::std::io::ErrorKind::InvalidData => ErrorKind::InvalidData,
+            ::std::io::ErrorKind::TimedOut => ErrorKind::TimedOut,
+            ::std::io::ErrorKind::WriteZero => ErrorKind::WriteZero,
+            ::std::io::ErrorKind::Interrupted => ErrorKind::Interrupted,
+            ::std::io::ErrorKind::Other => ErrorKind::Other,
+            ::std::io::ErrorKind::UnexpectedEof => ErrorKind::UnexpectedEof,
+            _ => ErrorKind::Other,
+        }
+    }
+}
 
 #[cfg(all(feature = "std", not(feature = "use-core2")))]
 mod std_impl {
@@ -81,7 +164,31 @@ mod std_impl {
 }
 
 #[cfg(feature = "use-core2")]
-pub use core2::io::Error;
+impl ErrorTrait for core2::io::Error {
+    fn kind(&self) -> ErrorKind {
+        match self.kind() {
+            core2::io::ErrorKind::NotFound => ErrorKind::NotFound,
+            core2::io::ErrorKind::PermissionDenied => ErrorKind::PermissionDenied,
+            core2::io::ErrorKind::ConnectionRefused => ErrorKind::ConnectionRefused,
+            core2::io::ErrorKind::ConnectionReset => ErrorKind::ConnectionReset,
+            core2::io::ErrorKind::ConnectionAborted => ErrorKind::ConnectionAborted,
+            core2::io::ErrorKind::NotConnected => ErrorKind::NotConnected,
+            core2::io::ErrorKind::AddrInUse => ErrorKind::AddrInUse,
+            core2::io::ErrorKind::AddrNotAvailable => ErrorKind::AddrNotAvailable,
+            core2::io::ErrorKind::BrokenPipe => ErrorKind::BrokenPipe,
+            core2::io::ErrorKind::AlreadyExists => ErrorKind::AlreadyExists,
+            core2::io::ErrorKind::WouldBlock => ErrorKind::WouldBlock,
+            core2::io::ErrorKind::InvalidInput => ErrorKind::InvalidInput,
+            core2::io::ErrorKind::InvalidData => ErrorKind::InvalidData,
+            core2::io::ErrorKind::TimedOut => ErrorKind::TimedOut,
+            core2::io::ErrorKind::WriteZero => ErrorKind::WriteZero,
+            core2::io::ErrorKind::Interrupted => ErrorKind::Interrupted,
+            core2::io::ErrorKind::Other => ErrorKind::Other,
+            core2::io::ErrorKind::UnexpectedEof => ErrorKind::UnexpectedEof,
+            _ => ErrorKind::Other,
+        }
+    }
+}
 
 #[cfg(feature = "use-core2")]
 mod core2_impl {
@@ -117,16 +224,8 @@ mod core2_impl {
 }
 
 #[cfg(all(not(feature = "use-core2"), not(feature = "std")))]
-#[derive(Debug)]
-/// The Error for the default implementation
-pub enum Error {
-    /// Unexpected "end of file"
-    UnexpectedEof,
-}
-
-#[cfg(all(not(feature = "use-core2"), not(feature = "std")))]
 mod default_impl {
-    use super::{Read, Write, Error};
+    use super::{Read, Write, Error, ErrorKind};
 
     impl<'a> Read for &'a [u8] {
         type Error = Error;
@@ -150,7 +249,10 @@ mod default_impl {
 
         fn read_exact(&mut self, buf: &mut [u8]) -> ::core::result::Result<(), Self::Error>  {
             if buf.len() > self.len() {
-                return Err(Self::Error::UnexpectedEof);
+                return Err( Self::Error {
+                    kind: ErrorKind::UnexpectedEof,
+                    error: alloc::boxed::Box::new(()),
+                });
             }
             let (a, b) = self.split_at(buf.len());
 
