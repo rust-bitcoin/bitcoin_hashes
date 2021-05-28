@@ -101,5 +101,9 @@ jobs:
           RUSTFLAGS: "-C link-arg=-Tlink.x"
           CARGO_TARGET_THUMBV7M_NONE_EABI_RUNNER: "qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel"
         run: cd embedded && cargo run --target thumbv7m-none-eabi
-
+      - name: Run with alloc
+        env:
+          RUSTFLAGS: "-C link-arg=-Tlink.x"
+          CARGO_TARGET_THUMBV7M_NONE_EABI_RUNNER: "qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel"
+        run: cd embedded && cargo run --target thumbv7m-none-eabi --features=alloc
 
