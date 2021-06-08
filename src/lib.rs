@@ -38,6 +38,9 @@
 #[cfg(all(test, feature = "unstable"))] extern crate test;
 
 #[cfg(any(test, feature="std"))] extern crate core;
+#[cfg(feature="core2")] extern crate core2;
+#[cfg(any(feature = "alloc"))] extern crate alloc;
+#[cfg(any(feature = "std"))] use std as alloc;
 #[cfg(feature="serde")] pub extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
 
@@ -53,7 +56,7 @@ pub mod _export {
 
 #[macro_use] mod util;
 #[macro_use] pub mod serde_macros;
-#[cfg(any(test, feature = "std"))] mod std_impls;
+#[cfg(any(feature = "std", feature = "core2"))] mod impls;
 pub mod error;
 pub mod hex;
 pub mod hash160;
