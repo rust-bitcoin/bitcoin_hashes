@@ -1,4 +1,8 @@
 
+# 0.9.7 - 2021-06-17
+
+* Introduce `alloc` feature and `core2` dependency for nostd support (this feature has MSRV of 1.36 rather than 1.29)
+
 # 0.9.6 - 2021-05-03
 
 * Re-export `core` as `_export::_core`. This resolves an issue when calling several exported macros with the `std` feature.
