@@ -1,6 +1,10 @@
 #!/bin/sh -ex
 
-FEATURES="serde serde-std"
+FEATURES="serde serde-std std"
+
+if [ "$DO_ALLOC_TESTS" = true ]; then
+	FEATURES="$FEATURES alloc"
+fi
 
 # Use toolchain if explicitly specified
 if [ -n "$TOOLCHAIN" ]
@@ -30,6 +34,11 @@ if [ "$DO_FEATURE_MATRIX" = true ]; then
     do
         cargo build --all --no-default-features --features="$feature"
         cargo test --all --features="$feature"
+		# All combos of two features
+		for featuretwo in ${FEATURES}; do
+			cargo build --all --no-default-features --features="$feature $featuretwo"
+			cargo test --all --features="$feature $featuretwo"
+		done
     done
 
     # Other combos
