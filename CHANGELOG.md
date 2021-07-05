@@ -1,4 +1,8 @@
 
+# 0.10.0 - 2021-07-05
+
+* Increase `core2` to released version of 0.3.0
+
 # 0.9.7 - 2021-06-17
 
 * Introduce `alloc` feature and `core2` dependency for nostd support (this feature has MSRV of 1.36 rather than 1.29)
