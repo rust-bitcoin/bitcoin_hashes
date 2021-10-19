@@ -16,7 +16,7 @@
 //!
 
 #[cfg(feature = "serde")]
-/// Functions used by serde impls of all hashes
+/// Functions used by serde impls of all hashes.
 pub mod serde_details {
     use Error;
 
@@ -83,7 +83,7 @@ pub mod serde_details {
         }
     }
 
-    /// Default serialization/deserialization methods
+    /// Default serialization/deserialization methods.
     pub trait SerdeHash
     where
         Self: Sized
@@ -93,13 +93,13 @@ pub mod serde_details {
             + ops::Index<ops::RangeFull, Output = [u8]>,
         <Self as FromStr>::Err: fmt::Display,
     {
-        /// Size, in bits, of the hash
+        /// Size, in bits, of the hash.
         const N: usize;
 
-        /// helper function to turn a deserialized slice into the correct hash type
+        /// Helper function to turn a deserialized slice into the correct hash type.
         fn from_slice_delegated(sl: &[u8]) -> Result<Self, Error>;
 
-        /// serde serialization
+        /// Do serde serialization.
         fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
             if s.is_human_readable() {
                 s.collect_str(self)
@@ -108,7 +108,7 @@ pub mod serde_details {
             }
         }
 
-        /// serde deserialization
+        /// Do serde deserialization.
         fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
             if d.is_human_readable() {
                 d.deserialize_str(HexVisitor::<Self>(PhantomData))
@@ -122,7 +122,7 @@ pub mod serde_details {
 #[macro_export]
 #[cfg(feature = "serde")]
 /// Implements `Serialize` and `Deserialize` for a type `$t` which
-/// represents a newtype over a byte-slice over length `$len`
+/// represents a newtype over a byte-slice over length `$len`.
 macro_rules! serde_impl(
     ($t:ident, $len:expr) => (
         impl $crate::serde_macros::serde_details::SerdeHash for $t {
@@ -145,7 +145,7 @@ macro_rules! serde_impl(
         }
 ));
 
-/// Does an "empty" serde implementation for the configuration without serde feature
+/// Does an "empty" serde implementation for the configuration without serde feature.
 #[macro_export]
 #[cfg(not(feature = "serde"))]
 macro_rules! serde_impl(

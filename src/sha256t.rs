@@ -28,8 +28,7 @@ use Error;
 
 /// Trait representing a tag that can be used as a context for SHA256t hashes.
 pub trait Tag {
-    /// Returns a hash engine that is pre-tagged and is ready
-    /// to be used for the data.
+    /// Returns a hash engine that is pre-tagged and is ready to be used for the data.
     fn engine() -> sha256::HashEngine;
 }
 

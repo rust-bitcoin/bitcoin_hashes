@@ -28,14 +28,14 @@ use core2::io;
 use core::{fmt, str};
 use Hash;
 
-/// Hex decoding error
+/// Hex decoding error.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Error {
-    /// non-hexadecimal character
+    /// Non-hexadecimal character.
     InvalidChar(u8),
-    /// purported hex string had odd length
+    /// Purported hex string had odd length.
     OddLengthString(usize),
-    /// tried to parse fixed-length hash from a string with the wrong type (expected, got)
+    /// Tried to parse fixed-length hash from a string with the wrong type (expected, got).
     InvalidLength(usize, usize),
 }
 
@@ -49,21 +49,21 @@ impl fmt::Display for Error {
     }
 }
 
-/// Trait for objects that can be serialized as hex strings
+/// Trait for objects that can be serialized as hex strings.
 #[cfg(any(test, feature = "std", feature = "alloc"))]
 pub trait ToHex {
-    /// Hex representation of the object
+    /// Converts to a hexadecimal representation of the object.
     fn to_hex(&self) -> String;
 }
 
-/// Trait for objects that can be deserialized from hex strings
+/// Trait for objects that can be deserialized from hex strings.
 pub trait FromHex: Sized {
-    /// Produce an object from a byte iterator
+    /// Produces an object from a byte iterator.
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
     where
         I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator;
 
-    /// Produce an object from a hex string
+    /// Produces an object from a hex string.
     fn from_hex(s: &str) -> Result<Self, Error> {
         Self::from_byte_iter(HexIterator::new(s)?)
     }
@@ -71,7 +71,7 @@ pub trait FromHex: Sized {
 
 #[cfg(any(test, feature = "std", feature = "alloc"))]
 impl<T: fmt::LowerHex> ToHex for T {
-    /// Outputs the hash in hexadecimal form
+    /// Outputs the hash in hexadecimal form.
     fn to_hex(&self) -> String {
         format!("{:x}", self)
     }
@@ -100,8 +100,11 @@ pub struct HexIterator<'a> {
 }
 
 impl<'a> HexIterator<'a> {
-    /// Constructs a new `HexIterator` from a string slice. If the string is of
-    /// odd length it returns an error.
+    /// Constructs a new `HexIterator` from a string slice.
+    ///
+    /// # Errors
+    ///
+    /// If the input string is of odd length.
     pub fn new(s: &'a str) -> Result<HexIterator<'a>, Error> {
         if s.len() % 2 != 0 {
             Err(Error::OddLengthString(s.len()))
@@ -165,8 +168,9 @@ impl<'a> DoubleEndedIterator for HexIterator<'a> {
 
 impl<'a> ExactSizeIterator for HexIterator<'a> {}
 
-/// Output hex into an object implementing `fmt::Write`, which is usually more
-/// efficient than going through a `String` using `ToHex`.
+/// Outputs hex into an object implementing `fmt::Write`.
+///
+/// This is usually more efficient than going through a `String` using [`ToHex`].
 pub fn format_hex(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     let prec = f.precision().unwrap_or(2 * data.len());
     let width = f.width().unwrap_or(2 * data.len());
@@ -182,8 +186,9 @@ pub fn format_hex(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     Ok(())
 }
 
-/// Output hex in reverse order; used for Sha256dHash whose standard hex encoding
-/// has the bytes reversed.
+/// Outputs hex in reverse order.
+///
+/// Used for `sha256d::Hash` whose standard hex encoding has the bytes reversed.
 pub fn format_hex_reverse(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     let prec = f.precision().unwrap_or(2 * data.len());
     let width = f.width().unwrap_or(2 * data.len());

@@ -12,7 +12,7 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! `std` / `core2` Impls
+//! `std` / `core2` Impls.
 //!
 //! Implementations of traits defined in `std` / `core2` and not in `core`.
 //!

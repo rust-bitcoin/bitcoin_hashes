@@ -31,7 +31,7 @@ use util;
 
 const BLOCK_SIZE: usize = 64;
 
-/// Engine to compute RIPEMD160 hash function
+/// Engine to compute RIPEMD160 hash function.
 #[derive(Clone)]
 pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
@@ -77,7 +77,7 @@ impl EngineTrait for HashEngine {
     engine_input_impl!();
 }
 
-/// Output of the RIPEMD160 hash function
+/// Output of the RIPEMD160 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]

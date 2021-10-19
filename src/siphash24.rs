@@ -55,7 +55,7 @@ macro_rules! compress {
 /// `copy_nonoverlapping` to let the compiler generate the most efficient way
 /// to load it from a possibly unaligned address.
 ///
-/// Unsafe because: unchecked indexing at `i..i+size_of(int_ty)`
+/// Unsafe because: unchecked indexing at `i..i+size_of(int_ty)`.
 macro_rules! load_int_le {
     ($buf:expr, $i:expr, $int_ty:ident) => {{
         debug_assert!($i + mem::size_of::<$int_ty>() <= $buf.len());
@@ -69,7 +69,7 @@ macro_rules! load_int_le {
     }};
 }
 
-/// Internal state of the [HashEngine].
+/// Internal state of the [`HashEngine`].
 #[derive(Debug, Clone)]
 pub struct State {
     // v0, v2 and v1, v3 show up in pairs in the algorithm,
@@ -82,7 +82,7 @@ pub struct State {
     v3: u64,
 }
 
-/// Engine to compute SipHash24 hash function.
+/// Engine to compute the SipHash24 hash function.
 #[derive(Debug, Clone)]
 pub struct HashEngine {
     k0: u64,
@@ -94,7 +94,7 @@ pub struct HashEngine {
 }
 
 impl HashEngine {
-    /// Create a new SipHash24 engine with keys.
+    /// Creates a new SipHash24 engine with keys.
     pub fn with_keys(k0: u64, k1: u64) -> HashEngine {
         HashEngine {
             k0: k0,
@@ -111,12 +111,12 @@ impl HashEngine {
         }
     }
 
-    /// Create a new SipHash24 engine.
+    /// Creates a new SipHash24 engine.
     pub fn new() -> HashEngine {
         HashEngine::with_keys(0, 0)
     }
 
-    /// Retrieve the keys of this engine.
+    /// Retrieves the keys of this engine.
     pub fn keys(&self) -> (u64, u64) {
         (self.k0, self.k1)
     }
@@ -229,21 +229,21 @@ impl str::FromStr for Hash {
 }
 
 impl Hash {
-    /// Hash the given data with an engine with the provided keys.
+    /// Hashes the given data with an engine with the provided keys.
     pub fn hash_with_keys(k0: u64, k1: u64, data: &[u8]) -> Hash {
         let mut engine = HashEngine::with_keys(k0, k1);
         engine.input(data);
         Hash::from_engine(engine)
     }
 
-    /// Hash the given data directly to u64 with an engine with the provided keys.
+    /// Hashes the given data directly to u64 with an engine with the provided keys.
     pub fn hash_to_u64_with_keys(k0: u64, k1: u64, data: &[u8]) -> u64 {
         let mut engine = HashEngine::with_keys(k0, k1);
         engine.input(data);
         Hash::from_engine_to_u64(engine)
     }
 
-    /// Produce a hash as u64 from the current state of a given engine
+    /// Produces a hash as `u64` from the current state of a given engine.
     #[inline]
     pub fn from_engine_to_u64(e: HashEngine) -> u64 {
         let mut state = e.state;
@@ -265,7 +265,7 @@ impl Hash {
         util::slice_to_u64_le(&self.0[..])
     }
 
-    /// Create a hash from its (little endian) 64-bit integer representation.
+    /// Creates a hash from its (little endian) 64-bit integer representation.
     pub fn from_u64(hash: u64) -> Hash {
         Hash(util::u64_to_array_le(hash))
     }
@@ -313,7 +313,7 @@ impl HashTrait for Hash {
 
 /// Load an u64 using up to 7 bytes of a byte slice.
 ///
-/// Unsafe because: unchecked indexing at start..start+len
+/// Unsafe because: unchecked indexing at `start..start+len`.
 #[inline]
 unsafe fn u8to64_le(buf: &[u8], start: usize, len: usize) -> u64 {
     debug_assert!(len < 8);
