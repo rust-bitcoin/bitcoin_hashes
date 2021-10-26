@@ -61,7 +61,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.29.0
+          - 1.41.1
           - beta
           - stable
     steps:
@@ -73,14 +73,11 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
-      - name: Pin cc if rust 1.29
-        if: matrix.rust == '1.29.0'
-        run: cargo generate-lockfile && cargo update -p serde_json --precise "1.0.39"
       - name: Running cargo
         env:
           DO_FEATURE_MATRIX: true
-          DO_SCHEMARS_TESTS: ${{matrix.rust != '1.29.0'}}
-          DO_ALLOC_TESTS: ${{matrix.rust != '1.29.0'}}
+          DO_SCHEMARS_TESTS: true
+          DO_ALLOC_TESTS: true
         run: ./contrib/test.sh
 
   Embedded:
