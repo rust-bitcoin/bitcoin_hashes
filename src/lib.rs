@@ -20,6 +20,9 @@
 //! are needed to display hashes anway.
 //!
 
+// Unknown lint warnings occur when linting with an old version of clippy and
+// hitting code that allows a lint that exists only in newer versions of clippy.
+#![allow(unknown_lints)]
 // Coding conventions
 #![deny(non_upper_case_globals)]
 #![deny(non_camel_case_types)]
