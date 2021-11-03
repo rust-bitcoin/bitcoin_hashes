@@ -156,6 +156,7 @@ mod tests {
             .validate(&js)
             .is_ok());
     }
+
     #[test]
     fn sha512() {
         static HASH_BYTES: [u8; 64] = [
