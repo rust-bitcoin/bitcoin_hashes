@@ -2,8 +2,6 @@ fn main() {}
 #[cfg(test)]
 mod tests {
     use bitcoin_hashes::*;
-    #[test]
-    fn it_works() {}
 
     #[test]
     fn hash160() {
