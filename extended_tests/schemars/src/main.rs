@@ -2,8 +2,6 @@ fn main() {}
 #[cfg(test)]
 mod tests {
     use bitcoin_hashes::*;
-    #[test]
-    fn it_works() {}
 
     #[test]
     fn hash160() {
@@ -23,7 +21,7 @@ mod tests {
     }
 
     #[test]
-    fn HMAC_SHA512() {
+    fn hmac_sha512() {
         static HASH_BYTES: [u8; 64] = [
             0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21, 0x11, 0x3c, 0x52, 0xff, 0x18, 0x2a,
             0x1b, 0x8e, 0x0a, 0x19, 0x57, 0x54, 0xaa, 0x52, 0x7f, 0xcd, 0x00, 0xa4, 0x11, 0x62,
@@ -113,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn TestHash() {
+    fn test_hash() {
         const TEST_MIDSTATE: [u8; 32] = [
             156, 224, 228, 230, 124, 17, 108, 57, 56, 179, 202, 242, 195, 15, 80, 137, 211, 243,
             147, 108, 71, 99, 110, 96, 125, 179, 62, 234, 221, 198, 240, 201,
@@ -158,6 +156,7 @@ mod tests {
             .validate(&js)
             .is_ok());
     }
+
     #[test]
     fn sha512() {
         static HASH_BYTES: [u8; 64] = [
