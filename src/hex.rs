@@ -20,6 +20,11 @@ use alloc::{string::String, vec::Vec};
 #[cfg(feature = "alloc")]
 use alloc::format;
 
+#[cfg(feature = "std")]
+use std::io;
+#[cfg(all(not(feature = "std"), feature = "core2"))]
+use core2::io;
+
 use core::{fmt, str};
 use Hash;
 
@@ -132,6 +137,23 @@ impl<'a> Iterator for HexIterator<'a> {
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (min, max) = self.iter.size_hint();
         (min / 2, max.map(|x| x /2))
+    }
+}
+
+#[cfg(any(feature = "std", feature = "core2"))]
+impl<'a> io::Read for HexIterator<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let mut bytes_read = 0usize;
+        for dst in buf {
+            match self.next() {
+                Some(Ok(src)) => {
+                    *dst = src;
+                    bytes_read += 1;
+                },
+                _ => break,
+            }
+        }
+        Ok(bytes_read)
     }
 }
 
