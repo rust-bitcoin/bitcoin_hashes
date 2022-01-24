@@ -20,6 +20,8 @@
 //! # RIPEMD160
 
 use core::{cmp, str};
+use core::ops::Index;
+use core::slice::SliceIndex;
 
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
@@ -86,9 +88,17 @@ pub struct Hash(
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 20);
 borrow_slice_impl!(Hash);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl str::FromStr for Hash {
     type Err = ::hex::Error;
