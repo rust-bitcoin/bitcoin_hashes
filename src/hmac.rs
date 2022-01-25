@@ -397,7 +397,7 @@ mod benches {
     use {Hmac, Hash, HashEngine};
 
     #[bench]
-    pub fn hmac_sha256_10(bh: & mut Bencher) {
+    pub fn hmac_sha256_10(bh: &mut Bencher) {
         let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -407,7 +407,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hmac_sha256_1k(bh: & mut Bencher) {
+    pub fn hmac_sha256_1k(bh: &mut Bencher) {
         let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -417,7 +417,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hmac_sha256_64k(bh: & mut Bencher) {
+    pub fn hmac_sha256_64k(bh: &mut Bencher) {
         let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

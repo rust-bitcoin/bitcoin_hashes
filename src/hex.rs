@@ -136,7 +136,7 @@ impl<'a> Iterator for HexIterator<'a> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (min, max) = self.iter.size_hint();
-        (min / 2, max.map(|x| x /2))
+        (min / 2, max.map(|x| x / 2))
     }
 }
 

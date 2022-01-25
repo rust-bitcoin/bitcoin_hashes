@@ -558,7 +558,7 @@ mod benches {
     use HashEngine;
 
     #[bench]
-    pub fn ripemd160_10(bh: & mut Bencher) {
+    pub fn ripemd160_10(bh: &mut Bencher) {
         let mut engine = ripemd160::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -568,7 +568,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn ripemd160_1k(bh: & mut Bencher) {
+    pub fn ripemd160_1k(bh: &mut Bencher) {
         let mut engine = ripemd160::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -578,7 +578,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn ripemd160_64k(bh: & mut Bencher) {
+    pub fn ripemd160_64k(bh: &mut Bencher) {
         let mut engine = ripemd160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
