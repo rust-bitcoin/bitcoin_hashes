@@ -81,7 +81,7 @@ impl EngineTrait for HashEngine {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_64"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_64"))]
     [u8; 64]
 );
 
@@ -415,7 +415,7 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn sha512_serde() {
         use serde_test::{Configure, Token, assert_tokens};
@@ -443,7 +443,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 

@@ -15,7 +15,7 @@
 //! # SHA256t (tagged SHA256)
 
 use core::{cmp, str};
-#[cfg(feature="serde")] use core::fmt;
+#[cfg(feature = "serde")] use core::fmt;
 use core::marker::PhantomData;
 
 use sha256;
@@ -34,7 +34,7 @@ pub trait Tag {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash<T: Tag>(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_32"))]
     [u8; 32],
     #[cfg_attr(feature = "schemars", schemars(skip))]
     PhantomData<T>
@@ -147,7 +147,7 @@ macro_rules! sha256t_hash_newtype {
     };
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<T: Tag> ::serde::Serialize for Hash<T> {
     fn serialize<S: ::serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         if s.is_human_readable() {
@@ -158,15 +158,15 @@ impl<T: Tag> ::serde::Serialize for Hash<T> {
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 struct HexVisitor<T: Tag>(PhantomData<T>);
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<T: Tag> Default for HexVisitor<T> {
     fn default() -> Self { HexVisitor(PhantomData) }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
     type Value = Hash<T>;
 
@@ -195,15 +195,15 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 struct BytesVisitor<T: Tag>(PhantomData<T>);
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<T: Tag> Default for BytesVisitor<T> {
     fn default() -> Self { BytesVisitor(PhantomData) }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
     type Value = Hash<T>;
 
@@ -222,7 +222,7 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
     fn deserialize<D: ::serde::Deserializer<'de>>(d: D) -> Result<Hash<T>, D::Error> {
         if d.is_human_readable() {

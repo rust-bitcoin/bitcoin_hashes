@@ -37,12 +37,12 @@
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 #[cfg(all(test, feature = "unstable"))] extern crate test;
 
-#[cfg(any(test, feature="std"))] extern crate core;
-#[cfg(feature="core2")] extern crate core2;
+#[cfg(any(test, feature = "std"))] extern crate core;
+#[cfg(feature = "core2")] extern crate core2;
 #[cfg(feature = "alloc")] extern crate alloc;
 #[cfg(all(not(feature = "alloc"), feature = "std"))] use std as alloc;
-#[cfg(feature="serde")] pub extern crate serde;
-#[cfg(all(test,feature="serde"))] extern crate serde_test;
+#[cfg(feature = "serde")] pub extern crate serde;
+#[cfg(all(test,feature = "serde"))] extern crate serde_test;
 
 #[doc(hidden)]
 pub mod _export {
