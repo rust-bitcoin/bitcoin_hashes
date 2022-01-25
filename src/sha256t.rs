@@ -262,13 +262,13 @@ mod tests {
 
     #[test]
     fn test_sha256t() {
-       assert_eq!(
-           TestHash::hash(&[0]).to_hex(),
-           "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
-       );
-       assert_eq!(
-           NewTypeHash::hash(&[0]).to_hex(),
-           "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
-       );
+        assert_eq!(
+            TestHash::hash(&[0]).to_hex(),
+            "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
+        );
+        assert_eq!(
+            NewTypeHash::hash(&[0]).to_hex(),
+            "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
+        );
     }
 }

@@ -94,14 +94,14 @@ mod tests {
     use Hash;
     use HashEngine;
 
-#[derive(Clone)]
+    #[derive(Clone)]
     struct Test {
-input: &'static str,
-           output: Vec<u8>,
-           output_str: &'static str,
+        input: &'static str,
+        output: Vec<u8>,
+        output_str: &'static str,
     }
 
-#[test]
+    #[test]
     fn test() {
         let tests = vec![
             // Test vector copied out of rust-bitcoin
