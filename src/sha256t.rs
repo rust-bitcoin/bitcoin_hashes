@@ -175,8 +175,8 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
     }
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-        where
-            E: ::serde::de::Error,
+    where
+        E: ::serde::de::Error,
     {
         use core::str::FromStr;
         if let Ok(hex) = str::from_utf8(v) {
@@ -187,8 +187,8 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: ::serde::de::Error,
+    where
+        E: ::serde::de::Error,
     {
         use core::str::FromStr;
         Hash::<T>::from_str(v).map_err(E::custom)
@@ -212,8 +212,8 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
     }
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-        where
-            E: ::serde::de::Error,
+    where
+        E: ::serde::de::Error,
     {
         Hash::<T>::from_slice(v).map_err(|_| {
             // from_slice only errors on incorrect length

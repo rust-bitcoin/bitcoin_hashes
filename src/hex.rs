@@ -60,9 +60,8 @@ pub trait ToHex {
 pub trait FromHex: Sized {
     /// Produce an object from a byte iterator
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-        where I: Iterator<Item=Result<u8, Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator;
+    where
+        I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator;
 
     /// Produce an object from a hex string
     fn from_hex(s: &str) -> Result<Self, Error> {
@@ -80,9 +79,8 @@ impl<T: fmt::LowerHex> ToHex for T {
 
 impl<T: Hash> FromHex for T {
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-        where I: Iterator<Item=Result<u8, Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator,
+    where
+        I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
         let inner;
         if Self::DISPLAY_BACKWARD {
@@ -216,9 +214,8 @@ impl ToHex for [u8] {
 #[cfg(any(test, feature = "std", feature = "alloc"))]
 impl FromHex for Vec<u8> {
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-        where I: Iterator<Item=Result<u8, Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator,
+    where
+        I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
         iter.collect()
     }
@@ -228,9 +225,8 @@ macro_rules! impl_fromhex_array {
     ($len:expr) => {
         impl FromHex for [u8; $len] {
             fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-                where I: Iterator<Item=Result<u8, Error>> +
-                    ExactSizeIterator +
-                    DoubleEndedIterator,
+            where
+                I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator,
             {
                 if iter.len() == $len {
                     let mut ret = [0; $len];

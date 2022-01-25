@@ -204,9 +204,8 @@ impl Midstate {
 
 impl hex::FromHex for Midstate {
     fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-        where I: Iterator<Item=Result<u8, hex::Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator,
+    where
+        I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
         // DISPLAY_BACKWARD is true
         Ok(Midstate::from_inner(hex::FromHex::from_byte_iter(iter.rev())?))
