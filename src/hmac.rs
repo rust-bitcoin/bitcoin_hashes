@@ -20,7 +20,7 @@
 //! # HMAC support
 
 use core::{borrow, fmt, ops, str};
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 use HashEngine as EngineTrait;
@@ -218,14 +218,14 @@ impl<T: HashTrait> HashTrait for Hmac<T> {
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<T: HashTrait + Serialize> Serialize for Hmac<T> {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         Serialize::serialize(&self.0, s)
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<'de, T: HashTrait + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Hmac<T>, D::Error> {
         let inner = Deserialize::deserialize(d)?;
@@ -236,7 +236,7 @@ impl<'de, T: HashTrait + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
 #[cfg(test)]
 mod tests {
     use sha256;
-    #[cfg(feature="serde")] use sha512;
+    #[cfg(feature = "serde")] use sha512;
     use {Hash, HashEngine, Hmac, HmacEngine};
 
     #[derive(Clone)]
@@ -361,7 +361,7 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn hmac_sha512_serde() {
         use serde_test::{Configure, Token, assert_tokens};
@@ -389,7 +389,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -397,7 +397,7 @@ mod benches {
     use {Hmac, Hash, HashEngine};
 
     #[bench]
-    pub fn hmac_sha256_10(bh: & mut Bencher) {
+    pub fn hmac_sha256_10(bh: &mut Bencher) {
         let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -407,7 +407,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hmac_sha256_1k(bh: & mut Bencher) {
+    pub fn hmac_sha256_1k(bh: &mut Bencher) {
         let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -417,7 +417,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hmac_sha256_64k(bh: & mut Bencher) {
+    pub fn hmac_sha256_64k(bh: &mut Bencher) {
         let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

@@ -15,7 +15,7 @@
 //! # SHA256t (tagged SHA256)
 
 use core::{cmp, str};
-#[cfg(feature="serde")] use core::fmt;
+#[cfg(feature = "serde")] use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Index;
 use core::slice::SliceIndex;
@@ -36,7 +36,7 @@ pub trait Tag {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash<T: Tag>(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_32"))]
     [u8; 32],
     #[cfg_attr(feature = "schemars", schemars(skip))]
     PhantomData<T>
@@ -157,7 +157,7 @@ macro_rules! sha256t_hash_newtype {
     };
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<T: Tag> ::serde::Serialize for Hash<T> {
     fn serialize<S: ::serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         if s.is_human_readable() {
@@ -168,15 +168,15 @@ impl<T: Tag> ::serde::Serialize for Hash<T> {
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 struct HexVisitor<T: Tag>(PhantomData<T>);
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<T: Tag> Default for HexVisitor<T> {
     fn default() -> Self { HexVisitor(PhantomData) }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
     type Value = Hash<T>;
 
@@ -185,8 +185,8 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
     }
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-        where
-            E: ::serde::de::Error,
+    where
+        E: ::serde::de::Error,
     {
         use core::str::FromStr;
         if let Ok(hex) = str::from_utf8(v) {
@@ -197,23 +197,23 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: ::serde::de::Error,
+    where
+        E: ::serde::de::Error,
     {
         use core::str::FromStr;
         Hash::<T>::from_str(v).map_err(E::custom)
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 struct BytesVisitor<T: Tag>(PhantomData<T>);
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<T: Tag> Default for BytesVisitor<T> {
     fn default() -> Self { BytesVisitor(PhantomData) }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
     type Value = Hash<T>;
 
@@ -222,8 +222,8 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
     }
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-        where
-            E: ::serde::de::Error,
+    where
+        E: ::serde::de::Error,
     {
         Hash::<T>::from_slice(v).map_err(|_| {
             // from_slice only errors on incorrect length
@@ -232,7 +232,7 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
     fn deserialize<D: ::serde::Deserializer<'de>>(d: D) -> Result<Hash<T>, D::Error> {
         if d.is_human_readable() {
@@ -272,13 +272,13 @@ mod tests {
 
     #[test]
     fn test_sha256t() {
-       assert_eq!(
-           TestHash::hash(&[0]).to_hex(),
-           "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
-       );
-       assert_eq!(
-           NewTypeHash::hash(&[0]).to_hex(),
-           "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
-       );
+        assert_eq!(
+            TestHash::hash(&[0]).to_hex(),
+            "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
+        );
+        assert_eq!(
+            NewTypeHash::hash(&[0]).to_hex(),
+            "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
+        );
     }
 }

@@ -33,11 +33,9 @@ use Error;
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_20"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_20"))]
     [u8; 20]
 );
-
-
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
@@ -159,7 +157,7 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn ripemd_serde() {
 
@@ -179,7 +177,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -188,7 +186,7 @@ mod benches {
     use HashEngine;
 
     #[bench]
-    pub fn hash160_10(bh: & mut Bencher) {
+    pub fn hash160_10(bh: &mut Bencher) {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -198,7 +196,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hash160_1k(bh: & mut Bencher) {
+    pub fn hash160_1k(bh: &mut Bencher) {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -208,8 +206,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hash160_64k(bh: & mut Bencher) {
-
+    pub fn hash160_64k(bh: &mut Bencher) {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
@@ -217,5 +214,4 @@ mod benches {
         });
         bh.bytes = bytes.len() as u64;
     }
-
 }

@@ -27,7 +27,7 @@ use Error;
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_32"))]
     [u8; 32]
 );
 
@@ -104,14 +104,14 @@ mod tests {
     use Hash;
     use HashEngine;
 
-#[derive(Clone)]
+    #[derive(Clone)]
     struct Test {
-input: &'static str,
-           output: Vec<u8>,
-           output_str: &'static str,
+        input: &'static str,
+        output: Vec<u8>,
+        output_str: &'static str,
     }
 
-#[test]
+    #[test]
     fn test() {
         let tests = vec![
             // Test vector copied out of rust-bitcoin
@@ -145,7 +145,7 @@ input: &'static str,
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn sha256_serde() {
         use serde_test::{Configure, Token, assert_tokens};
@@ -163,7 +163,7 @@ input: &'static str,
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -172,7 +172,7 @@ mod benches {
     use HashEngine;
 
     #[bench]
-    pub fn sha256d_10(bh: & mut Bencher) {
+    pub fn sha256d_10(bh: &mut Bencher) {
         let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -182,7 +182,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256d_1k(bh: & mut Bencher) {
+    pub fn sha256d_1k(bh: &mut Bencher) {
         let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -192,7 +192,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256d_64k(bh: & mut Bencher) {
+    pub fn sha256d_64k(bh: &mut Bencher) {
         let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

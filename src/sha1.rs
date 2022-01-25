@@ -76,7 +76,7 @@ impl EngineTrait for HashEngine {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_20"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_20"))]
     [u8; 20]
 );
 
@@ -118,7 +118,7 @@ impl HashTrait for Hash {
         let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
         e.input(&zeroes[..pad_length]);
         debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
-        
+
         e.input(&util::u64_to_array_be(8 * data_len));
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
@@ -265,7 +265,7 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn sha1_serde() {
         use serde_test::{Configure, Token, assert_tokens};
@@ -284,7 +284,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -293,7 +293,7 @@ mod benches {
     use HashEngine;
 
     #[bench]
-    pub fn sha1_10(bh: & mut Bencher) {
+    pub fn sha1_10(bh: &mut Bencher) {
         let mut engine = sha1::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -303,7 +303,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha1_1k(bh: & mut Bencher) {
+    pub fn sha1_1k(bh: &mut Bencher) {
         let mut engine = sha1::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -313,7 +313,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha1_64k(bh: & mut Bencher) {
+    pub fn sha1_64k(bh: &mut Bencher) {
         let mut engine = sha1::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

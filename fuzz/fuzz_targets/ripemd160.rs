@@ -18,11 +18,11 @@ fn do_test(data: &[u8]) {
     assert_eq!(&our_hash[..], &rc_hash[..]);
 }
 
-#[cfg(feature="honggfuzz")]
+#[cfg(feature = "honggfuzz")]
 #[macro_use]
 extern crate honggfuzz;
 
-#[cfg(feature="honggfuzz")]
+#[cfg(feature = "honggfuzz")]
 fn main() {
     loop {
         fuzz!(|d| { do_test(d) });

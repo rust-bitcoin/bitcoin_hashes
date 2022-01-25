@@ -77,7 +77,7 @@ impl EngineTrait for HashEngine {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_32"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_32"))]
     [u8; 32]
 );
 
@@ -222,9 +222,8 @@ impl Midstate {
 
 impl hex::FromHex for Midstate {
     fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-        where I: Iterator<Item=Result<u8, hex::Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator,
+    where
+        I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
         // DISPLAY_BACKWARD is true
         Ok(Midstate::from_inner(hex::FromHex::from_byte_iter(iter.rev())?))
@@ -511,7 +510,7 @@ mod tests {
         assert_eq!(hash, sha256::Hash(HASH_EXPECTED));
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn sha256_serde() {
         use serde_test::{Configure, Token, assert_tokens};
@@ -542,7 +541,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -551,7 +550,7 @@ mod benches {
     use HashEngine;
 
     #[bench]
-    pub fn sha256_10(bh: & mut Bencher) {
+    pub fn sha256_10(bh: &mut Bencher) {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -561,7 +560,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256_1k(bh: & mut Bencher) {
+    pub fn sha256_1k(bh: &mut Bencher) {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -571,7 +570,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256_64k(bh: & mut Bencher) {
+    pub fn sha256_64k(bh: &mut Bencher) {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
