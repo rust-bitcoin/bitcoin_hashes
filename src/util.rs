@@ -42,50 +42,6 @@ macro_rules! hex_fmt_impl(
     )
 );
 
-/// Adds `core::ops::Index` trait implementation to a given type `$ty`
-#[macro_export]
-macro_rules! index_impl(
-    ($ty:ident) => (
-        index_impl!($ty, );
-    );
-    ($ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<usize> for $ty<$($gen),*> {
-            type Output = u8;
-            fn index(&self, index: usize) -> &u8 {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::Range<usize>> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::Range<usize>) -> &[u8] {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeFrom<usize>> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::RangeFrom<usize>) -> &[u8] {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeTo<usize>> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::RangeTo<usize>) -> &[u8] {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeFull> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::RangeFull) -> &[u8] {
-                &self.0[index]
-            }
-        }
-    )
-);
-
 /// Adds slicing traits implementations to a given type `$ty`
 #[macro_export]
 macro_rules! borrow_slice_impl(
@@ -224,7 +180,6 @@ macro_rules! hash_newtype {
         hex_fmt_impl!(Debug, $newtype);
         hex_fmt_impl!(Display, $newtype);
         hex_fmt_impl!(LowerHex, $newtype);
-        index_impl!($newtype);
         serde_impl!($newtype, $len);
         borrow_slice_impl!($newtype);
 
@@ -294,6 +249,15 @@ macro_rules! hash_newtype {
             type Err = $crate::hex::Error;
             fn from_str(s: &str) -> $crate::_export::_core::result::Result<$newtype, Self::Err> {
                 $crate::hex::FromHex::from_hex(s)
+            }
+        }
+
+        impl<I: $crate::_export::_core::slice::SliceIndex<[u8]>> $crate::_export::_core::ops::Index<I> for $newtype {
+            type Output = I::Output;
+
+            #[inline]
+            fn index(&self, index: I) -> &Self::Output {
+                &self.0[index]
             }
         }
     };

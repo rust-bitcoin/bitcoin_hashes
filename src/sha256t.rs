@@ -17,6 +17,8 @@
 use core::{cmp, str};
 #[cfg(feature="serde")] use core::fmt;
 use core::marker::PhantomData;
+use core::ops::Index;
+use core::slice::SliceIndex;
 
 use sha256;
 use Hash as HashTrait;
@@ -83,8 +85,16 @@ impl<T: Tag> str::FromStr for Hash<T> {
 hex_fmt_impl!(Debug, Hash, T:Tag);
 hex_fmt_impl!(Display, Hash, T:Tag);
 hex_fmt_impl!(LowerHex, Hash, T:Tag);
-index_impl!(Hash, T:Tag);
 borrow_slice_impl!(Hash, T:Tag);
+
+impl<I: SliceIndex<[u8]>, T: Tag> Index<I> for Hash<T> {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl<T: Tag> HashTrait for Hash<T> {
     type Engine = sha256::HashEngine;

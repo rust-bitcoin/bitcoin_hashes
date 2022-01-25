@@ -15,6 +15,8 @@
 //! # SHA256
 
 use core::{cmp, str};
+use core::ops::Index;
+use core::slice::SliceIndex;
 
 use hex;
 use HashEngine as EngineTrait;
@@ -89,9 +91,17 @@ impl str::FromStr for Hash {
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
@@ -160,9 +170,17 @@ pub struct Midstate(pub [u8; 32]);
 hex_fmt_impl!(Debug, Midstate);
 hex_fmt_impl!(Display, Midstate);
 hex_fmt_impl!(LowerHex, Midstate);
-index_impl!(Midstate);
 serde_impl!(Midstate, 32);
 borrow_slice_impl!(Midstate);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Midstate {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl str::FromStr for Midstate {
     type Err = ::hex::Error;
