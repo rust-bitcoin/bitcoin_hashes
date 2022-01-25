@@ -35,8 +35,6 @@ pub struct Hash(
     [u8; 20]
 );
 
-
-
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
@@ -199,7 +197,6 @@ mod benches {
 
     #[bench]
     pub fn hash160_64k(bh: & mut Bencher) {
-
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
@@ -207,5 +204,4 @@ mod benches {
         });
         bh.bytes = bytes.len() as u64;
     }
-
 }
