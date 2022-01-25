@@ -85,10 +85,10 @@ impl<T: HashTrait> HmacEngine<T> {
                 *b_o ^= *b_h;
             }
         } else {
-            for (b_i, b_h) in ipad.iter_mut().zip(&key[..]) {
+            for (b_i, b_h) in ipad.iter_mut().zip(key) {
                 *b_i ^= *b_h;
             }
-            for (b_o, b_h) in opad.iter_mut().zip(&key[..]) {
+            for (b_o, b_h) in opad.iter_mut().zip(key) {
                 *b_o ^= *b_h;
             }
         };
