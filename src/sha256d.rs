@@ -12,7 +12,8 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA256d
+//! SHA256d implementation (double SHA256).
+//!
 
 use core::str;
 use core::ops::Index;

@@ -12,7 +12,8 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA256t (tagged SHA256)
+//! SHA256t implementation (tagged SHA256).
+//!
 
 use core::{cmp, str};
 #[cfg(feature = "serde")] use core::fmt;

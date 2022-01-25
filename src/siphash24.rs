@@ -17,7 +17,8 @@
 // was written entirely by Steven Roose, who is re-licensing its
 // contents here as CC0.
 
-//! # SipHash 2-4
+//! SipHash 2-4 implementation.
+//!
 
 use core::{cmp, mem, ptr, str};
 use core::ops::Index;

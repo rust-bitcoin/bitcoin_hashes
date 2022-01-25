@@ -17,7 +17,8 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # HASH160 (SHA256 then RIPEMD160)
+//! HASH160 (SHA256 then RIPEMD160) implementation.
+//!
 
 use core::str;
 use core::ops::Index;

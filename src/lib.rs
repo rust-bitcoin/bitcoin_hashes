@@ -12,7 +12,7 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # Rust Hashes Library
+//! Rust hashes library.
 //!
 //! This is a simple, no-dependency library which implements the hash functions
 //! needed by Bitcoin. These are SHA256, SHA256d, and RIPEMD160. As an ancillary

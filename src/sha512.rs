@@ -17,7 +17,8 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # SHA512
+//! SHA512 implementation.
+//!
 
 use core::{cmp, hash, str};
 use core::ops::Index;

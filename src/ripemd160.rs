@@ -17,7 +17,8 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # RIPEMD160
+//! RIPEMD160 implementation.
+//!
 
 use core::{cmp, str};
 use core::ops::Index;

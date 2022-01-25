@@ -12,7 +12,8 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA256
+//! SHA256 implementation.
+//!
 
 use core::{cmp, str};
 use core::ops::Index;

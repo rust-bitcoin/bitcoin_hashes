@@ -14,7 +14,8 @@
 
 //! `std` / `core2` Impls
 //!
-//! impls of traits defined in `std` / `core2` and not in `core`
+//! Implementations of traits defined in `std` / `core2` and not in `core`.
+//!
 
 #[cfg(feature = "std")]
 use std::{error, io};

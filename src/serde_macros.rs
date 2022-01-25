@@ -12,7 +12,8 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! Macros for serde trait impls, and supporting code
+//! Macros for serde trait implementations, and supporting code.
+//!
 
 #[cfg(feature = "serde")]
 /// Functions used by serde impls of all hashes

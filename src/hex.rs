@@ -12,7 +12,7 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # Hex encoding and decoding
+//! Hex encoding and decoding.
 //!
 
 #[cfg(any(feature = "std", feature = "alloc"))]

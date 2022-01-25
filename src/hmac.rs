@@ -17,7 +17,8 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # HMAC support
+//! Hash-based Message Authentication Code (HMAC).
+//!
 
 use core::{borrow, fmt, ops, str};
 #[cfg(feature = "serde")]
