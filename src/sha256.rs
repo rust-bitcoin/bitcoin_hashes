@@ -12,7 +12,8 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA256
+//! SHA256 implementation.
+//!
 
 use core::{cmp, str};
 use core::ops::Index;
@@ -26,7 +27,7 @@ use util;
 
 const BLOCK_SIZE: usize = 64;
 
-/// Engine to compute SHA256 hash function
+/// Engine to compute SHA256 hash function.
 #[derive(Clone)]
 pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
@@ -72,7 +73,7 @@ impl EngineTrait for HashEngine {
     engine_input_impl!();
 }
 
-/// Output of the SHA256 hash function
+/// Output of the SHA256 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
@@ -163,7 +164,7 @@ impl HashTrait for Hash {
     }
 }
 
-/// Output of the SHA256 hash function
+/// Output of the SHA256 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Midstate(pub [u8; 32]);
 
@@ -198,12 +199,12 @@ impl Midstate {
     /// true for `Sha256dHash`, so here we are.
     const DISPLAY_BACKWARD: bool = true;
 
-    /// Construct a new midstate from the inner value.
+    /// Construct a new [`Midstate`] from the inner value.
     pub fn from_inner(inner: [u8; 32]) -> Self {
         Midstate(inner)
     }
 
-    /// Copies a byte slice into the [Midstate] object.
+    /// Copies a byte slice into the [`Midstate`] object.
     pub fn from_slice(sl: &[u8]) -> Result<Midstate, Error> {
         if sl.len() != Self::LEN {
             Err(Error::InvalidLength(Self::LEN, sl.len()))
@@ -214,7 +215,7 @@ impl Midstate {
         }
     }
 
-    /// Unwraps the [Midstate] and returns the underlying byte array.
+    /// Unwraps the [`Midstate`] and returns the underlying byte array.
     pub fn into_inner(self) -> [u8; 32] {
         self.0
     }
@@ -252,10 +253,11 @@ macro_rules! round(
 );
 
 impl HashEngine {
-    /// Create a new [HashEngine] from a midstate.
+    /// Create a new [`HashEngine`] from a [`Midstate`].
     ///
-    /// Be aware that this method panics when [length] is
-    /// not a multiple of the block size.
+    /// # Panics
+    ///
+    /// If `length` is not a multiple of the block size.
     pub fn from_midstate(midstate: Midstate, length: usize) -> HashEngine {
         assert!(length % BLOCK_SIZE == 0, "length is no multiple of the block size");
 

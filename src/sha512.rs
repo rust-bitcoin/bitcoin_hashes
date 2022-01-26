@@ -17,7 +17,8 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # SHA512
+//! SHA512 implementation.
+//!
 
 use core::{cmp, hash, str};
 use core::ops::Index;
@@ -30,7 +31,7 @@ use util;
 
 const BLOCK_SIZE: usize = 128;
 
-/// Engine to compute SHA512 hash function
+/// Engine to compute SHA512 hash function.
 #[derive(Clone)]
 pub struct HashEngine {
     h: [u64; 8],
@@ -79,7 +80,7 @@ impl EngineTrait for HashEngine {
     engine_input_impl!();
 }
 
-/// Output of the SHA256 hash function
+/// Output of the SHA256 hash function.
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(

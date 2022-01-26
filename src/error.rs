@@ -12,12 +12,12 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # Error Type
+//! Crate error type.
 //!
 
 use core::fmt;
 
-/// [bitcoin_hashes] error.
+/// Crate error type.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Error {
     /// Tried to create a fixed-length hash from a slice with the wrong size (expected, got).

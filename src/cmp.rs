@@ -11,7 +11,7 @@
 /// volatile read. This should remain stable across compiler upgrades, but is much slower.
 ///
 /// As of rust 1.31.0 disassembly looks completely within reason for this, see
-/// https://godbolt.org/z/mMbGQv
+/// <https://godbolt.org/z/mMbGQv>.
 pub fn fixed_time_eq(a: &[u8], b: &[u8]) -> bool {
     assert!(a.len() == b.len());
     let count = a.len();

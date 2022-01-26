@@ -12,7 +12,8 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA1
+//! SHA1 implementation.
+//!
 
 use core::{cmp, str};
 use core::ops::Index;
@@ -25,7 +26,7 @@ use util;
 
 const BLOCK_SIZE: usize = 64;
 
-/// Engine to compute SHA1 hash function
+/// Engine to compute SHA1 hash function.
 #[derive(Clone)]
 pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
@@ -71,7 +72,7 @@ impl EngineTrait for HashEngine {
     engine_input_impl!();
 }
 
-/// Output of the SHA1 hash function
+/// Output of the SHA1 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]

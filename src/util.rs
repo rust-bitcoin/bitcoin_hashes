@@ -12,18 +12,18 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-/// Circular left-shift a 32-bit word
+/// Circular left-shift a 32-bit word.
 macro_rules! circular_lshift32 (
     ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (32 - $shift)))
 );
 
-/// Circular left-shift a 64-bit word
+/// Circular left-shift a 64-bit word.
 macro_rules! circular_lshift64 (
     ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (64 - $shift)))
 );
 
 #[macro_export]
-/// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`
+/// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`.
 macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ident) => (
         hex_fmt_impl!($imp, $ty, );
@@ -165,7 +165,7 @@ define_slice_to_le!(slice_to_u64_le, u64);
 define_le_to_array!(u32_to_array_le, u32, 4);
 define_le_to_array!(u64_to_array_le, u64, 8);
 
-/// Create a new newtype around a [Hash] type.
+/// Creates a new newtype around a [`Hash`] type.
 #[macro_export]
 macro_rules! hash_newtype {
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta) => {
@@ -184,12 +184,12 @@ macro_rules! hash_newtype {
         borrow_slice_impl!($newtype);
 
         impl $newtype {
-            /// Create this type from the inner hash type.
+            /// Creates this type from the inner hash type.
             pub fn from_hash(inner: $hash) -> $newtype {
                 $newtype(inner)
             }
 
-            /// Convert this type into the inner hash type.
+            /// Converts this type into the inner hash type.
             pub fn as_hash(&self) -> $hash {
                 // Hashes implement Copy so don't need into_hash.
                 self.0

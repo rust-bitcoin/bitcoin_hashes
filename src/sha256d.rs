@@ -12,7 +12,8 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA256d
+//! SHA256d implementation (double SHA256).
+//!
 
 use core::str;
 use core::ops::Index;
@@ -22,7 +23,7 @@ use sha256;
 use Hash as HashTrait;
 use Error;
 
-/// Output of the SHA256d hash function
+/// Output of the SHA256d hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]

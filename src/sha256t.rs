@@ -12,7 +12,8 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA256t (tagged SHA256)
+//! SHA256t implementation (tagged SHA256).
+//!
 
 use core::{cmp, str};
 #[cfg(feature = "serde")] use core::fmt;
@@ -27,8 +28,7 @@ use Error;
 
 /// Trait representing a tag that can be used as a context for SHA256t hashes.
 pub trait Tag {
-    /// Returns a hash engine that is pre-tagged and is ready
-    /// to be used for the data.
+    /// Returns a hash engine that is pre-tagged and is ready to be used for the data.
     fn engine() -> sha256::HashEngine;
 }
 

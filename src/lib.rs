@@ -12,7 +12,7 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # Rust Hashes Library
+//! Rust hashes library.
 //!
 //! This is a simple, no-dependency library which implements the hash functions
 //! needed by Bitcoin. These are SHA256, SHA256d, and RIPEMD160. As an ancillary
@@ -75,26 +75,26 @@ use core::{borrow, fmt, hash, ops};
 pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
 
-/// A hashing engine which bytes can be serialized into
+/// A hashing engine which bytes can be serialized into.
 pub trait HashEngine: Clone + Default {
-    /// Byte array representing the internal state of the hash engine
+    /// Byte array representing the internal state of the hash engine.
     type MidState;
 
     /// Outputs the midstate of the hash engine. This function should not be
     /// used directly unless you really know what you're doing.
     fn midstate(&self) -> Self::MidState;
 
-    /// Length of the hash's internal block size, in bytes
+    /// Length of the hash's internal block size, in bytes.
     const BLOCK_SIZE: usize;
 
-    /// Add data to the hash engine
+    /// Add data to the hash engine.
     fn input(&mut self, data: &[u8]);
 
-    /// Return the number of bytes already n_bytes_hashed(inputted)
+    /// Return the number of bytes already n_bytes_hashed(inputted).
     fn n_bytes_hashed(&self) -> usize;
 }
 
-/// Trait which applies to hashes of all types
+/// Trait which applies to hashes of all types.
 pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     hash::Hash + fmt::Debug + fmt::Display + fmt::LowerHex +
     ops::Index<ops::RangeFull, Output = [u8]> +
@@ -109,24 +109,24 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     /// any conditions.
     type Engine: HashEngine;
 
-    /// The byte array that represents the hash internally
+    /// The byte array that represents the hash internally.
     type Inner: hex::FromHex;
 
-    /// Construct a new engine
+    /// Constructs a new engine.
     fn engine() -> Self::Engine {
         Self::Engine::default()
     }
 
-    /// Produce a hash from the current state of a given engine
+    /// Produces a hash from the current state of a given engine.
     fn from_engine(e: Self::Engine) -> Self;
 
-    /// Length of the hash, in bytes
+    /// Length of the hash, in bytes.
     const LEN: usize;
 
-    /// Copies a byte slice into a hash object
+    /// Copies a byte slice into a hash object.
     fn from_slice(sl: &[u8]) -> Result<Self, Error>;
 
-    /// Hashes some bytes
+    /// Hashes some bytes.
     fn hash(data: &[u8]) -> Self {
         let mut engine = Self::engine();
         engine.input(data);
@@ -138,13 +138,13 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     /// true for `Sha256dHash`, so here we are.
     const DISPLAY_BACKWARD: bool = false;
 
-    /// Unwraps the hash and returns the underlying byte array
+    /// Unwraps the hash and returns the underlying byte array.
     fn into_inner(self) -> Self::Inner;
 
-    /// Unwraps the hash and returns a reference to the underlying byte array
+    /// Unwraps the hash and returns a reference to the underlying byte array.
     fn as_inner(&self) -> &Self::Inner;
 
-    /// Constructs a hash from the underlying byte array
+    /// Constructs a hash from the underlying byte array.
     fn from_inner(inner: Self::Inner) -> Self;
 }
 

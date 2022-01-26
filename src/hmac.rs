@@ -17,7 +17,8 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # HMAC support
+//! Hash-based Message Authentication Code (HMAC).
+//!
 
 use core::{borrow, fmt, ops, str};
 #[cfg(feature = "serde")]
@@ -41,8 +42,7 @@ impl<T: HashTrait + str::FromStr> str::FromStr for Hmac<T> {
     }
 }
 
-/// Pair of underlying hash midstates which represent the current state
-/// of an `HmacEngine`
+/// Pair of underlying hash midstates which represent the current state of an `HmacEngine`.
 pub struct HmacMidState<T: HashTrait> {
     /// Midstate of the inner hash engine
     pub inner: <T::Engine as EngineTrait>::MidState,
@@ -50,7 +50,7 @@ pub struct HmacMidState<T: HashTrait> {
     pub outer: <T::Engine as EngineTrait>::MidState,
 }
 
-/// Pair of underyling hash engines, used for the inner and outer hash of HMAC
+/// Pair of underyling hash engines, used for the inner and outer hash of HMAC.
 #[derive(Clone)]
 pub struct HmacEngine<T: HashTrait> {
     iengine: T::Engine,
@@ -64,8 +64,13 @@ impl<T: HashTrait> Default for HmacEngine<T> {
 }
 
 impl<T: HashTrait> HmacEngine<T> {
-    /// Construct a new keyed HMAC with the given key. We only support underlying hashes
-    /// whose block sizes are ≤ 128 bytes; larger hashes will result in panics.
+    /// Constructs a new keyed HMAC from `key`.
+    ///
+    /// We only support underlying hashes whose block sizes are ≤ 128 bytes.
+    ///
+    /// # Panics
+    ///
+    /// Larger hashes will result in a panic.
     pub fn new(key: &[u8]) -> HmacEngine<T> {
         debug_assert!(T::Engine::BLOCK_SIZE <= 128);
 
@@ -98,8 +103,7 @@ impl<T: HashTrait> HmacEngine<T> {
         ret
     }
 
-    /// A special constructor giving direct access to the underlying
-    /// "inner" and "outer" engines.
+    /// A special constructor giving direct access to the underlying "inner" and "outer" engines.
     pub fn from_inner_engines(iengine: T::Engine, oengine: T::Engine) -> HmacEngine<T> {
         HmacEngine {
             iengine: iengine,

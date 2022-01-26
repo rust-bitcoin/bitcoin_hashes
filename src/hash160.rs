@@ -17,7 +17,8 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # HASH160 (SHA256 then RIPEMD160)
+//! HASH160 (SHA256 then RIPEMD160) implementation.
+//!
 
 use core::str;
 use core::ops::Index;
@@ -28,7 +29,7 @@ use ripemd160;
 use Hash as HashTrait;
 use Error;
 
-/// Output of the Bitcoin HASH160 hash function
+/// Output of the Bitcoin HASH160 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
