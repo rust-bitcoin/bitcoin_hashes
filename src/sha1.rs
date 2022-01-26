@@ -197,20 +197,20 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use sha1;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use {sha1, Hash, HashEngine};
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
+
         let tests = vec![
             // Examples from wikipedia
             Test {
@@ -270,6 +270,7 @@ mod tests {
     #[test]
     fn sha1_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use {sha1, Hash};
 
         static HASH_BYTES: [u8; 20] = [
             0x13, 0x20, 0x72, 0xdf,

@@ -104,20 +104,20 @@ impl HashTrait for Hash {
 
 #[cfg(test)]
 mod tests {
-    use hash160;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-    #[derive(Clone)]
-    struct Test {
-        input: Vec<u8>,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use {hash160, Hash, HashEngine};
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        #[cfg(any(feature = "std", feature = "alloc"))]
+        struct Test {
+            input: Vec<u8>,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Uncompressed pubkey obtained from Bitcoin key; data from validateaddress
             Test {
@@ -161,8 +161,8 @@ mod tests {
     #[cfg(feature = "serde")]
     #[test]
     fn ripemd_serde() {
-
         use serde_test::{Configure, Token, assert_tokens};
+        use {hash160, Hash};
 
         static HASH_BYTES: [u8; 20] = [
             0x13, 0x20, 0x72, 0xdf,

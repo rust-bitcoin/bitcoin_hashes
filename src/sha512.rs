@@ -348,20 +348,19 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use sha512;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use {sha512, Hash, HashEngine};
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Test vectors computed with `sha512sum`
             Test {
@@ -430,6 +429,7 @@ mod tests {
     #[test]
     fn sha512_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use {sha512, Hash};
 
         static HASH_BYTES: [u8; 64] = [
             0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21,

@@ -459,20 +459,20 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use ripemd160;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use ripemd160;
+        use {Hash, HashEngine};
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Test messages from FIPS 180-1
             Test {
@@ -545,6 +545,7 @@ mod tests {
     #[test]
     fn ripemd_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use {ripemd160, Hash};
 
         static HASH_BYTES: [u8; 20] = [
             0x13, 0x20, 0x72, 0xdf,

@@ -274,6 +274,7 @@ mod tests {
     use core::fmt;
 
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn hex_roundtrip() {
         let expected = "0123456789abcdef";
         let expected_up = "0123456789ABCDEF";
@@ -361,6 +362,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn hex_error() {
         let oddlen = "0123456789abcdef0";
         let badchar1 = "Z123456789abcdef";

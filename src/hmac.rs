@@ -239,19 +239,18 @@ impl<'de, T: HashTrait + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
 
 #[cfg(test)]
 mod tests {
-    use sha256;
-    #[cfg(feature = "serde")] use sha512;
-    use {Hash, HashEngine, Hmac, HmacEngine};
-
-    #[derive(Clone)]
-    struct Test {
-        key: Vec<u8>,
-        input: Vec<u8>,
-        output: Vec<u8>,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use {sha256, HashEngine, HmacEngine, Hash, Hmac};
+
+        #[derive(Clone)]
+        struct Test {
+            key: Vec<u8>,
+            input: Vec<u8>,
+            output: Vec<u8>,
+        }
+
         let tests = vec![
             // Test vectors copied from libsecp256k1
             // Sadly the RFC2104 test vectors all use MD5 as their underlying hash function,
@@ -369,6 +368,7 @@ mod tests {
     #[test]
     fn hmac_sha512_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use {sha512, Hash, Hmac};
 
         static HASH_BYTES: [u8; 64] = [
             0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21,

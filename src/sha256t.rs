@@ -246,6 +246,7 @@ impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
 #[cfg(test)]
 mod tests {
     use ::{Hash, sha256, sha256t};
+    #[cfg(any(feature = "std", feature = "alloc"))]
     use ::hex::ToHex;
 
     const TEST_MIDSTATE: [u8; 32] = [
@@ -266,11 +267,13 @@ mod tests {
     }
 
     /// A hash tagged with `$name`.
+    #[cfg(any(feature = "std", feature = "alloc"))]
     pub type TestHash = sha256t::Hash<TestHashTag>;
 
     sha256t_hash_newtype!(NewTypeHash, NewTypeTag, TEST_MIDSTATE, 64, doc="test hash", true);
 
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test_sha256t() {
         assert_eq!(
             TestHash::hash(&[0]).to_hex(),
