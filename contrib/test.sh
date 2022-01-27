@@ -41,8 +41,6 @@ if [ "$DO_FEATURE_MATRIX" = true ]; then
 		done
     done
 
-    # Other combos
-    cargo test --all --features="serde-std"
 fi
 
 if [ "$DO_SCHEMARS_TESTS" = true ]; then
