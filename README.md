@@ -7,7 +7,7 @@ Groestlcoin. These are Groestl, SHA1, SHA256, SHA256d, and RIPEMD160. As an
 ancilliary thing, it exposes hexadecimal serialization and deserialization,
 since these are needed to display hashes anway.
 
-[Documentation](https://docs.rs/bitcoin_hashes/)
+[Documentation](https://docs.rs/groestlcoin_hashes/)
 
 ## Minimum Supported Rust Version (MSRV)
 
