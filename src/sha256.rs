@@ -45,7 +45,7 @@ impl Default for HashEngine {
 impl EngineTrait for HashEngine {
     type MidState = Midstate;
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
@@ -54,7 +54,7 @@ impl EngineTrait for HashEngine {
         Midstate(ret)
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         ret.copy_from_slice(&self.buffer[..32]);
@@ -63,12 +63,21 @@ impl EngineTrait for HashEngine {
 
     const BLOCK_SIZE: usize = 64;
 
+    fn n_bytes_hashed(&self) -> usize {
+        self.length
+    }
+
     engine_input_impl!();
 }
 
 /// Output of the SHA256 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Hash([u8; 32]);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_32"))]
+    [u8; 32]
+);
 
 impl str::FromStr for Hash {
     type Err = ::hex::Error;
@@ -94,7 +103,7 @@ impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn from_engine(mut e: HashEngine) -> Hash {
         // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
         let data_len = e.length as u64;
@@ -114,9 +123,15 @@ impl HashTrait for Hash {
         Hash(e.midstate().into_inner())
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn from_engine(e: HashEngine) -> Hash {
-        Hash(e.midstate().into_inner())
+        let mut hash = e.midstate().into_inner();
+        if hash == [0; 32] {
+            // Assume sha256 is secure and never generate 0-hashes (which represent invalid
+            // secp256k1 secret keys, causing downstream application breakage).
+            hash[0] = 1;
+        }
+        Hash(hash)
     }
 
     const LEN: usize = 32;
@@ -133,6 +148,10 @@ impl HashTrait for Hash {
 
     fn into_inner(self) -> Self::Inner {
         self.0
+    }
+
+    fn as_inner(&self) -> &Self::Inner {
+        &self.0
     }
 
     fn from_inner(inner: Self::Inner) -> Self {
@@ -495,6 +514,19 @@ mod tests {
         let hash = sha256::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_tokens(&hash.readable(), &[Token::Str("ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c")]);
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    mod wasm_tests {
+        extern crate wasm_bindgen_test;
+        use super::*;
+        use self::wasm_bindgen_test::*;
+        #[wasm_bindgen_test]
+        fn sha256_tests() {
+            test();
+            midstate();
+            engine_with_state();
+        }
     }
 }
 

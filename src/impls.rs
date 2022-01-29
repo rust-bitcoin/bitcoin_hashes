@@ -12,23 +12,31 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! `std` Impls
+//! `std` / `core2` Impls
 //!
-//! impls of traits defined in `std` and not `core`
+//! impls of traits defined in `std` / `core2` and not in `core`
 
+#[cfg(feature = "std")]
 use std::{error, io};
+
+#[cfg(not(feature = "std"))]
+use core2::{error, io};
 
 use {hex, sha1, sha256, sha512, ripemd160, siphash24, groestld};
 use HashEngine;
 use Error;
 
 impl error::Error for Error {
+    #[cfg(feature = "std")]
     fn cause(&self) -> Option<&error::Error> { None }
+    #[cfg(feature = "std")]
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }
 
 impl error::Error for hex::Error {
+    #[cfg(feature = "std")]
     fn cause(&self) -> Option<&error::Error> { None }
+    #[cfg(feature = "std")]
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }
 
@@ -88,7 +96,7 @@ impl io::Write for siphash24::HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
+    use super::io::Write;
 
     use {sha1, sha256, sha256d, sha512, ripemd160, hash160, siphash24};
     use Hash;

@@ -2,6 +2,68 @@
 
 * Add Groestl hash support
 
+# 0.10.0 - 2021-07-05
+
+* Increase `core2` to released version of 0.3.0
+
+# 0.9.7 - 2021-06-17
+
+* Introduce `alloc` feature and `core2` dependency for nostd support (this feature has MSRV of 1.36 rather than 1.29)
+
+# 0.9.6 - 2021-05-03
+
+* Re-export `core` as `_export::_core`. This resolves an issue when calling several exported macros with the `std` feature.
+
+# 0.9.5 - 2021-04-28
+
+* Add [`#[repr(transparent)]` to all newtype wrappers](https://github.com/rust-bitcoin/bitcoin_hashes/pull/108/)
+* Add [missing `#derive`s](https://github.com/rust-bitcoin/bitcoin_hashes/pull/110/)
+* Replace `fuzztarget` feature with [use of `cfg(fuzzing)`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/111/)
+* Use [`core` rather than `std`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/118/) and [fix `no_std` compilation](https://github.com/rust-bitcoin/bitcoin_hashes/pull/122/)
+
+Note that we have stopped re-exporting the `core` crate when compiling without `std`. This is technically a breaking change but it is hard to imagine what user might be affected.
+
+# 0.9.4 - 2020-10-23
+
+* Add `Hmac::from_inner_engines`
+
+# 0.9.3 - 2020-10-19
+
+* More serde macro fixes
+
+# 0.9.2 - 2020-10-18
+
+* Fix rustc 1.29.0 downstream issues with serde macros
+
+# 0.9.2 - 2020-10-16
+
+* Fix visibility issue with serde macros
+
+# 0.9.1 - 2020-10-07
+
+* Add `FromStr` impl to `sha256t::Hash`
+* Fix `Hash::engine()` implementation for hash newtypes
+* Add `sha256t_hash_newtype!` macro for creating tagged hashes
+
+# 0.9.0 - 2020-08-27
+
+* **Update MSRV to 1.29.0**
+
+# 0.8.0 - 2020-08-26
+
+* Add `as_inner` method to `Hash` trait
+* Add `n_bytes_hashed` to `HashEngine` trait
+
+# 0.7.6 - 2020-04-05
+
+* Support hash newtypes with reversed hex serialization.
+
+# 0.7.5 - 2020-04-02
+
+* Add `sha256t` module for SHA-256-based tagged hashes.
+* Add `FromStr` for hash newtypes.
+* Add `from_hash` for hash newtypes.
+
 # 0.7.3 - 2019-12-18
 
 * Add `as_hash(&self) -> <inner>` method to hash newtypes.

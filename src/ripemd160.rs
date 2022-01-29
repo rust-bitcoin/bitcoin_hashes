@@ -49,7 +49,7 @@ impl Default for HashEngine {
 impl EngineTrait for HashEngine {
     type MidState = [u8; 20];
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn midstate(&self) -> [u8; 20] {
         let mut ret = [0; 20];
         for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
@@ -58,7 +58,7 @@ impl EngineTrait for HashEngine {
         ret
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn midstate(&self) -> [u8; 20] {
         let mut ret = [0; 20];
         ret.copy_from_slice(&self.buffer[..20]);
@@ -67,12 +67,21 @@ impl EngineTrait for HashEngine {
 
     const BLOCK_SIZE: usize = 64;
 
+    fn n_bytes_hashed(&self) -> usize {
+        self.length
+    }
+
     engine_input_impl!();
 }
 
 /// Output of the RIPEMD160 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Hash([u8; 20]);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_20"))]
+    [u8; 20]
+);
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
@@ -92,7 +101,7 @@ impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 20];
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn from_engine(mut e: HashEngine) -> Hash {
         // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
         let data_len = e.length as u64;
@@ -112,7 +121,7 @@ impl HashTrait for Hash {
         Hash(e.midstate())
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn from_engine(e: HashEngine) -> Hash {
         let mut res = e.midstate();
         res[0] ^= (e.length & 0xff) as u8;
@@ -133,6 +142,10 @@ impl HashTrait for Hash {
 
     fn into_inner(self) -> Self::Inner {
         self.0
+    }
+
+    fn as_inner(&self) -> &Self::Inner {
+        &self.0
     }
 
     fn from_inner(inner: Self::Inner) -> Self {

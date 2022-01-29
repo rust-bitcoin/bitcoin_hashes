@@ -10,8 +10,15 @@ since these are needed to display hashes anway.
 [Documentation](https://docs.rs/bitcoin_hashes/)
 
 ## Minimum Supported Rust Version (MSRV)
-This library should always compile with any combination of features on **Rust 1.22**.
 
+This library should always compile with any combination of features on **Rust 1.29**.
+However, due to some dependencies breaking their MSRV in patch releases, you may
+need to pin these deps explicitly, e.g. with the following commands
+
+```
+cargo generate-lockfile
+cargo update -p serde_json --precise "1.0.39"
+```
 
 ## Contributions
 

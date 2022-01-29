@@ -37,15 +37,28 @@
 #![cfg_attr(all(test, feature = "unstable"), feature(test))]
 #[cfg(all(test, feature = "unstable"))] extern crate test;
 
-#[cfg(any(test, feature="std"))] pub extern crate core;
+#[cfg(any(test, feature="std"))] extern crate core;
+#[cfg(feature="core2")] extern crate core2;
+#[cfg(feature = "alloc")] extern crate alloc;
+#[cfg(all(not(feature = "alloc"), feature = "std"))] use std as alloc;
 #[cfg(feature="serde")] pub extern crate serde;
 #[cfg(all(test,feature="serde"))] extern crate serde_test;
 pub extern crate groestl;
-pub extern crate digest;
+//pub extern crate digest;
+
+#[doc(hidden)]
+pub mod _export {
+    /// A re-export of ::core::*
+    pub mod _core {
+        pub use ::core::*;
+    }
+}
+
+#[cfg(feature = "schemars")] extern crate schemars;
 
 #[macro_use] mod util;
-#[macro_use] mod serde_macros;
-#[cfg(any(test, feature = "std"))] mod std_impls;
+#[macro_use] pub mod serde_macros;
+#[cfg(any(feature = "std", feature = "core2"))] mod impls;
 pub mod error;
 pub mod hex;
 pub mod hash160;
@@ -53,20 +66,19 @@ pub mod hmac;
 pub mod ripemd160;
 pub mod sha1;
 pub mod sha256;
-pub mod sha512;
 pub mod sha256d;
+pub mod sha256t;
 pub mod siphash24;
-pub mod groestld;
+pub mod sha512;
 pub mod cmp;
+pub mod groestld;
 
 use core::{borrow, fmt, hash, ops};
 
 pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
 
-/// A hashing engine which bytes can be serialized into. It is expected
-/// to implement the `io::Write` trait, but to never return errors under
-/// any conditions.
+/// A hashing engine which bytes can be serialized into
 pub trait HashEngine: Clone + Default {
     /// Byte array representing the internal state of the hash engine
     type MidState;
@@ -80,6 +92,9 @@ pub trait HashEngine: Clone + Default {
 
     /// Add data to the hash engine
     fn input(&mut self, data: &[u8]);
+
+    /// Return the number of bytes already n_bytes_hashed(inputted)
+    fn n_bytes_hashed(&self) -> usize;
 }
 
 /// Trait which applies to hashes of all types
@@ -129,77 +144,15 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
     /// Unwraps the hash and returns the underlying byte array
     fn into_inner(self) -> Self::Inner;
 
+    /// Unwraps the hash and returns a reference to the underlying byte array
+    fn as_inner(&self) -> &Self::Inner;
+
     /// Constructs a hash from the underlying byte array
     fn from_inner(inner: Self::Inner) -> Self;
 }
 
-/// Create a new newtype around a [Hash] type.
-#[macro_export]
-macro_rules! hash_newtype {
-    ($newtype:ident, $hash:ty, $len:expr, $docs:meta) => {
-        #[$docs]
-        #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-        pub struct $newtype($hash);
-
-        hex_fmt_impl!(Debug, $newtype);
-        hex_fmt_impl!(Display, $newtype);
-        hex_fmt_impl!(LowerHex, $newtype);
-        index_impl!($newtype);
-        serde_impl!($newtype, $len);
-        borrow_slice_impl!($newtype);
-
-        impl $newtype {
-            /// Convert this type into the inner hash type.
-            pub fn as_hash(&self) -> $hash {
-                // Hashes implement Copy so don't need into_hash.
-                self.0
-            }
-        }
-
-        impl ::std::convert::From<$hash> for $newtype {
-            fn from(inner: $hash) -> $newtype {
-                // Due to rust 1.22 we have to use this instead of simple `Self(inner)`
-                Self { 0: inner }
-            }
-        }
-
-        impl ::std::convert::From<$newtype> for $hash {
-            fn from(hashtype: $newtype) -> $hash {
-                hashtype.0
-            }
-        }
-
-        impl $crate::Hash for $newtype {
-            type Engine = <$hash as $crate::Hash>::Engine;
-            type Inner = <$hash as $crate::Hash>::Inner;
-
-            const LEN: usize = <$hash as $crate::Hash>::LEN;
-            const DISPLAY_BACKWARD: bool = <$hash as $crate::Hash>::DISPLAY_BACKWARD;
-
-            fn from_engine(e: Self::Engine) -> Self {
-                Self::from(<$hash as $crate::Hash>::from_engine(e))
-            }
-
-            #[inline]
-            fn from_slice(sl: &[u8]) -> Result<$newtype, $crate::Error> {
-                Ok($newtype(<$hash as $crate::Hash>::from_slice(sl)?))
-            }
-
-            #[inline]
-            fn from_inner(inner: Self::Inner) -> Self {
-                $newtype(<$hash as $crate::Hash>::from_inner(inner))
-            }
-
-            #[inline]
-            fn into_inner(self) -> Self::Inner {
-                self.0.into_inner()
-            }
-        }
-    };
-}
-
 #[cfg(test)]
-mod test {
+mod tests {
     use Hash;
     hash_newtype!(TestNewtype, ::sha256d::Hash, 32, doc="A test newtype");
     hash_newtype!(TestNewtype2, ::sha256d::Hash, 32, doc="A test newtype");
@@ -209,6 +162,10 @@ mod test {
         let h1 = TestNewtype::hash(&[]);
         let h2: TestNewtype2 = h1.as_hash().into();
         assert_eq!(&h1[..], &h2[..]);
+
+        let h = ::sha256d::Hash::hash(&[]);
+        let h2: TestNewtype = h.to_string().parse().unwrap();
+        assert_eq!(h2.as_hash(), h);
     }
 }
 

@@ -34,13 +34,15 @@ const BLOCK_SIZE: usize = 128;
 /// Engine to compute Groestl512 hash function
 #[derive(Clone)]
 pub struct HashEngine {
-    buffer: Vec<u8>, 
+    buffer: Vec<u8>,
+    length: usize,
 }
 
 impl Default for HashEngine {
     fn default() -> Self {
         HashEngine {
             buffer: Vec::new(),
+            length: 0,
         }
     }
 }
@@ -65,6 +67,10 @@ impl EngineTrait for HashEngine {
     }
 
     const BLOCK_SIZE: usize = 64;
+
+    fn n_bytes_hashed(&self) -> usize {
+        self.length
+    }
 
     //engine_input_impl!();
 
@@ -145,6 +151,10 @@ impl HashTrait for Hash {
 
     fn into_inner(self) -> Self::Inner {
         self.0
+    }
+
+    fn as_inner(&self) -> &Self::Inner {
+        &self.0
     }
 
     fn from_inner(inner: Self::Inner) -> Self {
@@ -248,6 +258,7 @@ impl HashEngine {
 
         HashEngine {
             buffer: Vec::new(),
+            length: length
         }
     }
 
