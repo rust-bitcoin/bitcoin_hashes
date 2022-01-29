@@ -28,7 +28,7 @@ unstable = []  # for benchmarking
 serde = { version = "1.0", default-features = false, optional = true }
 schemars = { version = "0.8.0", optional = true }
 core2 = { version = "0.3.0", optional = true, default_features = false }
-groestl = "0.8.0"
+groestl = "0.10.0"
 
 [dev-dependencies]
 serde_test = "1.0"
