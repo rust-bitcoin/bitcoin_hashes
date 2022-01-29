@@ -1,6 +1,6 @@
-// Bitcoin Hashes Library
-// Written in 2018 by
-//   Andrew Poelstra <apoelstra@wpsoftware.net>
+// Groestlcoin Hashes Library
+// Written in 2020 by
+//   Hashengineering <hashengineeringsolutions@gmail.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
 // copyright and related and neighboring rights to this software to
@@ -12,9 +12,11 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # Groestl512
+//! # Groestl512d implementation (double Groestl512).
 
 use core::str;
+use core::ops::Index;
+use core::slice::SliceIndex;
 use groestl::{Groestl512, Digest};
 use hex;
 use HashEngine as EngineTrait;
@@ -31,7 +33,7 @@ const BLOCK_SIZE: usize = 128;
 //use digest::generic_array::{ArrayLength, GenericArray};
 
 
-/// Engine to compute Groestl512 hash function
+/// Engine to compute Groestl512d hash function
 #[derive(Clone)]
 pub struct HashEngine {
     buffer: Vec<u8>,
@@ -50,7 +52,7 @@ impl Default for HashEngine {
 impl EngineTrait for HashEngine {
     type MidState = Midstate;
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn midstate(&self) -> Midstate {
         let ret = [0; 32];
         //for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
@@ -59,7 +61,7 @@ impl EngineTrait for HashEngine {
         Midstate(ret)
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         //ret.copy_from_slice(&self.buffer[..64]);
@@ -82,9 +84,14 @@ impl EngineTrait for HashEngine {
     }
 }
 
-/// Output of the Groestl512 hash function
+/// Output of the Groestl512d hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Hash([u8; 32]);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_32"))]
+    [u8; 32]
+);
 
 impl str::FromStr for Hash {
     type Err = ::hex::Error;
@@ -102,9 +109,17 @@ impl Into<[u8; 32]> for Hash {
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
@@ -162,16 +177,24 @@ impl HashTrait for Hash {
     }
 }
 
-/// Output of the Groestl512 hash function
+/// Output of the Groestl512d hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Midstate(pub [u8; 32]);
 
 hex_fmt_impl!(Debug, Midstate);
 hex_fmt_impl!(Display, Midstate);
 hex_fmt_impl!(LowerHex, Midstate);
-index_impl!(Midstate);
 serde_impl!(Midstate, 64);
 borrow_slice_impl!(Midstate);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Midstate {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl str::FromStr for Midstate {
     type Err = ::hex::Error;
@@ -189,12 +212,12 @@ impl Midstate {
     /// true for `Sha256dHash`, so here we are.
     const DISPLAY_BACKWARD: bool = true;
 
-    /// Construct a new midstate from the inner value.
+    /// Construct a new [`Midstate`] from the inner value.
     pub fn from_inner(inner: [u8; 32]) -> Self {
         Midstate(inner)
     }
 
-    /// Copies a byte slice into the [Midstate] object.
+    /// Copies a byte slice into the [`Midstate`] object.
     pub fn from_slice(sl: &[u8]) -> Result<Midstate, Error> {
         if sl.len() != Self::LEN {
             Err(Error::InvalidLength(Self::LEN, sl.len()))
@@ -205,7 +228,7 @@ impl Midstate {
         }
     }
 
-    /// Unwraps the [Midstate] and returns the underlying byte array.
+    /// Unwraps the [`Midstate`] and returns the underlying byte array.
     pub fn into_inner(self) -> [u8; 32] {
         self.0
     }
@@ -213,9 +236,8 @@ impl Midstate {
 
 impl hex::FromHex for Midstate {
     fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-        where I: Iterator<Item=Result<u8, hex::Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator,
+        where
+        I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
         // DISPLAY_BACKWARD is true
         Ok(Midstate::from_inner(hex::FromHex::from_byte_iter(iter.rev())?))
@@ -244,10 +266,11 @@ impl hex::FromHex for Midstate {
 );*/
 
 impl HashEngine {
-    /// Create a new [HashEngine] from a midstate.
+    /// Create a new [`HashEngine`] from a [`Midstate`].
     ///
-    /// Be aware that this method panics when [length] is
-    /// not a multiple of the block size.
+    /// # Panics
+    ///
+    /// If `length` is not a multiple of the block size.
     pub fn from_midstate(midstate: Midstate, length: usize) -> HashEngine {
         assert!(length % BLOCK_SIZE == 0, "length is no multiple of the block size");
 
@@ -517,6 +540,19 @@ mod tests {
         let hash = Groestl512::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_tokens(&hash.readable(), &[Token::Str("ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c")]);
+    }
+    
+    #[cfg(target_arch = "wasm32")]
+    mod wasm_tests {
+        extern crate wasm_bindgen_test;
+        use super::*;
+        use self::wasm_bindgen_test::*;
+        #[wasm_bindgen_test]
+        fn sha256_tests() {
+            test();
+            midstate();
+            engine_with_state();
+        }
     }
     */
 }
