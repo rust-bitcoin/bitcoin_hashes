@@ -1,7 +1,7 @@
 fn main() {}
 #[cfg(test)]
 mod tests {
-    use bitcoin_hashes::*;
+    use groestlcoin_hashes::*;
     #[test]
     fn it_works() {}
 

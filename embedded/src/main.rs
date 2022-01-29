@@ -3,15 +3,15 @@
 #![no_main]
 
 #[macro_use]
-extern crate bitcoin_hashes;
+extern crate groestlcoin_hashes;
 
 #[cfg(feature = "alloc")] extern crate alloc;
 #[cfg(feature = "alloc")] use alloc_cortex_m::CortexMHeap;
 #[cfg(feature = "alloc")] use core::alloc::Layout;
 #[cfg(feature = "alloc")] use cortex_m::asm;
-#[cfg(feature = "alloc")] use bitcoin_hashes::hex::ToHex;
+#[cfg(feature = "alloc")] use groestlcoin_hashes::hex::ToHex;
 
-use bitcoin_hashes::{sha256, Hash, HashEngine};
+use groestlcoin_hashes::{sha256, Hash, HashEngine};
 use core2::io::Write;
 use core::str::FromStr;
 use cortex_m_rt::entry;
