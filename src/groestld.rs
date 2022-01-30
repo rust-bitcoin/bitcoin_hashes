@@ -127,11 +127,11 @@ impl HashTrait for Hash {
 
     fn from_engine(e: HashEngine) -> Hash {
         let mut groestl_engine = Groestl512::new();
-        groestl_engine.input(e.buffer);
-        let first = groestl_engine.result();
+        groestl_engine.update(e.buffer);
+        let first = groestl_engine.finalize();
         let mut groestl_engine2 = Groestl512::new();
-        groestl_engine2.input(first);
-        let result = groestl_engine2.result();
+        groestl_engine2.update(first);
+        let result = groestl_engine2.finalize();
         let mut ret = [0; 32];
         //ret.copy_from_slice(result.as_slice());
 
