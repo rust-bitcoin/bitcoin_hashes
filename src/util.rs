@@ -173,7 +173,7 @@ macro_rules! hash_newtype {
     };
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta, $reverse:expr) => {
         #[$docs]
-        #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+        #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
         #[repr(transparent)]
         pub struct $newtype($hash);
 
@@ -242,6 +242,12 @@ macro_rules! hash_newtype {
             #[inline]
             fn as_inner(&self) -> &Self::Inner {
                 self.0.as_inner()
+            }
+
+            #[inline]
+            fn all_zeros() -> Self {
+                let zeros = <$hash>::all_zeros();
+                $newtype(zeros)
             }
         }
 

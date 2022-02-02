@@ -134,6 +134,10 @@ impl<T: Tag> HashTrait for Hash<T> {
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner, PhantomData)
     }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 32], PhantomData)
+    }
 }
 
 /// Macro used to define a newtype tagged hash.

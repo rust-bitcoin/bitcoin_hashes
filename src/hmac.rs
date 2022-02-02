@@ -29,7 +29,7 @@ use Hash as HashTrait;
 use Error;
 
 /// A hash computed from a RFC 2104 HMAC. Parameterized by the underlying hash function.
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schemars", schemars(transparent))]
 #[repr(transparent)]
@@ -219,6 +219,11 @@ impl<T: HashTrait> HashTrait for Hmac<T> {
 
     fn from_inner(inner: T::Inner) -> Self {
         Hmac(T::from_inner(inner))
+    }
+
+    fn all_zeros() -> Self {
+        let zeros = T::all_zeros();
+        Hmac(zeros)
     }
 }
 
