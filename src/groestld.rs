@@ -23,27 +23,20 @@ use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
 use util;
-//use groestlstate;
-//use digest::generic_array::{ArrayLength, GenericArray};
-
 
 const BLOCK_SIZE: usize = 128;
-
-//use std::vec::Vec;
-//use digest::generic_array::{ArrayLength, GenericArray};
-
 
 /// Engine to compute Groestl512d hash function
 #[derive(Clone)]
 pub struct HashEngine {
-    buffer: Vec<u8>,
+    hasher: Groestl512,
     length: usize,
 }
 
 impl Default for HashEngine {
     fn default() -> Self {
         HashEngine {
-            buffer: Vec::new(),
+            hasher: Groestl512::new(),
             length: 0,
         }
     }
@@ -74,13 +67,8 @@ impl EngineTrait for HashEngine {
         self.length
     }
 
-    //engine_input_impl!();
-
     fn input(&mut self, inp: &[u8]) {
-        for c in inp {
-            self.buffer.push(*c);
-        }
-        //self.length += inp.len();
+        self.hasher.update(inp)
     }
 }
 
@@ -126,9 +114,10 @@ impl HashTrait for Hash {
     type Inner = [u8; 32];
 
     fn from_engine(e: HashEngine) -> Hash {
-        let mut groestl_engine = Groestl512::new();
-        groestl_engine.update(e.buffer);
-        let first = groestl_engine.finalize();
+        //let mut groestl_engine = Groestl512::new();
+        //groestl_engine.update(e.buffer);
+        //let first = groestl_engine.finalize();
+        let first = e.hasher.finalize();
         let mut groestl_engine2 = Groestl512::new();
         groestl_engine2.update(first);
         let result = groestl_engine2.finalize();
@@ -280,7 +269,7 @@ impl HashEngine {
         }
 
         HashEngine {
-            buffer: Vec::new(),
+            hasher: Groestl512::new(),
             length: length
         }
     }
