@@ -561,13 +561,13 @@ mod tests {
 mod benches {
     use test::Bencher;
 
-    use Groestl512;
+    use groestld;
     use Hash;
     use HashEngine;
 
     #[bench]
-    pub fn sha256_10(bh: & mut Bencher) {
-        let mut engine = sha256::Hash::engine();
+    pub fn groestl512_10(bh: & mut Bencher) {
+        let mut engine = groestld::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
             engine.input(&bytes);
@@ -576,8 +576,8 @@ mod benches {
     }
 
     #[bench]
-    pub fn Groestl512_1k(bh: & mut Bencher) {
-        let mut engine = Groestl512::Hash::engine();
+    pub fn groestl512_1k(bh: & mut Bencher) {
+        let mut engine = groestld::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
             engine.input(&bytes);
@@ -586,8 +586,8 @@ mod benches {
     }
 
     #[bench]
-    pub fn Groestl512_64k(bh: & mut Bencher) {
-        let mut engine = Groestl512::Hash::engine();
+    pub fn groestl512_64k(bh: & mut Bencher) {
+        let mut engine = groestld::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
             engine.input(&bytes);
