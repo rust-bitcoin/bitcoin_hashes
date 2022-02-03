@@ -373,18 +373,20 @@ impl HashEngine {
 #[cfg(test)]
 mod tests {
     use sha256;
-    use hex::{FromHex, ToHex};
     use {Hash, HashEngine};
 
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Examples from wikipedia
             Test {

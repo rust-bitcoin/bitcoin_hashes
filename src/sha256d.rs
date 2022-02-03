@@ -100,20 +100,19 @@ impl HashTrait for Hash {
 
 #[cfg(test)]
 mod tests {
-    use sha256d;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use {sha256d, Hash, HashEngine};
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Test vector copied out of rust-bitcoin
             Test {
@@ -150,6 +149,7 @@ mod tests {
     #[test]
     fn sha256_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use {sha256d, Hash};
 
         static HASH_BYTES: [u8; 32] = [
             0xef, 0x53, 0x7f, 0x25, 0xc8, 0x95, 0xbf, 0xa7,
