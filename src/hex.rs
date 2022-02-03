@@ -26,6 +26,8 @@ use std::io;
 use core2::io;
 
 use core::{fmt, str};
+use core::convert::Infallible;
+
 use crate::Hash;
 
 /// Hex decoding error.
@@ -58,7 +60,10 @@ pub trait ToHex {
 }
 
 /// Trait for objects that can be deserialized from hex strings.
-pub trait FromHex: Sized {
+///
+/// Implement this trait if the `Error` enum is suitable for returning all your errors, if you need
+/// an additional custom error consider implementing `FromHexRestricted`.
+pub trait FromHex: FromHexRestricted<CustomError = Infallible> + Sized {
     /// Produces an object from a byte iterator.
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
     where
@@ -66,7 +71,55 @@ pub trait FromHex: Sized {
 
     /// Produces an object from a hex string.
     fn from_hex(s: &str) -> Result<Self, Error> {
-        Self::from_byte_iter(HexIterator::new(s)?)
+        <Self as FromHex>::from_byte_iter(HexIterator::new(s)?)
+    }
+}
+
+/// Enables users of the library to return a custom error when implementing the `FromHexRestricted` trait.
+pub enum MaybeCustomError<E> {
+    /// Wraps the custom error `E`.
+    Custom(E),
+    /// Wraps the [`hex::Error`].
+    Encoding(Error),
+}
+
+impl<E: fmt::Display> fmt::Display for MaybeCustomError<E> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &*self {
+            MaybeCustomError::Custom(e) => write!(f, "{}", e),
+            MaybeCustomError::Encoding(e) => write!(f, "{}", e),
+        }
+    }
+}
+
+/// Trait for objects that can be deserialized from hex strings.
+///
+/// Implement this trait if `Error` is not enough and you need an additional custom error. An
+/// implementation of this trait is automatically added for any types that implement `FromHex`.
+pub trait FromHexRestricted: Sized {
+    /// The type returned inside of `MaybeCustomError::Custom`.
+    type CustomError;
+
+    /// Produces an object from a byte iterator.
+    fn from_byte_iter<I>(iter: I) -> Result<Self, MaybeCustomError<Self::CustomError>>
+    where
+        I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator;
+
+    /// Produces an object from a hex string.
+    fn from_hex(s: &str) -> Result<Self, MaybeCustomError<Self::CustomError>> {
+        Self::from_byte_iter(HexIterator::new(s).map_err(MaybeCustomError::Encoding)?)
+    }
+}
+
+/// Implements `FromHexRestricted` for types that only error during encoding i.e., no custom error.
+impl<T: FromHex> FromHexRestricted for T {
+    type CustomError = Infallible;
+
+    fn from_byte_iter<I>(iter: I) -> Result<Self, MaybeCustomError<Infallible>>
+    where
+        I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator
+    {
+        <T as FromHex>::from_byte_iter(iter).map_err(MaybeCustomError::Encoding)
     }
 }
 
@@ -85,9 +138,9 @@ impl<T: Hash> FromHex for T {
         I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
         let inner = if Self::DISPLAY_BACKWARD {
-            T::Inner::from_byte_iter(iter.rev())?
+            <<T as Hash>::Inner as FromHex>::from_byte_iter(iter.rev())?
         } else {
-            T::Inner::from_byte_iter(iter)?
+            <<T as Hash>::Inner as FromHex>::from_byte_iter(iter)?
         };
         Ok(Hash::from_inner(inner))
     }
@@ -373,30 +426,23 @@ mod tests {
         let badchar2 = "012Y456789abcdeb";
         let badchar3 = "«23456789abcdef";
 
-        assert_eq!(
-            Vec::<u8>::from_hex(oddlen),
-            Err(Error::OddLengthString(17))
-        );
-        assert_eq!(
-            <[u8; 4]>::from_hex(oddlen),
-            Err(Error::OddLengthString(17))
-        );
-        assert_eq!(
-            <[u8; 8]>::from_hex(oddlen),
-            Err(Error::OddLengthString(17))
-        );
-        assert_eq!(
-            Vec::<u8>::from_hex(badchar1),
-            Err(Error::InvalidChar(b'Z'))
-        );
-        assert_eq!(
-            Vec::<u8>::from_hex(badchar2),
-            Err(Error::InvalidChar(b'Y'))
-        );
-        assert_eq!(
-            Vec::<u8>::from_hex(badchar3),
-            Err(Error::InvalidChar(194))
-        );
+        let res: Result<Vec<u8>, Error> = FromHex::from_hex(oddlen);
+        assert_eq!(res, Err(Error::OddLengthString(17)));
+
+        let res: Result<[u8; 4], Error> = FromHex::from_hex(oddlen);
+        assert_eq!(res, Err(Error::OddLengthString(17)));
+
+        let res: Result<[u8; 8], Error> = FromHex::from_hex(oddlen);
+        assert_eq!(res, Err(Error::OddLengthString(17)));
+
+        let res: Result<Vec<u8>, Error> = FromHex::from_hex(badchar1);
+        assert_eq!(res, Err(Error::InvalidChar(b'Z')));
+
+        let res: Result<Vec<u8>, Error> = FromHex::from_hex(badchar2);
+        assert_eq!(res, Err(Error::InvalidChar(b'Y')));
+
+        let res: Result<Vec<u8>, Error> = FromHex::from_hex(badchar3);
+        assert_eq!(res, Err(Error::InvalidChar(194)));
     }
 }
 
