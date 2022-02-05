@@ -29,6 +29,9 @@ use Error;
 
 /// A hash computed from a RFC 2104 HMAC. Parameterized by the underlying hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "schemars", schemars(transparent))]
+#[repr(transparent)]
 pub struct Hmac<T: HashTrait>(T);
 
 impl<T: HashTrait + str::FromStr> str::FromStr for Hmac<T> {
@@ -94,6 +97,15 @@ impl<T: HashTrait> HmacEngine<T> {
         EngineTrait::input(&mut ret.oengine, &opad[..T::Engine::BLOCK_SIZE]);
         ret
     }
+
+    /// A special constructor giving direct access to the underlying
+    /// "inner" and "outer" engines.
+    pub fn from_inner_engines(iengine: T::Engine, oengine: T::Engine) -> HmacEngine<T> {
+        HmacEngine {
+            iengine: iengine,
+            oengine: oengine,
+        }
+    }
 }
 
 impl<T: HashTrait> EngineTrait for HmacEngine<T> {
@@ -107,7 +119,11 @@ impl<T: HashTrait> EngineTrait for HmacEngine<T> {
     }
 
     const BLOCK_SIZE: usize = T::Engine::BLOCK_SIZE;
-    
+
+    fn n_bytes_hashed(&self) -> usize {
+        self.iengine.n_bytes_hashed()
+    }
+
     fn input(&mut self, buf: &[u8]) {
         self.iengine.input(buf)
     }
@@ -191,6 +207,10 @@ impl<T: HashTrait> HashTrait for Hmac<T> {
 
     fn into_inner(self) -> Self::Inner {
         self.0.into_inner()
+    }
+
+    fn as_inner(&self) -> &Self::Inner {
+        self.0.as_inner()
     }
 
     fn from_inner(inner: T::Inner) -> Self {

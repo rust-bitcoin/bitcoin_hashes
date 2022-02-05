@@ -1,9 +1,9 @@
 
-extern crate bitcoin_hashes;
+extern crate groestlcoin_hashes;
 extern crate crypto;
 
-use bitcoin_hashes::Hash;
-use bitcoin_hashes::sha1;
+use groestlcoin_hashes::Hash;
+use groestlcoin_hashes::sha1;
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
 

@@ -17,8 +17,8 @@
 
 use core::fmt;
 
-/// [bitcoin_hashes] error.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+/// [groestlcoin_hashes] error.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Error {
     /// Tried to create a fixed-length hash from a slice with the wrong size (expected, got).
     InvalidLength(usize, usize),

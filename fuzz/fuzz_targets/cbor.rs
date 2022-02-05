@@ -1,11 +1,11 @@
 
 extern crate serde;
 #[macro_use] extern crate serde_derive;
-extern crate bitcoin_hashes;
+extern crate groestlcoin_hashes;
 extern crate serde_cbor;
 
-use bitcoin_hashes::Hmac;
-use bitcoin_hashes::{sha1, sha512, ripemd160, sha256d};
+use groestlcoin_hashes::Hmac;
+use groestlcoin_hashes::{sha1, sha512, ripemd160, sha256d};
 
 #[derive(Deserialize, Serialize)]
 struct Hmacs {

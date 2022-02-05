@@ -22,7 +22,12 @@ use Error;
 
 /// Output of the SHA256d hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Hash([u8; 32]);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
+    [u8; 32]
+);
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
@@ -71,6 +76,10 @@ impl HashTrait for Hash {
 
     fn into_inner(self) -> Self::Inner {
         self.0
+    }
+
+    fn as_inner(&self) -> &Self::Inner {
+        &self.0
     }
 
     fn from_inner(inner: Self::Inner) -> Self {

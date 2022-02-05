@@ -187,11 +187,21 @@ impl EngineTrait for HashEngine {
         self.tail = unsafe { u8to64_le(msg, i, left) };
         self.ntail = left;
     }
+
+    fn n_bytes_hashed(&self) -> usize {
+        self.length
+    }
+
 }
 
 /// Output of the SipHash24 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Hash([u8; 8]);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_8"))]
+    [u8; 8]
+);
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
@@ -254,12 +264,12 @@ impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 8];
 
-    #[cfg(not(feature = "fuzztarget"))]
+    #[cfg(not(fuzzing))]
     fn from_engine(e: HashEngine) -> Hash {
         Hash::from_u64(Hash::from_engine_to_u64(e))
     }
 
-    #[cfg(feature = "fuzztarget")]
+    #[cfg(fuzzing)]
     fn from_engine(e: HashEngine) -> Hash {
         let state = e.midstate();
         Hash::from_u64(state.v0 ^ state.v1 ^ state.v2 ^ state.v3)
@@ -279,6 +289,10 @@ impl HashTrait for Hash {
 
     fn into_inner(self) -> Self::Inner {
         self.0
+    }
+
+    fn as_inner(&self) -> &Self::Inner {
+        &self.0
     }
 
     fn from_inner(inner: Self::Inner) -> Self {

@@ -1,6 +1,6 @@
-// Bitcoin Hashes Library
-// Written in 2018 by
-//   Andrew Poelstra <apoelstra@wpsoftware.net>
+// Groestlcoin Hashes Library
+// Written in 2020 by
+//   Hashengineering <hashengineeringsolutions@gmail.com>
 //
 // To the extent possible under law, the author(s) have dedicated all
 // copyright and related and neighboring rights to this software to
@@ -12,73 +12,70 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # Groestl512
+//! # Groestl512d implementation (double Groestl512).
 
 use core::str;
+use core::ops::Index;
+use core::slice::SliceIndex;
 use groestl::{Groestl512, Digest};
-use hex;
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
-use util;
-//use groestlstate;
-//use digest::generic_array::{ArrayLength, GenericArray};
 
-
-const BLOCK_SIZE: usize = 128;
-
-//use std::vec::Vec;
-//use digest::generic_array::{ArrayLength, GenericArray};
-
-
-/// Engine to compute Groestl512 hash function
+/// Engine to compute Groestld hash function
 #[derive(Clone)]
 pub struct HashEngine {
-    buffer: Vec<u8>, 
+    hasher: Groestl512,
+    length: usize,
 }
 
 impl Default for HashEngine {
     fn default() -> Self {
         HashEngine {
-            buffer: Vec::new(),
+            hasher: Groestl512::new(),
+            length: 0,
         }
     }
 }
 
+// This will handle a single Groestl512 hash
 impl EngineTrait for HashEngine {
-    type MidState = Midstate;
+    type MidState = [u8; 64];
 
-    #[cfg(not(feature = "fuzztarget"))]
-    fn midstate(&self) -> Midstate {
-        let ret = [0; 32];
-        //for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
-        //    ret_bytes.copy_from_slice(&util::u32_to_array_be(*val));
-        //}
-        Midstate(ret)
+    #[cfg(not(fuzzing))]
+    fn midstate(&self) -> [u8; 64] {
+        let ret = [0; 64];
+        // this is not supported by Groestl512
+        ret
     }
 
-    #[cfg(feature = "fuzztarget")]
-    fn midstate(&self) -> Midstate {
-        let mut ret = [0; 32];
-        //ret.copy_from_slice(&self.buffer[..64]);
-        Midstate(ret)
+    #[cfg(fuzzing)]
+    fn midstate(&self) -> [u8; 64] {
+        let ret = [0; 64];
+        // this is not supported by Groestl512
+        ret
     }
 
     const BLOCK_SIZE: usize = 64;
 
-    //engine_input_impl!();
-
     fn input(&mut self, inp: &[u8]) {
-        for c in inp {
-            self.buffer.push(*c);
-        }
-        //self.length += inp.len();
+        self.hasher.update(inp);
+        self.length += inp.len()
+    }
+
+    fn n_bytes_hashed(&self) -> usize {
+        self.length
     }
 }
 
-/// Output of the Groestl512 hash function
+/// Output of the Groestl512d hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Hash([u8; 32]);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
+    [u8; 32]
+);
 
 impl str::FromStr for Hash {
     type Err = ::hex::Error;
@@ -96,32 +93,31 @@ impl Into<[u8; 32]> for Hash {
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
 
     fn from_engine(e: HashEngine) -> Hash {
-        let mut groestl_engine = Groestl512::new();
-        groestl_engine.input(e.buffer);
-        let first = groestl_engine.result();
+        let first = e.hasher.finalize();
+
         let mut groestl_engine2 = Groestl512::new();
-        groestl_engine2.input(first);
-        let result = groestl_engine2.result();
+        groestl_engine2.update(first);
+        let result = groestl_engine2.finalize();
+
+        // use the first 32 bytes
         let mut ret = [0; 32];
-        //ret.copy_from_slice(result.as_slice());
-
-        /*(for (place, data) in result.iter().zip(ret.iter()) {
-            *place = *data
-        }*/
-
-        /*for (mut place, data) in ret.iter().zip(result.iter()) {
-            place = &*data
-        }*/
-
         for x in 0..32 {
             ret[x] = result.as_slice()[x]; // x: i32
         }
@@ -147,205 +143,13 @@ impl HashTrait for Hash {
         self.0
     }
 
+    fn as_inner(&self) -> &Self::Inner {
+        &self.0
+    }
+
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
-}
-
-/// Output of the Groestl512 hash function
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Midstate(pub [u8; 32]);
-
-hex_fmt_impl!(Debug, Midstate);
-hex_fmt_impl!(Display, Midstate);
-hex_fmt_impl!(LowerHex, Midstate);
-index_impl!(Midstate);
-serde_impl!(Midstate, 64);
-borrow_slice_impl!(Midstate);
-
-impl str::FromStr for Midstate {
-    type Err = ::hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
-    }
-}
-
-impl Midstate {
-    /// Length of the midstate, in bytes.
-    const LEN: usize = 64;
-
-    /// Flag indicating whether user-visible serializations of this hash
-    /// should be backward. For some reason Satoshi decided this should be
-    /// true for `Sha256dHash`, so here we are.
-    const DISPLAY_BACKWARD: bool = true;
-
-    /// Construct a new midstate from the inner value.
-    pub fn from_inner(inner: [u8; 32]) -> Self {
-        Midstate(inner)
-    }
-
-    /// Copies a byte slice into the [Midstate] object.
-    pub fn from_slice(sl: &[u8]) -> Result<Midstate, Error> {
-        if sl.len() != Self::LEN {
-            Err(Error::InvalidLength(Self::LEN, sl.len()))
-        } else {
-            let mut ret = [0; 32];
-            ret.copy_from_slice(sl);
-            Ok(Midstate(ret))
-        }
-    }
-
-    /// Unwraps the [Midstate] and returns the underlying byte array.
-    pub fn into_inner(self) -> [u8; 32] {
-        self.0
-    }
-}
-
-impl hex::FromHex for Midstate {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-        where I: Iterator<Item=Result<u8, hex::Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator,
-    {
-        // DISPLAY_BACKWARD is true
-        Ok(Midstate::from_inner(hex::FromHex::from_byte_iter(iter.rev())?))
-    }
-}
-
-//macro_rules! Ch( ($x:expr, $y:expr, $z:expr) => ($z ^ ($x & ($y ^ $z))) );
-//macro_rules! Maj( ($x:expr, $y:expr, $z:expr) => (($x & $y) | ($z & ($x | $y))) );
-//macro_rules! Sigma0( ($x:expr) => (circular_lshift32!(30, $x) ^ circular_lshift32!(19, $x) ^ circular_lshift32!(10, $x)) ); macro_rules! Sigma1( ($x:expr) => (circular_lshift32!(26, $x) ^ circular_lshift32!(21, $x) ^ circular_lshift32!(7, $x)) );
-//macro_rules! sigma0( ($x:expr) => (circular_lshift32!(25, $x) ^ circular_lshift32!(14, $x) ^ ($x >> 3)) );
-//macro_rules! sigma1( ($x:expr) => (circular_lshift32!(15, $x) ^ circular_lshift32!(13, $x) ^ ($x >> 10)) );
-
-/*macro_rules! round(
-    // first round
-    ($a:expr, $b:expr, $c:expr, $d:expr, $e:expr, $f:expr, $g:expr, $h:expr, $k:expr, $w:expr) => (
-        let t1 = $h.wrapping_add(Sigma1!($e)).wrapping_add(Ch!($e, $f, $g)).wrapping_add($k).wrapping_add($w);
-        let t2 = Sigma0!($a).wrapping_add(Maj!($a, $b, $c));
-        $d = $d.wrapping_add(t1);
-        $h = t1.wrapping_add(t2);
-    );
-    // later rounds we reassign $w before doing the first-round computation
-    ($a:expr, $b:expr, $c:expr, $d:expr, $e:expr, $f:expr, $g:expr, $h:expr, $k:expr, $w:expr, $w1:expr, $w2:expr, $w3:expr) => (
-        $w = $w.wrapping_add(sigma1!($w1)).wrapping_add($w2).wrapping_add(sigma0!($w3));
-        round!($a, $b, $c, $d, $e, $f, $g, $h, $k, $w);
-    )
-);*/
-
-impl HashEngine {
-    /// Create a new [HashEngine] from a midstate.
-    ///
-    /// Be aware that this method panics when [length] is
-    /// not a multiple of the block size.
-    pub fn from_midstate(midstate: Midstate, length: usize) -> HashEngine {
-        assert!(length % BLOCK_SIZE == 0, "length is no multiple of the block size");
-
-        let mut ret = [0; 8];
-        for (ret_val, midstate_bytes) in ret.iter_mut().zip(midstate[..].chunks(4)) {
-            *ret_val = util::slice_to_u32_be(midstate_bytes);
-        }
-
-        HashEngine {
-            buffer: Vec::new(),
-        }
-    }
-
-    // Algorithm copied from libsecp256k1
-    /*fn process_block(&mut self) {
-        debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
-
-        let mut w = [0u32; 16];
-        for (w_val, buff_bytes) in w.iter_mut().zip(self.buffer.chunks(4)) {
-            *w_val = util::slice_to_u32_be(buff_bytes);
-        }
-
-        let mut a = self.h[0];
-        let mut b = self.h[1];
-        let mut c = self.h[2];
-        let mut d = self.h[3];
-        let mut e = self.h[4];
-        let mut f = self.h[5];
-        let mut g = self.h[6];
-        let mut h = self.h[7];
-
-        round!(a, b, c, d, e, f, g, h, 0x428a2f98, w[0]);
-        round!(h, a, b, c, d, e, f, g, 0x71374491, w[1]);
-        round!(g, h, a, b, c, d, e, f, 0xb5c0fbcf, w[2]);
-        round!(f, g, h, a, b, c, d, e, 0xe9b5dba5, w[3]);
-        round!(e, f, g, h, a, b, c, d, 0x3956c25b, w[4]);
-        round!(d, e, f, g, h, a, b, c, 0x59f111f1, w[5]);
-        round!(c, d, e, f, g, h, a, b, 0x923f82a4, w[6]);
-        round!(b, c, d, e, f, g, h, a, 0xab1c5ed5, w[7]);
-        round!(a, b, c, d, e, f, g, h, 0xd807aa98, w[8]);
-        round!(h, a, b, c, d, e, f, g, 0x12835b01, w[9]);
-        round!(g, h, a, b, c, d, e, f, 0x243185be, w[10]);
-        round!(f, g, h, a, b, c, d, e, 0x550c7dc3, w[11]);
-        round!(e, f, g, h, a, b, c, d, 0x72be5d74, w[12]);
-        round!(d, e, f, g, h, a, b, c, 0x80deb1fe, w[13]);
-        round!(c, d, e, f, g, h, a, b, 0x9bdc06a7, w[14]);
-        round!(b, c, d, e, f, g, h, a, 0xc19bf174, w[15]);
-
-        round!(a, b, c, d, e, f, g, h, 0xe49b69c1, w[0], w[14], w[9], w[1]);
-        round!(h, a, b, c, d, e, f, g, 0xefbe4786, w[1], w[15], w[10], w[2]);
-        round!(g, h, a, b, c, d, e, f, 0x0fc19dc6, w[2], w[0], w[11], w[3]);
-        round!(f, g, h, a, b, c, d, e, 0x240ca1cc, w[3], w[1], w[12], w[4]);
-        round!(e, f, g, h, a, b, c, d, 0x2de92c6f, w[4], w[2], w[13], w[5]);
-        round!(d, e, f, g, h, a, b, c, 0x4a7484aa, w[5], w[3], w[14], w[6]);
-        round!(c, d, e, f, g, h, a, b, 0x5cb0a9dc, w[6], w[4], w[15], w[7]);
-        round!(b, c, d, e, f, g, h, a, 0x76f988da, w[7], w[5], w[0], w[8]);
-        round!(a, b, c, d, e, f, g, h, 0x983e5152, w[8], w[6], w[1], w[9]);
-        round!(h, a, b, c, d, e, f, g, 0xa831c66d, w[9], w[7], w[2], w[10]);
-        round!(g, h, a, b, c, d, e, f, 0xb00327c8, w[10], w[8], w[3], w[11]);
-        round!(f, g, h, a, b, c, d, e, 0xbf597fc7, w[11], w[9], w[4], w[12]);
-        round!(e, f, g, h, a, b, c, d, 0xc6e00bf3, w[12], w[10], w[5], w[13]);
-        round!(d, e, f, g, h, a, b, c, 0xd5a79147, w[13], w[11], w[6], w[14]);
-        round!(c, d, e, f, g, h, a, b, 0x06ca6351, w[14], w[12], w[7], w[15]);
-        round!(b, c, d, e, f, g, h, a, 0x14292967, w[15], w[13], w[8], w[0]);
-
-        round!(a, b, c, d, e, f, g, h, 0x27b70a85, w[0], w[14], w[9], w[1]);
-        round!(h, a, b, c, d, e, f, g, 0x2e1b2138, w[1], w[15], w[10], w[2]);
-        round!(g, h, a, b, c, d, e, f, 0x4d2c6dfc, w[2], w[0], w[11], w[3]);
-        round!(f, g, h, a, b, c, d, e, 0x53380d13, w[3], w[1], w[12], w[4]);
-        round!(e, f, g, h, a, b, c, d, 0x650a7354, w[4], w[2], w[13], w[5]);
-        round!(d, e, f, g, h, a, b, c, 0x766a0abb, w[5], w[3], w[14], w[6]);
-        round!(c, d, e, f, g, h, a, b, 0x81c2c92e, w[6], w[4], w[15], w[7]);
-        round!(b, c, d, e, f, g, h, a, 0x92722c85, w[7], w[5], w[0], w[8]);
-        round!(a, b, c, d, e, f, g, h, 0xa2bfe8a1, w[8], w[6], w[1], w[9]);
-        round!(h, a, b, c, d, e, f, g, 0xa81a664b, w[9], w[7], w[2], w[10]);
-        round!(g, h, a, b, c, d, e, f, 0xc24b8b70, w[10], w[8], w[3], w[11]);
-        round!(f, g, h, a, b, c, d, e, 0xc76c51a3, w[11], w[9], w[4], w[12]);
-        round!(e, f, g, h, a, b, c, d, 0xd192e819, w[12], w[10], w[5], w[13]);
-        round!(d, e, f, g, h, a, b, c, 0xd6990624, w[13], w[11], w[6], w[14]);
-        round!(c, d, e, f, g, h, a, b, 0xf40e3585, w[14], w[12], w[7], w[15]);
-        round!(b, c, d, e, f, g, h, a, 0x106aa070, w[15], w[13], w[8], w[0]);
-
-        round!(a, b, c, d, e, f, g, h, 0x19a4c116, w[0], w[14], w[9], w[1]);
-        round!(h, a, b, c, d, e, f, g, 0x1e376c08, w[1], w[15], w[10], w[2]);
-        round!(g, h, a, b, c, d, e, f, 0x2748774c, w[2], w[0], w[11], w[3]);
-        round!(f, g, h, a, b, c, d, e, 0x34b0bcb5, w[3], w[1], w[12], w[4]);
-        round!(e, f, g, h, a, b, c, d, 0x391c0cb3, w[4], w[2], w[13], w[5]);
-        round!(d, e, f, g, h, a, b, c, 0x4ed8aa4a, w[5], w[3], w[14], w[6]);
-        round!(c, d, e, f, g, h, a, b, 0x5b9cca4f, w[6], w[4], w[15], w[7]);
-        round!(b, c, d, e, f, g, h, a, 0x682e6ff3, w[7], w[5], w[0], w[8]);
-        round!(a, b, c, d, e, f, g, h, 0x748f82ee, w[8], w[6], w[1], w[9]);
-        round!(h, a, b, c, d, e, f, g, 0x78a5636f, w[9], w[7], w[2], w[10]);
-        round!(g, h, a, b, c, d, e, f, 0x84c87814, w[10], w[8], w[3], w[11]);
-        round!(f, g, h, a, b, c, d, e, 0x8cc70208, w[11], w[9], w[4], w[12]);
-        round!(e, f, g, h, a, b, c, d, 0x90befffa, w[12], w[10], w[5], w[13]);
-        round!(d, e, f, g, h, a, b, c, 0xa4506ceb, w[13], w[11], w[6], w[14]);
-        round!(c, d, e, f, g, h, a, b, 0xbef9a3f7, w[14], w[12], w[7], w[15]);
-        round!(b, c, d, e, f, g, h, a, 0xc67178f2, w[15], w[13], w[8], w[0]);
-
-        self.h[0] = self.h[0].wrapping_add(a);
-        self.h[1] = self.h[1].wrapping_add(b);
-        self.h[2] = self.h[2].wrapping_add(c);
-        self.h[3] = self.h[3].wrapping_add(d);
-        self.h[4] = self.h[4].wrapping_add(e);
-        self.h[5] = self.h[5].wrapping_add(f);
-        self.h[6] = self.h[6].wrapping_add(g);
-        self.h[7] = self.h[7].wrapping_add(h);
-    }*/
 }
 
 #[cfg(test)]
@@ -416,81 +220,6 @@ mod tests {
         }
     }
 
-    /*#[test]
-    fn midstate() {
-        // Test vector obtained by doing an asset issuance on Elements
-        let mut engine = Groestl512::Hash::engine();
-        // sha256dhash of outpoint
-        // 73828cbc65fd68ab78dc86992b76ae50ae2bf8ceedbe8de0483172f0886219f7:0
-        engine.input(&[
-            0x9d, 0xd0, 0x1b, 0x56, 0xb1, 0x56, 0x45, 0x14,
-            0x3e, 0xad, 0x15, 0x8d, 0xec, 0x19, 0xf8, 0xce,
-            0xa9, 0x0b, 0xd0, 0xa9, 0xb2, 0xf8, 0x1d, 0x21,
-            0xff, 0xa3, 0xa4, 0xc6, 0x44, 0x81, 0xd4, 0x1c,
-        ]);
-        // 32 bytes of zeroes representing "new asset"
-        engine.input(&[0; 32]);
-        assert_eq!(
-            engine.midstate(),
-            // RPC output
-            Groestl512::Midstate::from_inner([
-                0x0b, 0xcf, 0xe0, 0xe5, 0x4e, 0x6c, 0xc7, 0xd3,
-                0x4f, 0x4f, 0x7c, 0x1d, 0xf0, 0xb0, 0xf5, 0x03,
-                0xf2, 0xf7, 0x12, 0x91, 0x2a, 0x06, 0x05, 0xb4,
-                0x14, 0xed, 0x33, 0x7f, 0x7f, 0x03, 0x2e, 0x03,
-            ])
-        );
-    }
-
-    #[test]
-    fn engine_with_state() {
-        let mut engine = Groestl512::Hash::engine();
-        let midstate_engine = Groestl512::HashEngine::from_midstate(engine.midstate(), 0);
-        // Fresh engine and engine initialized with fresh state should have same state
-        assert_eq!(engine.h, midstate_engine.h);
-
-        // Midstate changes after writing 64 bytes
-        engine.input(&[1; 63]);
-        assert_eq!(engine.h, midstate_engine.h);
-        engine.input(&[2; 1]);
-        assert_ne!(engine.h, midstate_engine.h);
-
-        // Initializing an engine with midstate from another engine should result in
-        // both engines producing the same hashes
-        let data_vec = vec![vec![3; 1], vec![4; 63], vec![5; 65], vec![6; 66]];
-        for data in data_vec {
-            let mut engine = engine.clone();
-            let mut midstate_engine =
-                Groestl512::HashEngine::from_midstate(engine.midstate(), engine.length);
-            assert_eq!(engine.h, midstate_engine.h);
-            assert_eq!(engine.length, midstate_engine.length);
-            engine.input(&data);
-            midstate_engine.input(&data);
-            assert_eq!(engine.h, midstate_engine.h);
-            let hash1 = Groestl512::Hash::from_engine(engine);
-            let hash2 = Groestl512::Hash::from_engine(midstate_engine);
-            assert_eq!(hash1, hash2);
-        }
-
-        // Test that a specific midstate results in a specific hash. Midstate was
-        // obtained by applying sha256 to sha256("MuSig coefficient")||sha256("MuSig
-        // coefficient").
-        static MIDSTATE: [u8; 32] = [
-            0x0f, 0xd0, 0x69, 0x0c, 0xfe, 0xfe, 0xae, 0x97, 0x99, 0x6e, 0xac, 0x7f, 0x5c, 0x30,
-            0xd8, 0x64, 0x8c, 0x4a, 0x05, 0x73, 0xac, 0xa1, 0xa2, 0x2f, 0x6f, 0x43, 0xb8, 0x01,
-            0x85, 0xce, 0x27, 0xcd,
-        ];
-        static HASH_EXPECTED: [u8; 32] = [
-            0x18, 0x84, 0xe4, 0x72, 0x40, 0x4e, 0xf4, 0x5a, 0xb4, 0x9c, 0x4e, 0xa4, 0x9a, 0xe6,
-            0x23, 0xa8, 0x88, 0x52, 0x7f, 0x7d, 0x8a, 0x06, 0x94, 0x20, 0x8f, 0xf1, 0xf7, 0xa9,
-            0xd5, 0x69, 0x09, 0x59,
-        ];
-        let midstate_engine =
-            Groestl512::HashEngine::from_midstate(Groestl512::Midstate::from_inner(MIDSTATE), 64);
-        let hash = Groestl512::Hash::from_engine(midstate_engine);
-        assert_eq!(hash, Groestl512::Hash(HASH_EXPECTED));
-    }
-
     #[cfg(feature="serde")]
     #[test]
     fn sha256_serde() {
@@ -503,24 +232,34 @@ mod tests {
             0xb7, 0x65, 0x44, 0x8c, 0x86, 0x35, 0xfb, 0x6c,
         ];
 
-        let hash = Groestl512::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
+        let hash = groestld::Hash::from_slice(&HASH_BYTES).expect("right number of bytes");
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
-        assert_tokens(&hash.readable(), &[Token::Str("ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c")]);
+        assert_tokens(&hash.readable(), &[Token::Str("6cfb35868c4465b7c289d7d5641563aa973db6a929655282a7bf95c8257f53ef")]);
     }
-    */
+    
+    #[cfg(target_arch = "wasm32")]
+    mod wasm_tests {
+        extern crate wasm_bindgen_test;
+        use super::*;
+        use self::wasm_bindgen_test::*;
+        #[wasm_bindgen_test]
+        fn groestld_tests() {
+            test();
+        }
+    }
 }
 
 #[cfg(all(test, feature="unstable"))]
 mod benches {
     use test::Bencher;
 
-    use Groestl512;
+    use groestld;
     use Hash;
     use HashEngine;
 
     #[bench]
-    pub fn sha256_10(bh: & mut Bencher) {
-        let mut engine = sha256::Hash::engine();
+    pub fn groestl512_10(bh: & mut Bencher) {
+        let mut engine = groestld::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
             engine.input(&bytes);
@@ -529,8 +268,8 @@ mod benches {
     }
 
     #[bench]
-    pub fn Groestl512_1k(bh: & mut Bencher) {
-        let mut engine = Groestl512::Hash::engine();
+    pub fn groestl512_1k(bh: & mut Bencher) {
+        let mut engine = groestld::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
             engine.input(&bytes);
@@ -539,8 +278,8 @@ mod benches {
     }
 
     #[bench]
-    pub fn Groestl512_64k(bh: & mut Bencher) {
-        let mut engine = Groestl512::Hash::engine();
+    pub fn groestl512_64k(bh: & mut Bencher) {
+        let mut engine = groestld::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
             engine.input(&bytes);

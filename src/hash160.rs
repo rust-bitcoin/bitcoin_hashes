@@ -28,7 +28,14 @@ use Error;
 
 /// Output of the Bitcoin HASH160 hash function
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-pub struct Hash([u8; 20]);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[repr(transparent)]
+pub struct Hash(
+    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_20"))]
+    [u8; 20]
+);
+
+
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
@@ -75,6 +82,10 @@ impl HashTrait for Hash {
 
     fn into_inner(self) -> Self::Inner {
         self.0
+    }
+
+    fn as_inner(&self) -> &Self::Inner {
+        &self.0
     }
 
     fn from_inner(inner: Self::Inner) -> Self {
@@ -141,6 +152,7 @@ mod tests {
     #[cfg(feature="serde")]
     #[test]
     fn ripemd_serde() {
+
         use serde_test::{Configure, Token, assert_tokens};
 
         static HASH_BYTES: [u8; 20] = [
@@ -187,6 +199,7 @@ mod benches {
 
     #[bench]
     pub fn hash160_64k(bh: & mut Bencher) {
+
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
