@@ -81,3 +81,29 @@ jobs:
           DO_SCHEMARS_TESTS: ${{matrix.rust != '1.41.0'}}
           DO_ALLOC_TESTS: ${{matrix.rust != '1.41.0'}}
         run: ./contrib/test.sh
+
+  Embedded:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        run: sudo apt update && sudo apt install qemu-system-arm
+      - name: Checkout Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: rust-src
+          target: thumbv7m-none-eabi
+      - name: Run
+        env:
+          RUSTFLAGS: "-C link-arg=-Tlink.x"
+          CARGO_TARGET_THUMBV7M_NONE_EABI_RUNNER: "qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel"
+        run: cd embedded && cargo run --target thumbv7m-none-eabi
+      - name: Run with alloc
+        env:
+          RUSTFLAGS: "-C link-arg=-Tlink.x"
+          CARGO_TARGET_THUMBV7M_NONE_EABI_RUNNER: "qemu-system-arm -cpu cortex-m3 -machine lm3s6965evb -nographic -semihosting-config enable=on,target=native -kernel"
+        run: cd embedded && cargo run --target thumbv7m-none-eabi --features alloc
