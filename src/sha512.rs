@@ -17,9 +17,12 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # SHA512
+//! SHA512 implementation.
+//!
 
 use core::{cmp, hash, str};
+use core::ops::Index;
+use core::slice::SliceIndex;
 
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
@@ -28,7 +31,7 @@ use util;
 
 const BLOCK_SIZE: usize = 128;
 
-/// Engine to compute SHA512 hash function
+/// Engine to compute SHA512 hash function.
 #[derive(Clone)]
 pub struct HashEngine {
     h: [u64; 8],
@@ -77,11 +80,11 @@ impl EngineTrait for HashEngine {
     engine_input_impl!();
 }
 
-/// Output of the SHA256 hash function
+/// Output of the SHA256 hash function.
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_64"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_64"))]
     [u8; 64]
 );
 
@@ -137,9 +140,17 @@ impl str::FromStr for Hash {
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 64);
 borrow_slice_impl!(Hash);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
@@ -337,20 +348,19 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use sha512;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use {sha512, Hash, HashEngine};
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Test vectors computed with `sha512sum`
             Test {
@@ -415,10 +425,11 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn sha512_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use {sha512, Hash};
 
         static HASH_BYTES: [u8; 64] = [
             0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21,
@@ -443,7 +454,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -452,7 +463,7 @@ mod benches {
     use HashEngine;
 
     #[bench]
-    pub fn sha512_10(bh: & mut Bencher) {
+    pub fn sha512_10(bh: &mut Bencher) {
         let mut engine = sha512::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -462,7 +473,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha512_1k(bh: & mut Bencher) {
+    pub fn sha512_1k(bh: &mut Bencher) {
         let mut engine = sha512::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -472,7 +483,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha512_64k(bh: & mut Bencher) {
+    pub fn sha512_64k(bh: &mut Bencher) {
         let mut engine = sha512::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

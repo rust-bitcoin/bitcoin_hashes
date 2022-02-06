@@ -12,9 +12,12 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA256
+//! SHA256 implementation.
+//!
 
 use core::{cmp, str};
+use core::ops::Index;
+use core::slice::SliceIndex;
 
 use hex;
 use HashEngine as EngineTrait;
@@ -24,7 +27,7 @@ use util;
 
 const BLOCK_SIZE: usize = 64;
 
-/// Engine to compute SHA256 hash function
+/// Engine to compute SHA256 hash function.
 #[derive(Clone)]
 pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
@@ -70,12 +73,12 @@ impl EngineTrait for HashEngine {
     engine_input_impl!();
 }
 
-/// Output of the SHA256 hash function
+/// Output of the SHA256 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_32"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_32"))]
     [u8; 32]
 );
 
@@ -95,9 +98,17 @@ impl Into<[u8; 32]> for Hash {
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl HashTrait for Hash {
     type Engine = HashEngine;
@@ -159,16 +170,24 @@ impl HashTrait for Hash {
     }
 }
 
-/// Output of the SHA256 hash function
+/// Output of the SHA256 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Midstate(pub [u8; 32]);
 
 hex_fmt_impl!(Debug, Midstate);
 hex_fmt_impl!(Display, Midstate);
 hex_fmt_impl!(LowerHex, Midstate);
-index_impl!(Midstate);
 serde_impl!(Midstate, 32);
 borrow_slice_impl!(Midstate);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Midstate {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl str::FromStr for Midstate {
     type Err = ::hex::Error;
@@ -186,12 +205,12 @@ impl Midstate {
     /// true for `Sha256dHash`, so here we are.
     const DISPLAY_BACKWARD: bool = true;
 
-    /// Construct a new midstate from the inner value.
+    /// Construct a new [`Midstate`] from the inner value.
     pub fn from_inner(inner: [u8; 32]) -> Self {
         Midstate(inner)
     }
 
-    /// Copies a byte slice into the [Midstate] object.
+    /// Copies a byte slice into the [`Midstate`] object.
     pub fn from_slice(sl: &[u8]) -> Result<Midstate, Error> {
         if sl.len() != Self::LEN {
             Err(Error::InvalidLength(Self::LEN, sl.len()))
@@ -202,7 +221,7 @@ impl Midstate {
         }
     }
 
-    /// Unwraps the [Midstate] and returns the underlying byte array.
+    /// Unwraps the [`Midstate`] and returns the underlying byte array.
     pub fn into_inner(self) -> [u8; 32] {
         self.0
     }
@@ -210,9 +229,8 @@ impl Midstate {
 
 impl hex::FromHex for Midstate {
     fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-        where I: Iterator<Item=Result<u8, hex::Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator,
+    where
+        I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
         // DISPLAY_BACKWARD is true
         Ok(Midstate::from_inner(hex::FromHex::from_byte_iter(iter.rev())?))
@@ -241,10 +259,11 @@ macro_rules! round(
 );
 
 impl HashEngine {
-    /// Create a new [HashEngine] from a midstate.
+    /// Create a new [`HashEngine`] from a [`Midstate`].
     ///
-    /// Be aware that this method panics when [length] is
-    /// not a multiple of the block size.
+    /// # Panics
+    ///
+    /// If `length` is not a multiple of the block size.
     pub fn from_midstate(midstate: Midstate, length: usize) -> HashEngine {
         assert!(length % BLOCK_SIZE == 0, "length is no multiple of the block size");
 
@@ -360,18 +379,20 @@ impl HashEngine {
 #[cfg(test)]
 mod tests {
     use sha256;
-    use hex::{FromHex, ToHex};
     use {Hash, HashEngine};
 
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Examples from wikipedia
             Test {
@@ -499,7 +520,7 @@ mod tests {
         assert_eq!(hash, sha256::Hash(HASH_EXPECTED));
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn sha256_serde() {
         use serde_test::{Configure, Token, assert_tokens};
@@ -530,7 +551,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -539,7 +560,7 @@ mod benches {
     use HashEngine;
 
     #[bench]
-    pub fn sha256_10(bh: & mut Bencher) {
+    pub fn sha256_10(bh: &mut Bencher) {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -549,7 +570,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256_1k(bh: & mut Bencher) {
+    pub fn sha256_1k(bh: &mut Bencher) {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -559,7 +580,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256_64k(bh: & mut Bencher) {
+    pub fn sha256_64k(bh: &mut Bencher) {
         let mut engine = sha256::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

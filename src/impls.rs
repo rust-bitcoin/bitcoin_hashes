@@ -12,9 +12,10 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! `std` / `core2` Impls
+//! `std` / `core2` Impls.
 //!
-//! impls of traits defined in `std` / `core2` and not in `core`
+//! Implementations of traits defined in `std` / `core2` and not in `core`.
+//!
 
 #[cfg(feature = "std")]
 use std::{error, io};
@@ -22,7 +23,7 @@ use std::{error, io};
 #[cfg(not(feature = "std"))]
 use core2::{error, io};
 
-use {hex, sha1, sha256, sha512, ripemd160, siphash24, groestld};
+use {hex, sha1, sha256, sha512, ripemd160, siphash24, hmac, groestld};
 use HashEngine;
 use Error;
 
@@ -94,11 +95,20 @@ impl io::Write for siphash24::HashEngine {
     }
 }
 
+impl<T: ::Hash> io::Write for hmac::HmacEngine<T> {
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.input(buf);
+        Ok(buf.len())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::io::Write;
 
-    use {sha1, sha256, sha256d, sha512, ripemd160, hash160, siphash24};
+    use {sha1, sha256, sha256d, sha512, ripemd160, hash160, siphash24, hmac};
     use Hash;
 
     macro_rules! write_test {
@@ -180,4 +190,28 @@ mod tests {
         "3a3ccefde9b5b1e3",
         "ce456e4e4ecbc5bf",
     );
+
+    #[test]
+    fn hmac() {
+        let mut engine = hmac::HmacEngine::<sha256::Hash>::new(&[0xde, 0xad, 0xbe, 0xef]);
+        engine.write_all(&[]).unwrap();
+        assert_eq!(
+            format!("{}", hmac::Hmac::from_engine(engine)),
+            "bf5515149cf797955c4d3194cca42472883281951697c8375d9d9b107f384225"
+        );
+
+        let mut engine = hmac::HmacEngine::<sha256::Hash>::new(&[0xde, 0xad, 0xbe, 0xef]);
+        engine.write_all(&[1; 256]).unwrap();
+        assert_eq!(
+            format!("{}", hmac::Hmac::from_engine(engine)),
+            "59c9aca10c81c73cb4c196d94db741b6bf2050e0153d5a45f2526bff34675ac5"
+        );
+
+        let mut engine = hmac::HmacEngine::<sha256::Hash>::new(&[0xde, 0xad, 0xbe, 0xef]);
+        engine.write_all(&[99; 64000]).unwrap();
+        assert_eq!(
+            format!("{}", hmac::Hmac::from_engine(engine)),
+            "30df499717415a395379a1eaabe50038036e4abb5afc94aa55c952f4aa57be08"
+        );
+    }
 }

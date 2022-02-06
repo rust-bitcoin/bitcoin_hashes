@@ -12,18 +12,18 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-/// Circular left-shift a 32-bit word
+/// Circular left-shift a 32-bit word.
 macro_rules! circular_lshift32 (
     ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (32 - $shift)))
 );
 
-/// Circular left-shift a 64-bit word
+/// Circular left-shift a 64-bit word.
 macro_rules! circular_lshift64 (
     ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (64 - $shift)))
 );
 
 #[macro_export]
-/// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`
+/// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`.
 macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ident) => (
         hex_fmt_impl!($imp, $ty, );
@@ -37,50 +37,6 @@ macro_rules! hex_fmt_impl(
                 } else {
                     format_hex(&self.0, f)
                 }
-            }
-        }
-    )
-);
-
-/// Adds `core::ops::Index` trait implementation to a given type `$ty`
-#[macro_export]
-macro_rules! index_impl(
-    ($ty:ident) => (
-        index_impl!($ty, );
-    );
-    ($ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<usize> for $ty<$($gen),*> {
-            type Output = u8;
-            fn index(&self, index: usize) -> &u8 {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::Range<usize>> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::Range<usize>) -> &[u8] {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeFrom<usize>> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::RangeFrom<usize>) -> &[u8] {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeTo<usize>> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::RangeTo<usize>) -> &[u8] {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeFull> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::RangeFull) -> &[u8] {
-                &self.0[index]
             }
         }
     )
@@ -209,7 +165,7 @@ define_slice_to_le!(slice_to_u64_le, u64);
 define_le_to_array!(u32_to_array_le, u32, 4);
 define_le_to_array!(u64_to_array_le, u64, 8);
 
-/// Create a new newtype around a [Hash] type.
+/// Creates a new newtype around a [`Hash`] type.
 #[macro_export]
 macro_rules! hash_newtype {
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta) => {
@@ -224,17 +180,16 @@ macro_rules! hash_newtype {
         hex_fmt_impl!(Debug, $newtype);
         hex_fmt_impl!(Display, $newtype);
         hex_fmt_impl!(LowerHex, $newtype);
-        index_impl!($newtype);
         serde_impl!($newtype, $len);
         borrow_slice_impl!($newtype);
 
         impl $newtype {
-            /// Create this type from the inner hash type.
+            /// Creates this type from the inner hash type.
             pub fn from_hash(inner: $hash) -> $newtype {
                 $newtype(inner)
             }
 
-            /// Convert this type into the inner hash type.
+            /// Converts this type into the inner hash type.
             pub fn as_hash(&self) -> $hash {
                 // Hashes implement Copy so don't need into_hash.
                 self.0
@@ -294,6 +249,15 @@ macro_rules! hash_newtype {
             type Err = $crate::hex::Error;
             fn from_str(s: &str) -> $crate::_export::_core::result::Result<$newtype, Self::Err> {
                 $crate::hex::FromHex::from_hex(s)
+            }
+        }
+
+        impl<I: $crate::_export::_core::slice::SliceIndex<[u8]>> $crate::_export::_core::ops::Index<I> for $newtype {
+            type Output = I::Output;
+
+            #[inline]
+            fn index(&self, index: I) -> &Self::Output {
+                &self.0[index]
             }
         }
     };

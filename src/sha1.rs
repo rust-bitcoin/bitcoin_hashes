@@ -12,9 +12,12 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA1
+//! SHA1 implementation.
+//!
 
 use core::{cmp, str};
+use core::ops::Index;
+use core::slice::SliceIndex;
 
 use HashEngine as EngineTrait;
 use Hash as HashTrait;
@@ -23,7 +26,7 @@ use util;
 
 const BLOCK_SIZE: usize = 64;
 
-/// Engine to compute SHA1 hash function
+/// Engine to compute SHA1 hash function.
 #[derive(Clone)]
 pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
@@ -69,21 +72,29 @@ impl EngineTrait for HashEngine {
     engine_input_impl!();
 }
 
-/// Output of the SHA1 hash function
+/// Output of the SHA1 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_20"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_20"))]
     [u8; 20]
 );
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 20);
 borrow_slice_impl!(Hash);
+
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl str::FromStr for Hash {
     type Err = ::hex::Error;
@@ -108,7 +119,7 @@ impl HashTrait for Hash {
         let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
         e.input(&zeroes[..pad_length]);
         debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
-        
+
         e.input(&util::u64_to_array_be(8 * data_len));
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
@@ -186,20 +197,20 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use sha1;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use {sha1, Hash, HashEngine};
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
+
         let tests = vec![
             // Examples from wikipedia
             Test {
@@ -255,10 +266,11 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn sha1_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use {sha1, Hash};
 
         static HASH_BYTES: [u8; 20] = [
             0x13, 0x20, 0x72, 0xdf,
@@ -274,7 +286,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -283,7 +295,7 @@ mod benches {
     use HashEngine;
 
     #[bench]
-    pub fn sha1_10(bh: & mut Bencher) {
+    pub fn sha1_10(bh: &mut Bencher) {
         let mut engine = sha1::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -293,7 +305,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha1_1k(bh: & mut Bencher) {
+    pub fn sha1_1k(bh: &mut Bencher) {
         let mut engine = sha1::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -303,7 +315,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha1_64k(bh: & mut Bencher) {
+    pub fn sha1_64k(bh: &mut Bencher) {
         let mut engine = sha1::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

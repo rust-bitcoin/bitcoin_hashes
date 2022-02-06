@@ -17,10 +17,11 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # HMAC support
+//! Hash-based Message Authentication Code (HMAC).
+//!
 
 use core::{borrow, fmt, ops, str};
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 use HashEngine as EngineTrait;
@@ -41,8 +42,7 @@ impl<T: HashTrait + str::FromStr> str::FromStr for Hmac<T> {
     }
 }
 
-/// Pair of underlying hash midstates which represent the current state
-/// of an `HmacEngine`
+/// Pair of underlying hash midstates which represent the current state of an `HmacEngine`.
 pub struct HmacMidState<T: HashTrait> {
     /// Midstate of the inner hash engine
     pub inner: <T::Engine as EngineTrait>::MidState,
@@ -50,7 +50,7 @@ pub struct HmacMidState<T: HashTrait> {
     pub outer: <T::Engine as EngineTrait>::MidState,
 }
 
-/// Pair of underyling hash engines, used for the inner and outer hash of HMAC
+/// Pair of underyling hash engines, used for the inner and outer hash of HMAC.
 #[derive(Clone)]
 pub struct HmacEngine<T: HashTrait> {
     iengine: T::Engine,
@@ -64,8 +64,13 @@ impl<T: HashTrait> Default for HmacEngine<T> {
 }
 
 impl<T: HashTrait> HmacEngine<T> {
-    /// Construct a new keyed HMAC with the given key. We only support underlying hashes
-    /// whose block sizes are ≤ 128 bytes; larger hashes will result in panics.
+    /// Constructs a new keyed HMAC from `key`.
+    ///
+    /// We only support underlying hashes whose block sizes are ≤ 128 bytes.
+    ///
+    /// # Panics
+    ///
+    /// Larger hashes will result in a panic.
     pub fn new(key: &[u8]) -> HmacEngine<T> {
         debug_assert!(T::Engine::BLOCK_SIZE <= 128);
 
@@ -85,10 +90,10 @@ impl<T: HashTrait> HmacEngine<T> {
                 *b_o ^= *b_h;
             }
         } else {
-            for (b_i, b_h) in ipad.iter_mut().zip(&key[..]) {
+            for (b_i, b_h) in ipad.iter_mut().zip(key) {
                 *b_i ^= *b_h;
             }
-            for (b_o, b_h) in opad.iter_mut().zip(&key[..]) {
+            for (b_o, b_h) in opad.iter_mut().zip(key) {
                 *b_o ^= *b_h;
             }
         };
@@ -98,8 +103,7 @@ impl<T: HashTrait> HmacEngine<T> {
         ret
     }
 
-    /// A special constructor giving direct access to the underlying
-    /// "inner" and "outer" engines.
+    /// A special constructor giving direct access to the underlying "inner" and "outer" engines.
     pub fn from_inner_engines(iengine: T::Engine, oengine: T::Engine) -> HmacEngine<T> {
         HmacEngine {
             iengine: iengine,
@@ -218,14 +222,14 @@ impl<T: HashTrait> HashTrait for Hmac<T> {
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<T: HashTrait + Serialize> Serialize for Hmac<T> {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         Serialize::serialize(&self.0, s)
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<'de, T: HashTrait + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Hmac<T>, D::Error> {
         let inner = Deserialize::deserialize(d)?;
@@ -235,19 +239,18 @@ impl<'de, T: HashTrait + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
 
 #[cfg(test)]
 mod tests {
-    use sha256;
-    #[cfg(feature="serde")] use sha512;
-    use {Hash, HashEngine, Hmac, HmacEngine};
-
-    #[derive(Clone)]
-    struct Test {
-        key: Vec<u8>,
-        input: Vec<u8>,
-        output: Vec<u8>,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use {sha256, HashEngine, HmacEngine, Hash, Hmac};
+
+        #[derive(Clone)]
+        struct Test {
+            key: Vec<u8>,
+            input: Vec<u8>,
+            output: Vec<u8>,
+        }
+
         let tests = vec![
             // Test vectors copied from libsecp256k1
             // Sadly the RFC2104 test vectors all use MD5 as their underlying hash function,
@@ -361,10 +364,11 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn hmac_sha512_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use {sha512, Hash, Hmac};
 
         static HASH_BYTES: [u8; 64] = [
             0x8b, 0x41, 0xe1, 0xb7, 0x8a, 0xd1, 0x15, 0x21,
@@ -389,7 +393,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -397,7 +401,7 @@ mod benches {
     use {Hmac, Hash, HashEngine};
 
     #[bench]
-    pub fn hmac_sha256_10(bh: & mut Bencher) {
+    pub fn hmac_sha256_10(bh: &mut Bencher) {
         let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -407,7 +411,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hmac_sha256_1k(bh: & mut Bencher) {
+    pub fn hmac_sha256_1k(bh: &mut Bencher) {
         let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -417,7 +421,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hmac_sha256_64k(bh: & mut Bencher) {
+    pub fn hmac_sha256_64k(bh: &mut Bencher) {
         let mut engine = Hmac::<sha256::Hash>::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

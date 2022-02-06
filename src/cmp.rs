@@ -11,7 +11,7 @@
 /// volatile read. This should remain stable across compiler upgrades, but is much slower.
 ///
 /// As of rust 1.31.0 disassembly looks completely within reason for this, see
-/// https://godbolt.org/z/mMbGQv
+/// <https://godbolt.org/z/mMbGQv>.
 pub fn fixed_time_eq(a: &[u8], b: &[u8]) -> bool {
     assert!(a.len() == b.len());
     let count = a.len();
@@ -44,16 +44,16 @@ pub fn fixed_time_eq(a: &[u8], b: &[u8]) -> bool {
 
 #[test]
 fn eq_test() {
-    assert!( fixed_time_eq(&[0b00000000], &[0b00000000]));
-    assert!( fixed_time_eq(&[0b00000001], &[0b00000001]));
-    assert!( fixed_time_eq(&[0b00000010], &[0b00000010]));
-    assert!( fixed_time_eq(&[0b00000100], &[0b00000100]));
-    assert!( fixed_time_eq(&[0b00001000], &[0b00001000]));
-    assert!( fixed_time_eq(&[0b00010000], &[0b00010000]));
-    assert!( fixed_time_eq(&[0b00100000], &[0b00100000]));
-    assert!( fixed_time_eq(&[0b01000000], &[0b01000000]));
-    assert!( fixed_time_eq(&[0b10000000], &[0b10000000]));
-    assert!( fixed_time_eq(&[0b11111111], &[0b11111111]));
+    assert!(fixed_time_eq(&[0b00000000], &[0b00000000]));
+    assert!(fixed_time_eq(&[0b00000001], &[0b00000001]));
+    assert!(fixed_time_eq(&[0b00000010], &[0b00000010]));
+    assert!(fixed_time_eq(&[0b00000100], &[0b00000100]));
+    assert!(fixed_time_eq(&[0b00001000], &[0b00001000]));
+    assert!(fixed_time_eq(&[0b00010000], &[0b00010000]));
+    assert!(fixed_time_eq(&[0b00100000], &[0b00100000]));
+    assert!(fixed_time_eq(&[0b01000000], &[0b01000000]));
+    assert!(fixed_time_eq(&[0b10000000], &[0b10000000]));
+    assert!(fixed_time_eq(&[0b11111111], &[0b11111111]));
 
     assert!(!fixed_time_eq(&[0b00000001], &[0b00000000]));
     assert!(!fixed_time_eq(&[0b00000001], &[0b11111111]));
@@ -79,7 +79,7 @@ fn eq_test() {
     assert!(!fixed_time_eq(&[0b00000000, 0b00000000], &[0b00000001, 0b00000001]));
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
