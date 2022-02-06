@@ -43,7 +43,7 @@ if [ "$DO_FEATURE_MATRIX" = true ]; then
     done
 
     # Other combos
-    # TODO: Add this test once we bump MSRV past 1.29
+    # TODO: Add this test once we bump MSRV past 1.41
     # cargo test --all --no-default-features --features="std,schemars"
 fi
 
@@ -82,4 +82,3 @@ fi
 if [ "$DO_BENCH" = true ]; then
     cargo bench --all --features="unstable"
 fi
-

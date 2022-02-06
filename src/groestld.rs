@@ -13,6 +13,7 @@
 //
 
 //! # Groestl512d implementation (double Groestl512).
+//!
 
 use core::str;
 use core::ops::Index;
@@ -22,7 +23,7 @@ use HashEngine as EngineTrait;
 use Hash as HashTrait;
 use Error;
 
-/// Engine to compute Groestld hash function
+/// Engine to compute Groestld hash function.
 #[derive(Clone)]
 pub struct HashEngine {
     hasher: Groestl512,
@@ -68,12 +69,12 @@ impl EngineTrait for HashEngine {
     }
 }
 
-/// Output of the Groestl512d hash function
+/// Output of the Groestl512d hash function.
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_32"))]
     [u8; 32]
 );
 
@@ -121,7 +122,7 @@ impl HashTrait for Hash {
         for x in 0..32 {
             ret[x] = result.as_slice()[x]; // x: i32
         }
-    
+
         Hash(ret)
     }
 
@@ -154,27 +155,27 @@ impl HashTrait for Hash {
 
 #[cfg(test)]
 mod tests {
-    use groestld;
-    use hex::{FromHex, ToHex};
-    use {Hash, HashEngine};
-
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use {groestld, Hash, HashEngine};
+        use hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Examples from wikipedia
             Test {
                 input: "",
                 output: vec![
-                    0xfd, 0xfb, 0x14, 0xd3, 0x86, 0xc6, 0xdf, 0xf8, 
-                    0x57, 0x15, 0xc5, 0x0e, 0xfb, 0x82, 0x6c, 0x43, 
-                    0xe0, 0x42, 0x05, 0xb1, 0x84, 0x10, 0x49, 0x7a, 
+                    0xfd, 0xfb, 0x14, 0xd3, 0x86, 0xc6, 0xdf, 0xf8,
+                    0x57, 0x15, 0xc5, 0x0e, 0xfb, 0x82, 0x6c, 0x43,
+                    0xe0, 0x42, 0x05, 0xb1, 0x84, 0x10, 0x49, 0x7a,
                     0xa4, 0x7f, 0x12, 0x1e, 0xce, 0xb3, 0xa6, 0x5e,
 
                 ],
@@ -193,9 +194,9 @@ mod tests {
             Test {
                 input: "The quick brown fox jumps over the lazy dog.",
                 output: vec![
-                    0xf3, 0x32, 0x2d, 0xae, 0x35, 0x14, 0x73, 0xff, 
-                    0xf3, 0x42, 0x27, 0x8c, 0x15, 0x20, 0x2b, 0x0f, 
-                    0x71, 0x3c, 0x4c, 0x24, 0xde, 0x61, 0xa3, 0x52, 
+                    0xf3, 0x32, 0x2d, 0xae, 0x35, 0x14, 0x73, 0xff,
+                    0xf3, 0x42, 0x27, 0x8c, 0x15, 0x20, 0x2b, 0x0f,
+                    0x71, 0x3c, 0x4c, 0x24, 0xde, 0x61, 0xa3, 0x52,
                     0x57, 0x00, 0xc1, 0x45, 0xc3, 0x45, 0x32, 0x77,
                 ],
                 output_str: "773245c345c1005752a361de244c3c710f2b20158c2742f3ff731435ae2d32f3",
@@ -220,10 +221,11 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn sha256_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use {groestld, Hash};
 
         static HASH_BYTES: [u8; 32] = [
             0xef, 0x53, 0x7f, 0x25, 0xc8, 0x95, 0xbf, 0xa7,
@@ -236,7 +238,7 @@ mod tests {
         assert_tokens(&hash.compact(), &[Token::BorrowedBytes(&HASH_BYTES[..])]);
         assert_tokens(&hash.readable(), &[Token::Str("6cfb35868c4465b7c289d7d5641563aa973db6a929655282a7bf95c8257f53ef")]);
     }
-    
+
     #[cfg(target_arch = "wasm32")]
     mod wasm_tests {
         extern crate wasm_bindgen_test;
@@ -249,7 +251,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
@@ -258,7 +260,7 @@ mod benches {
     use HashEngine;
 
     #[bench]
-    pub fn groestl512_10(bh: & mut Bencher) {
+    pub fn groestl512_10(bh: &mut Bencher) {
         let mut engine = groestld::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -268,7 +270,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn groestl512_1k(bh: & mut Bencher) {
+    pub fn groestl512_1k(bh: &mut Bencher) {
         let mut engine = groestld::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -278,7 +280,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn groestl512_64k(bh: & mut Bencher) {
+    pub fn groestl512_64k(bh: &mut Bencher) {
         let mut engine = groestld::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
