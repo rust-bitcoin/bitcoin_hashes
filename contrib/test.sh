@@ -51,9 +51,9 @@ if [ "$DO_SCHEMARS_TESTS" = true ]; then
     (cd extended_tests/schemars && cargo test)
 fi
 
-# Docs
+# Build the docs if told to (this only works with the nightly toolchain)
 if [ "$DO_DOCS" = true ]; then
-    cargo doc --all --features="$FEATURES"
+    RUSTDOCFLAGS="--cfg docsrs" cargo doc --all --features="$FEATURES"
 fi
 
 # Webassembly stuff

@@ -3,8 +3,8 @@ on: [push, pull_request]
 name: Continuous integration
 
 jobs:
-  bench_nightly:
-    name: Nightly - ASan + Bench
+  Nightly:
+    name: Nightly - ASan + Bench + Docs
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,9 +28,13 @@ jobs:
         env:
           DO_BENCH: true
         run: ./contrib/test.sh
+      - name: Building docs
+        env:
+          DO_DOCS: true
+        run: ./contrib/test.sh
 
-  wasm: 
-    name: Stable - Docs / WebAssembly Build
+  wasm:
+    name: Stable - WebAssembly Build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -45,10 +49,6 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
-      - name: Building docs
-        env:
-          DO_DOCS: true
-        run: ./contrib/test.sh
       - name: Running WASM build
         env:
           DO_WASM: true
