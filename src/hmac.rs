@@ -223,6 +223,7 @@ impl<T: HashTrait> HashTrait for Hmac<T> {
 }
 
 #[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 impl<T: HashTrait + Serialize> Serialize for Hmac<T> {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         Serialize::serialize(&self.0, s)
@@ -230,6 +231,7 @@ impl<T: HashTrait + Serialize> Serialize for Hmac<T> {
 }
 
 #[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 impl<'de, T: HashTrait + Deserialize<'de>> Deserialize<'de> for Hmac<T> {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Hmac<T>, D::Error> {
         let inner = Deserialize::deserialize(d)?;

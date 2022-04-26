@@ -27,6 +27,9 @@
 #![deny(unused_mut)]
 #![deny(missing_docs)]
 
+// Experimental features we need
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 // In general, rust is absolutely horrid at supporting users doing things like,
 // for example, compiling Rust code for real environments. Disable useless lints
 // that don't do anything but annoy us and cant actually ever be resolved.
