@@ -204,7 +204,7 @@ pub fn format_hex_reverse(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     Ok(())
 }
 
-#[cfg(any(test, feature = "alloc", feature = "std"))]
+#[cfg(any(test, feature = "std", feature = "alloc"))]
 impl ToHex for [u8] {
     fn to_hex(&self) -> String {
         use core::fmt::Write;
