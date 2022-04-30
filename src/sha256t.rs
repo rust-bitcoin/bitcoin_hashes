@@ -143,7 +143,14 @@ impl<T: Tag> HashTrait for Hash<T> {
 #[macro_export]
 macro_rules! sha256t_hash_newtype {
     ($newtype:ident, $tag:ident, $midstate:ident, $midstate_len:expr, $docs:meta, $reverse: expr) => {
-        /// The tag used for [$newtype].
+        sha256t_hash_newtype!($newtype, $tag, $midstate, $midstate_len, $docs, $reverse, stringify!($newtype));
+    };
+
+    ($newtype:ident, $tag:ident, $midstate:ident, $midstate_len:expr, $docs:meta, $reverse: expr, $sname:expr) => {
+        #[doc = "The tag used for ["]
+        #[doc = $sname]
+        #[doc = "]"]
+        #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
         pub struct $tag;
 
         impl $crate::sha256t::Tag for $tag {
