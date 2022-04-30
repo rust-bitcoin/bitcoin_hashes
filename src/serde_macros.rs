@@ -15,8 +15,9 @@
 //! Macros for serde trait implementations, and supporting code.
 //!
 
-#[cfg(feature = "serde")]
 /// Functions used by serde impls of all hashes.
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 pub mod serde_details {
     use Error;
 
@@ -119,10 +120,11 @@ pub mod serde_details {
     }
 }
 
-#[macro_export]
-#[cfg(feature = "serde")]
 /// Implements `Serialize` and `Deserialize` for a type `$t` which
 /// represents a newtype over a byte-slice over length `$len`.
+#[macro_export]
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 macro_rules! serde_impl(
     ($t:ident, $len:expr) => (
         impl $crate::serde_macros::serde_details::SerdeHash for $t {
@@ -148,6 +150,7 @@ macro_rules! serde_impl(
 /// Does an "empty" serde implementation for the configuration without serde feature.
 #[macro_export]
 #[cfg(not(feature = "serde"))]
+#[cfg_attr(docsrs, doc(cfg(not(feature = "serde"))))]
 macro_rules! serde_impl(
         ($t:ident, $len:expr) => ()
 );

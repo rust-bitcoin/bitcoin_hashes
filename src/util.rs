@@ -264,6 +264,7 @@ macro_rules! hash_newtype {
 }
 
 #[cfg(feature = "schemars")]
+#[cfg_attr(docsrs, doc(cfg(feature = "schemars")))]
 pub mod json_hex_string {
     use schemars::schema::{Schema, SchemaObject};
     use schemars::{gen::SchemaGenerator, JsonSchema};
