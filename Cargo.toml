@@ -1,6 +1,6 @@
 [package]
 name = "bitcoin_hashes"
-version = "0.10.0"
+version = "0.11.0"
 authors = ["Andrew Poelstra <apoelstra@wpsoftware.net>"]
 license = "CC0-1.0"
 description = "Hash functions used by rust-bitcoin which support rustc 1.29.0"
@@ -9,6 +9,7 @@ repository = "https://github.com/rust-bitcoin/bitcoin_hashes/"
 documentation = "https://docs.rs/bitcoin_hashes/"
 keywords = [ "crypto", "bitcoin", "hash", "digest" ]
 readme = "README.md"
+edition = "2018"
 
 [lib]
 name = "bitcoin_hashes"

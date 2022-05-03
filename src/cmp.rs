@@ -83,10 +83,8 @@ fn eq_test() {
 mod benches {
     use test::Bencher;
 
-    use sha256;
-    use sha512;
-    use Hash;
-    use cmp::fixed_time_eq;
+    use crate::{Hash, sha256, sha512};
+    use crate::cmp::fixed_time_eq;
 
     #[bench]
     fn bench_32b_constant_time_cmp_ne(bh: &mut Bencher) {

@@ -16,9 +16,9 @@
 //!
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-use alloc::{string::String, vec::Vec};
+use crate::alloc::{string::String, vec::Vec};
 #[cfg(feature = "alloc")]
-use alloc::format;
+use crate::alloc::format;
 
 #[cfg(feature = "std")]
 use std::io;
@@ -26,7 +26,7 @@ use std::io;
 use core2::io;
 
 use core::{fmt, str};
-use Hash;
+use crate::Hash;
 
 /// Hex decoding error.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

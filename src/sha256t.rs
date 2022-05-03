@@ -21,10 +21,8 @@ use core::marker::PhantomData;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use sha256;
-use Hash as HashTrait;
-#[allow(unused)]
-use Error;
+use crate::{Error, hex, sha256};
+#[cfg(feature="serde")] use crate::Hash as _;
 
 /// Trait representing a tag that can be used as a context for SHA256t hashes.
 pub trait Tag {
@@ -76,9 +74,9 @@ impl<T: Tag> ::core::hash::Hash for Hash<T> {
 }
 
 impl<T: Tag> str::FromStr for Hash<T> {
-    type Err = ::hex::Error;
+    type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+        hex::FromHex::from_hex(s)
     }
 }
 
@@ -96,7 +94,7 @@ impl<I: SliceIndex<[u8]>, T: Tag> Index<I> for Hash<T> {
     }
 }
 
-impl<T: Tag> HashTrait for Hash<T> {
+impl<T: Tag> crate::Hash for Hash<T> {
     type Engine = sha256::HashEngine;
     type Inner = [u8; 32];
 
@@ -252,9 +250,11 @@ impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
 
 #[cfg(test)]
 mod tests {
-    use ::{Hash, sha256, sha256t};
+    use crate::{sha256, sha256t};
     #[cfg(any(feature = "std", feature = "alloc"))]
-    use ::hex::ToHex;
+    use crate::hex::ToHex;
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    use crate::Hash;
 
     const TEST_MIDSTATE: [u8; 32] = [
        156, 224, 228, 230, 124, 17, 108, 57, 56, 179, 202, 242, 195, 15, 80, 137, 211, 243,
