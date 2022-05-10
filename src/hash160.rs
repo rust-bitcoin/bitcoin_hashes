@@ -27,7 +27,7 @@ use core::slice::SliceIndex;
 use crate::{Error, hex, ripemd160, sha256};
 
 /// Output of the Bitcoin HASH160 hash function.
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
@@ -96,6 +96,10 @@ impl crate::Hash for Hash {
 
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
+    }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 20])
     }
 }
 

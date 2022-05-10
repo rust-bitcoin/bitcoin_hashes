@@ -98,7 +98,7 @@ pub trait HashEngine: Clone + Default {
 }
 
 /// Trait which applies to hashes of all types.
-pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
+pub trait Hash: Copy + Clone + PartialEq + Eq + PartialOrd + Ord +
     hash::Hash + fmt::Debug + fmt::Display + fmt::LowerHex +
     ops::Index<ops::RangeFull, Output = [u8]> +
     ops::Index<ops::RangeFrom<usize>, Output = [u8]> +
@@ -149,6 +149,13 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
 
     /// Constructs a hash from the underlying byte array.
     fn from_inner(inner: Self::Inner) -> Self;
+
+    /// Returns an all zero hash.
+    ///
+    /// An all zeros hash is a made up construct because there is not a known input that can create
+    /// it, however it is used in various places in Bitcoin e.g., the Bitcoin genesis block's
+    /// previous blockhash and the coinbase transaction's outpoint txid.
+    fn all_zeros() -> Self;
 }
 
 #[cfg(test)]
