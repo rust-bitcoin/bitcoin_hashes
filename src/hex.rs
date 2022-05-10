@@ -84,12 +84,11 @@ impl<T: Hash> FromHex for T {
     where
         I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
-        let inner;
-        if Self::DISPLAY_BACKWARD {
-            inner = T::Inner::from_byte_iter(iter.rev())?;
+        let inner = if Self::DISPLAY_BACKWARD {
+            T::Inner::from_byte_iter(iter.rev())?
         } else {
-            inner = T::Inner::from_byte_iter(iter)?;
-        }
+            T::Inner::from_byte_iter(iter)?
+        };
         Ok(Hash::from_inner(inner))
     }
 }
