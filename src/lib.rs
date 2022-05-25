@@ -49,9 +49,9 @@
 
 #[doc(hidden)]
 pub mod _export {
-    /// A re-export of ::core::*
+    /// A re-export of core::*
     pub mod _core {
-        pub use ::core::*;
+        pub use core::*;
     }
 }
 

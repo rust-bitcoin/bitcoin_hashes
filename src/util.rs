@@ -108,7 +108,7 @@ macro_rules! define_slice_to_be {
     ($name: ident, $type: ty) => {
         #[inline]
         pub fn $name(slice: &[u8]) -> $type {
-            assert_eq!(slice.len(), ::core::mem::size_of::<$type>());
+            assert_eq!(slice.len(), core::mem::size_of::<$type>());
             let mut res = 0;
             for i in 0..::core::mem::size_of::<$type>() {
                 res |= (slice[i] as $type) << (::core::mem::size_of::<$type>() - i - 1)*8;
@@ -121,7 +121,7 @@ macro_rules! define_slice_to_le {
     ($name: ident, $type: ty) => {
         #[inline]
         pub fn $name(slice: &[u8]) -> $type {
-            assert_eq!(slice.len(), ::core::mem::size_of::<$type>());
+            assert_eq!(slice.len(), core::mem::size_of::<$type>());
             let mut res = 0;
             for i in 0..::core::mem::size_of::<$type>() {
                 res |= (slice[i] as $type) << i*8;

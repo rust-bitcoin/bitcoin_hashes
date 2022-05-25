@@ -67,8 +67,8 @@ impl<T: Tag> Ord for Hash<T> {
         cmp::Ord::cmp(&self.0, &other.0)
     }
 }
-impl<T: Tag> ::core::hash::Hash for Hash<T> {
-    fn hash<H: ::core::hash::Hasher>(&self, h: &mut H) {
+impl<T: Tag> core::hash::Hash for Hash<T> {
+    fn hash<H: core::hash::Hasher>(&self, h: &mut H) {
         self.0.hash(h)
     }
 }
@@ -167,8 +167,8 @@ macro_rules! sha256t_hash_newtype {
 }
 
 #[cfg(feature = "serde")]
-impl<T: Tag> ::serde::Serialize for Hash<T> {
-    fn serialize<S: ::serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+impl<T: Tag> serde::Serialize for Hash<T> {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         if s.is_human_readable() {
             s.collect_str(self)
         } else {
@@ -186,7 +186,7 @@ impl<T: Tag> Default for HexVisitor<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
+impl<'de, T: Tag> serde::de::Visitor<'de> for HexVisitor<T> {
     type Value = Hash<T>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -195,7 +195,7 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
     where
-        E: ::serde::de::Error,
+        E: serde::de::Error,
     {
         use core::str::FromStr;
         if let Ok(hex) = str::from_utf8(v) {
@@ -207,7 +207,7 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
     where
-        E: ::serde::de::Error,
+        E: serde::de::Error,
     {
         use core::str::FromStr;
         Hash::<T>::from_str(v).map_err(E::custom)
@@ -223,7 +223,7 @@ impl<T: Tag> Default for BytesVisitor<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
+impl<'de, T: Tag> serde::de::Visitor<'de> for BytesVisitor<T> {
     type Value = Hash<T>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -232,7 +232,7 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
     where
-        E: ::serde::de::Error,
+        E: serde::de::Error,
     {
         Hash::<T>::from_slice(v).map_err(|_| {
             // from_slice only errors on incorrect length
@@ -242,8 +242,8 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
-    fn deserialize<D: ::serde::Deserializer<'de>>(d: D) -> Result<Hash<T>, D::Error> {
+impl<'de, T: Tag> serde::Deserialize<'de> for Hash<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Hash<T>, D::Error> {
         if d.is_human_readable() {
             d.deserialize_str(HexVisitor::<T>::default())
         } else {
