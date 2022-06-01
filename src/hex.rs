@@ -30,6 +30,7 @@ use crate::Hash;
 
 /// Hex decoding error.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[non_exhaustive]
 pub enum Error {
     /// Non-hexadecimal character.
     InvalidChar(u8),
