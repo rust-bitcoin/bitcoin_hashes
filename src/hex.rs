@@ -142,24 +142,6 @@ impl<'a> Iterator for HexIterator<'a> {
     }
 }
 
-#[cfg(any(feature = "std", feature = "core2"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "core2"))))]
-impl<'a> io::Read for HexIterator<'a> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let mut bytes_read = 0usize;
-        for dst in buf {
-            match self.next() {
-                Some(Ok(src)) => {
-                    *dst = src;
-                    bytes_read += 1;
-                },
-                _ => break,
-            }
-        }
-        Ok(bytes_read)
-    }
-}
-
 impl<'a> DoubleEndedIterator for HexIterator<'a> {
     fn next_back(&mut self) -> Option<Result<u8, Error>> {
         let lo = self.iter.next_back()?;

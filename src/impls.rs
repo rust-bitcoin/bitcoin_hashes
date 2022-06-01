@@ -39,6 +39,22 @@ impl error::Error for hex::Error {
     fn description(&self) -> &str { "`std::error::description` is deprecated" }
 }
 
+impl<'a> io::Read for hex::HexIterator<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let mut bytes_read = 0usize;
+        for dst in buf {
+            match self.next() {
+                Some(Ok(src)) => {
+                    *dst = src;
+                    bytes_read += 1;
+                },
+                _ => break,
+            }
+        }
+        Ok(bytes_read)
+    }
+}
+
 impl io::Write for sha1::HashEngine {
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 
