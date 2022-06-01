@@ -26,17 +26,23 @@ use core2::{error, io};
 use crate::{Error, HashEngine, hex, sha1, sha256, sha512, ripemd160, siphash24, hmac};
 
 impl error::Error for Error {
-    #[cfg(feature = "std")]
-    fn cause(&self) -> Option<&error::Error> { None }
-    #[cfg(feature = "std")]
-    fn description(&self) -> &str { "`std::error::description` is deprecated" }
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        use Error::*;
+
+        match *self {
+            InvalidLength(_, _) => None
+        }
+    }
 }
 
 impl error::Error for hex::Error {
-    #[cfg(feature = "std")]
-    fn cause(&self) -> Option<&error::Error> { None }
-    #[cfg(feature = "std")]
-    fn description(&self) -> &str { "`std::error::description` is deprecated" }
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        use hex::Error::*;
+
+        match *self {
+            InvalidChar(_) | OddLengthString(_) | InvalidLength(_, _) => None
+        }
+    }
 }
 
 impl<'a> io::Read for hex::HexIterator<'a> {
