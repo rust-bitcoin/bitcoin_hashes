@@ -11,10 +11,6 @@ keywords = [ "crypto", "bitcoin", "hash", "digest" ]
 readme = "README.md"
 edition = "2018"
 
-[lib]
-name = "bitcoin_hashes"
-path = "src/lib.rs"
-
 [features]
 default = ["std"]
 std = []
