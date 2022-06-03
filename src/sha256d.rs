@@ -12,38 +12,47 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # SHA256d
+//! SHA256d implementation (double SHA256).
+//!
 
 use core::str;
+use core::ops::Index;
+use core::slice::SliceIndex;
 
-use sha256;
-use Hash as HashTrait;
-use Error;
+use crate::{Error, hex, sha256};
 
-/// Output of the SHA256d hash function
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+/// Output of the SHA256d hash function.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_32"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_32"))]
     [u8; 32]
 );
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
 
-impl str::FromStr for Hash {
-    type Err = ::hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
     }
 }
 
-impl HashTrait for Hash {
+impl str::FromStr for Hash {
+    type Err = hex::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        hex::FromHex::from_hex(s)
+    }
+}
+
+impl crate::Hash for Hash {
     type Engine = sha256::HashEngine;
     type Inner = [u8; 32];
 
@@ -85,30 +94,27 @@ impl HashTrait for Hash {
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
-}
 
-impl From<sha256::Hash> for Hash {
-    fn from(hash: sha256::Hash) -> Self {
-        Self::from_inner(hash.into_inner())
+    fn all_zeros() -> Self {
+        Hash([0x00; 32])
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use sha256d;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-#[derive(Clone)]
-    struct Test {
-input: &'static str,
-           output: Vec<u8>,
-           output_str: &'static str,
-    }
-
-#[test]
+    #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use crate::{sha256d, Hash, HashEngine};
+        use crate::hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Test vector copied out of rust-bitcoin
             Test {
@@ -141,10 +147,11 @@ input: &'static str,
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn sha256_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use crate::{sha256d, Hash};
 
         static HASH_BYTES: [u8; 32] = [
             0xef, 0x53, 0x7f, 0x25, 0xc8, 0x95, 0xbf, 0xa7,
@@ -159,16 +166,14 @@ input: &'static str,
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
-    use sha256d;
-    use Hash;
-    use HashEngine;
+    use crate::{Hash, HashEngine, sha256d};
 
     #[bench]
-    pub fn sha256d_10(bh: & mut Bencher) {
+    pub fn sha256d_10(bh: &mut Bencher) {
         let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -178,7 +183,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256d_1k(bh: & mut Bencher) {
+    pub fn sha256d_1k(bh: &mut Bencher) {
         let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -188,7 +193,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn sha256d_64k(bh: & mut Bencher) {
+    pub fn sha256d_64k(bh: &mut Bencher) {
         let mut engine = sha256d::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

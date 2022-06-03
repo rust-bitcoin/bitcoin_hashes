@@ -11,7 +11,7 @@
 /// volatile read. This should remain stable across compiler upgrades, but is much slower.
 ///
 /// As of rust 1.31.0 disassembly looks completely within reason for this, see
-/// https://godbolt.org/z/mMbGQv
+/// <https://godbolt.org/z/mMbGQv>.
 pub fn fixed_time_eq(a: &[u8], b: &[u8]) -> bool {
     assert!(a.len() == b.len());
     let count = a.len();
@@ -20,40 +20,40 @@ pub fn fixed_time_eq(a: &[u8], b: &[u8]) -> bool {
 
     let mut r: u8 = 0;
     for i in 0..count {
-        let mut rs = unsafe { ::core::ptr::read_volatile(&r) };
+        let mut rs = unsafe { core::ptr::read_volatile(&r) };
         rs |= lhs[i] ^ rhs[i];
-        unsafe { ::core::ptr::write_volatile(&mut r, rs); }
+        unsafe { core::ptr::write_volatile(&mut r, rs); }
     }
     {
-        let mut t = unsafe { ::core::ptr::read_volatile(&r) };
+        let mut t = unsafe { core::ptr::read_volatile(&r) };
         t |= t >> 4;
-        unsafe { ::core::ptr::write_volatile(&mut r, t); }
+        unsafe { core::ptr::write_volatile(&mut r, t); }
     }
     {
-        let mut t = unsafe { ::core::ptr::read_volatile(&r) };
+        let mut t = unsafe { core::ptr::read_volatile(&r) };
         t |= t >> 2;
-        unsafe { ::core::ptr::write_volatile(&mut r, t); }
+        unsafe { core::ptr::write_volatile(&mut r, t); }
     }
     {
-        let mut t = unsafe { ::core::ptr::read_volatile(&r) };
+        let mut t = unsafe { core::ptr::read_volatile(&r) };
         t |= t >> 1;
-        unsafe { ::core::ptr::write_volatile(&mut r, t); }
+        unsafe { core::ptr::write_volatile(&mut r, t); }
     }
     unsafe { (::core::ptr::read_volatile(&r) & 1) == 0 }
 }
 
 #[test]
 fn eq_test() {
-    assert!( fixed_time_eq(&[0b00000000], &[0b00000000]));
-    assert!( fixed_time_eq(&[0b00000001], &[0b00000001]));
-    assert!( fixed_time_eq(&[0b00000010], &[0b00000010]));
-    assert!( fixed_time_eq(&[0b00000100], &[0b00000100]));
-    assert!( fixed_time_eq(&[0b00001000], &[0b00001000]));
-    assert!( fixed_time_eq(&[0b00010000], &[0b00010000]));
-    assert!( fixed_time_eq(&[0b00100000], &[0b00100000]));
-    assert!( fixed_time_eq(&[0b01000000], &[0b01000000]));
-    assert!( fixed_time_eq(&[0b10000000], &[0b10000000]));
-    assert!( fixed_time_eq(&[0b11111111], &[0b11111111]));
+    assert!(fixed_time_eq(&[0b00000000], &[0b00000000]));
+    assert!(fixed_time_eq(&[0b00000001], &[0b00000001]));
+    assert!(fixed_time_eq(&[0b00000010], &[0b00000010]));
+    assert!(fixed_time_eq(&[0b00000100], &[0b00000100]));
+    assert!(fixed_time_eq(&[0b00001000], &[0b00001000]));
+    assert!(fixed_time_eq(&[0b00010000], &[0b00010000]));
+    assert!(fixed_time_eq(&[0b00100000], &[0b00100000]));
+    assert!(fixed_time_eq(&[0b01000000], &[0b01000000]));
+    assert!(fixed_time_eq(&[0b10000000], &[0b10000000]));
+    assert!(fixed_time_eq(&[0b11111111], &[0b11111111]));
 
     assert!(!fixed_time_eq(&[0b00000001], &[0b00000000]));
     assert!(!fixed_time_eq(&[0b00000001], &[0b11111111]));
@@ -79,14 +79,12 @@ fn eq_test() {
     assert!(!fixed_time_eq(&[0b00000000, 0b00000000], &[0b00000001, 0b00000001]));
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
-    use sha256;
-    use sha512;
-    use Hash;
-    use cmp::fixed_time_eq;
+    use crate::{Hash, sha256, sha512};
+    use crate::cmp::fixed_time_eq;
 
     #[bench]
     fn bench_32b_constant_time_cmp_ne(bh: &mut Bencher) {

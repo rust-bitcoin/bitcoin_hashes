@@ -17,41 +17,47 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # HASH160 (SHA256 then RIPEMD160)
+//! HASH160 (SHA256 then RIPEMD160) implementation.
+//!
 
 use core::str;
+use core::ops::Index;
+use core::slice::SliceIndex;
 
-use sha256;
-use ripemd160;
-use Hash as HashTrait;
-use Error;
+use crate::{Error, hex, ripemd160, sha256};
 
-/// Output of the Bitcoin HASH160 hash function
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+/// Output of the Bitcoin HASH160 hash function.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="crate::util::json_hex_string::len_20"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_20"))]
     [u8; 20]
 );
-
-
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 20);
 borrow_slice_impl!(Hash);
 
-impl str::FromStr for Hash {
-    type Err = ::hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
     }
 }
 
-impl HashTrait for Hash {
+impl str::FromStr for Hash {
+    type Err = hex::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        hex::FromHex::from_hex(s)
+    }
+}
+
+impl crate::Hash for Hash {
     type Engine = sha256::HashEngine;
     type Inner = [u8; 20];
 
@@ -91,24 +97,28 @@ impl HashTrait for Hash {
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 20])
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use hash160;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-    #[derive(Clone)]
-    struct Test {
-        input: Vec<u8>,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use crate::{hash160, Hash, HashEngine};
+        use crate::hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        #[cfg(any(feature = "std", feature = "alloc"))]
+        struct Test {
+            input: Vec<u8>,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Uncompressed pubkey obtained from Bitcoin key; data from validateaddress
             Test {
@@ -149,11 +159,11 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn ripemd_serde() {
-
         use serde_test::{Configure, Token, assert_tokens};
+        use crate::{hash160, Hash};
 
         static HASH_BYTES: [u8; 20] = [
             0x13, 0x20, 0x72, 0xdf,
@@ -169,16 +179,14 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
-    use hash160;
-    use Hash;
-    use HashEngine;
+    use crate::{Hash, HashEngine, hash160};
 
     #[bench]
-    pub fn hash160_10(bh: & mut Bencher) {
+    pub fn hash160_10(bh: &mut Bencher) {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -188,7 +196,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hash160_1k(bh: & mut Bencher) {
+    pub fn hash160_1k(bh: &mut Bencher) {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -198,8 +206,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn hash160_64k(bh: & mut Bencher) {
-
+    pub fn hash160_64k(bh: &mut Bencher) {
         let mut engine = hash160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {
@@ -207,5 +214,4 @@ mod benches {
         });
         bh.bytes = bytes.len() as u64;
     }
-
 }

@@ -12,18 +12,18 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-/// Circular left-shift a 32-bit word
+/// Circular left-shift a 32-bit word.
 macro_rules! circular_lshift32 (
     ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (32 - $shift)))
 );
 
-/// Circular left-shift a 64-bit word
+/// Circular left-shift a 64-bit word.
 macro_rules! circular_lshift64 (
     ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (64 - $shift)))
 );
 
 #[macro_export]
-/// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`
+/// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`.
 macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ident) => (
         hex_fmt_impl!($imp, $ty, );
@@ -31,59 +31,17 @@ macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ident, $($gen:ident: $gent:ident),*) => (
         impl<$($gen: $gent),*> $crate::_export::_core::fmt::$imp for $ty<$($gen),*> {
             fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
-                use $crate::hex::{format_hex, format_hex_reverse};
+                #[allow(unused_imports)]
+                use $crate::{Hash as _, HashEngine as _, hex};
+
                 if $ty::<$($gen),*>::DISPLAY_BACKWARD {
-                    format_hex_reverse(&self.0, f)
+                    hex::format_hex_reverse(&self.0, f)
                 } else {
-                    format_hex(&self.0, f)
+                    hex::format_hex(&self.0, f)
                 }
             }
         }
-    )
-);
-
-/// Adds `core::ops::Index` trait implementation to a given type `$ty`
-#[macro_export]
-macro_rules! index_impl(
-    ($ty:ident) => (
-        index_impl!($ty, );
     );
-    ($ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<usize> for $ty<$($gen),*> {
-            type Output = u8;
-            fn index(&self, index: usize) -> &u8 {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::Range<usize>> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::Range<usize>) -> &[u8] {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeFrom<usize>> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::RangeFrom<usize>) -> &[u8] {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeTo<usize>> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::RangeTo<usize>) -> &[u8] {
-                &self.0[index]
-            }
-        }
-
-        impl<$($gen: $gent),*> $crate::_export::_core::ops::Index<$crate::_export::_core::ops::RangeFull> for $ty<$($gen),*> {
-            type Output = [u8];
-            fn index(&self, index: $crate::_export::_core::ops::RangeFull) -> &[u8] {
-                &self.0[index]
-            }
-        }
-    )
 );
 
 /// Adds slicing traits implementations to a given type `$ty`
@@ -120,14 +78,14 @@ macro_rules! engine_input_impl(
         #[cfg(not(fuzzing))]
         fn input(&mut self, mut inp: &[u8]) {
             while !inp.is_empty() {
-                let buf_idx = self.length % <Self as EngineTrait>::BLOCK_SIZE;
-                let rem_len = <Self as EngineTrait>::BLOCK_SIZE - buf_idx;
+                let buf_idx = self.length % <Self as crate::HashEngine>::BLOCK_SIZE;
+                let rem_len = <Self as crate::HashEngine>::BLOCK_SIZE - buf_idx;
                 let write_len = cmp::min(rem_len, inp.len());
 
                 self.buffer[buf_idx..buf_idx + write_len]
                     .copy_from_slice(&inp[..write_len]);
                 self.length += write_len;
-                if self.length % <Self as EngineTrait>::BLOCK_SIZE == 0 {
+                if self.length % <Self as crate::HashEngine>::BLOCK_SIZE == 0 {
                     self.process_block();
                 }
                 inp = &inp[write_len..];
@@ -150,7 +108,7 @@ macro_rules! define_slice_to_be {
     ($name: ident, $type: ty) => {
         #[inline]
         pub fn $name(slice: &[u8]) -> $type {
-            assert_eq!(slice.len(), ::core::mem::size_of::<$type>());
+            assert_eq!(slice.len(), core::mem::size_of::<$type>());
             let mut res = 0;
             for i in 0..::core::mem::size_of::<$type>() {
                 res |= (slice[i] as $type) << (::core::mem::size_of::<$type>() - i - 1)*8;
@@ -163,7 +121,7 @@ macro_rules! define_slice_to_le {
     ($name: ident, $type: ty) => {
         #[inline]
         pub fn $name(slice: &[u8]) -> $type {
-            assert_eq!(slice.len(), ::core::mem::size_of::<$type>());
+            assert_eq!(slice.len(), core::mem::size_of::<$type>());
             let mut res = 0;
             for i in 0..::core::mem::size_of::<$type>() {
                 res |= (slice[i] as $type) << i*8;
@@ -209,7 +167,7 @@ define_slice_to_le!(slice_to_u64_le, u64);
 define_le_to_array!(u32_to_array_le, u32, 4);
 define_le_to_array!(u64_to_array_le, u64, 8);
 
-/// Create a new newtype around a [Hash] type.
+/// Creates a new newtype around a [`Hash`] type.
 #[macro_export]
 macro_rules! hash_newtype {
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta) => {
@@ -217,24 +175,23 @@ macro_rules! hash_newtype {
     };
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta, $reverse:expr) => {
         #[$docs]
-        #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+        #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
         #[repr(transparent)]
         pub struct $newtype($hash);
 
         hex_fmt_impl!(Debug, $newtype);
         hex_fmt_impl!(Display, $newtype);
         hex_fmt_impl!(LowerHex, $newtype);
-        index_impl!($newtype);
         serde_impl!($newtype, $len);
         borrow_slice_impl!($newtype);
 
         impl $newtype {
-            /// Create this type from the inner hash type.
+            /// Creates this type from the inner hash type.
             pub fn from_hash(inner: $hash) -> $newtype {
                 $newtype(inner)
             }
 
-            /// Convert this type into the inner hash type.
+            /// Converts this type into the inner hash type.
             pub fn as_hash(&self) -> $hash {
                 // Hashes implement Copy so don't need into_hash.
                 self.0
@@ -288,6 +245,12 @@ macro_rules! hash_newtype {
             fn as_inner(&self) -> &Self::Inner {
                 self.0.as_inner()
             }
+
+            #[inline]
+            fn all_zeros() -> Self {
+                let zeros = <$hash>::all_zeros();
+                $newtype(zeros)
+            }
         }
 
         impl $crate::_export::_core::str::FromStr for $newtype {
@@ -296,10 +259,20 @@ macro_rules! hash_newtype {
                 $crate::hex::FromHex::from_hex(s)
             }
         }
+
+        impl<I: $crate::_export::_core::slice::SliceIndex<[u8]>> $crate::_export::_core::ops::Index<I> for $newtype {
+            type Output = I::Output;
+
+            #[inline]
+            fn index(&self, index: I) -> &Self::Output {
+                &self.0[index]
+            }
+        }
     };
 }
 
 #[cfg(feature = "schemars")]
+#[cfg_attr(docsrs, doc(cfg(feature = "schemars")))]
 pub mod json_hex_string {
     use schemars::schema::{Schema, SchemaObject};
     use schemars::{gen::SchemaGenerator, JsonSchema};
@@ -324,8 +297,8 @@ pub mod json_hex_string {
 
 #[cfg(test)]
 mod test {
-    use Hash;
-    use sha256;
+    use crate::{Hash, sha256};
+
     use super::*;
 
     #[test]

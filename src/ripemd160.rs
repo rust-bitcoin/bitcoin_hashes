@@ -17,18 +17,18 @@
 // was written entirely by Andrew Poelstra, who is re-licensing its
 // contents here as CC0.
 
-//! # RIPEMD160
+//! RIPEMD160 implementation.
+//!
 
 use core::{cmp, str};
+use core::ops::Index;
+use core::slice::SliceIndex;
 
-use HashEngine as EngineTrait;
-use Hash as HashTrait;
-use Error;
-use util;
+use crate::{Error, HashEngine as _, hex, util};
 
 const BLOCK_SIZE: usize = 64;
 
-/// Engine to compute RIPEMD160 hash function
+/// Engine to compute RIPEMD160 hash function.
 #[derive(Clone)]
 pub struct HashEngine {
     buffer: [u8; BLOCK_SIZE],
@@ -46,7 +46,7 @@ impl Default for HashEngine {
     }
 }
 
-impl EngineTrait for HashEngine {
+impl crate::HashEngine for HashEngine {
     type MidState = [u8; 20];
 
     #[cfg(not(fuzzing))]
@@ -74,30 +74,38 @@ impl EngineTrait for HashEngine {
     engine_input_impl!();
 }
 
-/// Output of the RIPEMD160 hash function
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+/// Output of the RIPEMD160 hash function.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with="util::json_hex_string::len_20"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_20"))]
     [u8; 20]
 );
 
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
-index_impl!(Hash);
 serde_impl!(Hash, 20);
 borrow_slice_impl!(Hash);
 
-impl str::FromStr for Hash {
-    type Err = ::hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+impl<I: SliceIndex<[u8]>> Index<I> for Hash {
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
     }
 }
 
-impl HashTrait for Hash {
+impl str::FromStr for Hash {
+    type Err = hex::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        hex::FromHex::from_hex(s)
+    }
+}
+
+impl crate::Hash for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 20];
 
@@ -150,6 +158,10 @@ impl HashTrait for Hash {
 
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
+    }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 20])
     }
 }
 
@@ -448,20 +460,19 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use ripemd160;
-    use hex::{FromHex, ToHex};
-    use Hash;
-    use HashEngine;
-
-    #[derive(Clone)]
-    struct Test {
-        input: &'static str,
-        output: Vec<u8>,
-        output_str: &'static str,
-    }
-
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use crate::{Hash, HashEngine, ripemd160};
+        use crate::hex::{FromHex, ToHex};
+
+        #[derive(Clone)]
+        struct Test {
+            input: &'static str,
+            output: Vec<u8>,
+            output_str: &'static str,
+        }
+
         let tests = vec![
             // Test messages from FIPS 180-1
             Test {
@@ -530,10 +541,11 @@ mod tests {
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
     fn ripemd_serde() {
         use serde_test::{Configure, Token, assert_tokens};
+        use crate::{ripemd160, Hash};
 
         static HASH_BYTES: [u8; 20] = [
             0x13, 0x20, 0x72, 0xdf,
@@ -549,16 +561,14 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature="unstable"))]
+#[cfg(all(test, feature = "unstable"))]
 mod benches {
     use test::Bencher;
 
-    use ripemd160;
-    use Hash;
-    use HashEngine;
+    use crate::{Hash, HashEngine, ripemd160};
 
     #[bench]
-    pub fn ripemd160_10(bh: & mut Bencher) {
+    pub fn ripemd160_10(bh: &mut Bencher) {
         let mut engine = ripemd160::Hash::engine();
         let bytes = [1u8; 10];
         bh.iter( || {
@@ -568,7 +578,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn ripemd160_1k(bh: & mut Bencher) {
+    pub fn ripemd160_1k(bh: &mut Bencher) {
         let mut engine = ripemd160::Hash::engine();
         let bytes = [1u8; 1024];
         bh.iter( || {
@@ -578,7 +588,7 @@ mod benches {
     }
 
     #[bench]
-    pub fn ripemd160_64k(bh: & mut Bencher) {
+    pub fn ripemd160_64k(bh: &mut Bencher) {
         let mut engine = ripemd160::Hash::engine();
         let bytes = [1u8; 65536];
         bh.iter( || {

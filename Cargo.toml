@@ -9,10 +9,7 @@ repository = "https://github.com/Groestlcoin/groestlcoin_hashes/"
 documentation = "https://docs.rs/groestlcoin_hashes/"
 keywords = [ "crypto", "groestlcoin", "hash", "digest" ]
 readme = "README.md"
-
-[lib]
-name = "groestlcoin_hashes"
-path = "src/lib.rs"
+edition = "2018"
 
 [features]
 default = ["std"]
@@ -25,8 +22,11 @@ serde-std = ["serde/std"]
 unstable = []  # for benchmarking
 
 [dependencies]
+# Only enable this if you explicitly do not want to use "std", otherwise enable "serde-std".
 serde = { version = "1.0", default-features = false, optional = true }
+# Can only be used with "std" enabled.
 schemars = { version = "<=0.8.3", optional = true }
+# Only enable this if you explicitly do not want to use an allocator, otherwise enable "alloc".
 core2 = { version = "0.3.0", optional = true, default_features = false }
 groestl = "0.10.0"
 

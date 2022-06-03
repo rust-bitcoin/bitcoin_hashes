@@ -18,9 +18,10 @@ use core::str;
 use core::ops::Index;
 use core::slice::SliceIndex;
 use groestl::{Groestl512, Digest};
-use HashEngine as EngineTrait;
-use Hash as HashTrait;
-use Error;
+//use HashEngine as EngineTrait;
+//use Hash as HashTrait;
+//use Error;
+use crate::{Error, hex};
 
 /// Engine to compute Groestld hash function
 #[derive(Clone)]
@@ -39,7 +40,7 @@ impl Default for HashEngine {
 }
 
 // This will handle a single Groestl512 hash
-impl EngineTrait for HashEngine {
+impl crate::HashEngine for HashEngine {
     type MidState = [u8; 64];
 
     #[cfg(not(fuzzing))]
@@ -78,9 +79,9 @@ pub struct Hash(
 );
 
 impl str::FromStr for Hash {
-    type Err = ::hex::Error;
+    type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+        hex::FromHex::from_hex(s)
     }
 }
 
@@ -105,7 +106,7 @@ impl<I: SliceIndex<[u8]>> Index<I> for Hash {
     }
 }
 
-impl HashTrait for Hash {
+impl crate::Hash for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
 
@@ -150,13 +151,16 @@ impl HashTrait for Hash {
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 32])
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use groestld;
-    use hex::{FromHex, ToHex};
-    use {Hash, HashEngine};
+    use crate::{groestld, Hash, HashEngine};
+    use crate::hex::{FromHex, ToHex};
 
     #[derive(Clone)]
     struct Test {
@@ -253,9 +257,7 @@ mod tests {
 mod benches {
     use test::Bencher;
 
-    use groestld;
-    use Hash;
-    use HashEngine;
+    use crate::{groestld, Hash, HashEngine};
 
     #[bench]
     pub fn groestl512_10(bh: & mut Bencher) {

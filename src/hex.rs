@@ -12,25 +12,30 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-//! # Hex encoding and decoding
+//! Hex encoding and decoding.
 //!
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-use alloc::{string::String, vec::Vec};
+use crate::alloc::{string::String, vec::Vec};
 #[cfg(feature = "alloc")]
-use alloc::format;
+use crate::alloc::format;
+
+#[cfg(feature = "std")]
+use std::io;
+#[cfg(all(not(feature = "std"), feature = "core2"))]
+use core2::io;
 
 use core::{fmt, str};
-use Hash;
+use crate::Hash;
 
-/// Hex decoding error
+/// Hex decoding error.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Error {
-    /// non-hexadecimal character
+    /// Non-hexadecimal character.
     InvalidChar(u8),
-    /// purported hex string had odd length
+    /// Purported hex string had odd length.
     OddLengthString(usize),
-    /// tried to parse fixed-length hash from a string with the wrong type (expected, got)
+    /// Tried to parse fixed-length hash from a string with the wrong type (expected, got).
     InvalidLength(usize, usize),
 }
 
@@ -44,30 +49,31 @@ impl fmt::Display for Error {
     }
 }
 
-/// Trait for objects that can be serialized as hex strings
+/// Trait for objects that can be serialized as hex strings.
 #[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(test, feature = "std", feature = "alloc"))))]
 pub trait ToHex {
-    /// Hex representation of the object
+    /// Converts to a hexadecimal representation of the object.
     fn to_hex(&self) -> String;
 }
 
-/// Trait for objects that can be deserialized from hex strings
+/// Trait for objects that can be deserialized from hex strings.
 pub trait FromHex: Sized {
-    /// Produce an object from a byte iterator
+    /// Produces an object from a byte iterator.
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-        where I: Iterator<Item=Result<u8, Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator;
+    where
+        I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator;
 
-    /// Produce an object from a hex string
+    /// Produces an object from a hex string.
     fn from_hex(s: &str) -> Result<Self, Error> {
         Self::from_byte_iter(HexIterator::new(s)?)
     }
 }
 
 #[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(test, feature = "std", feature = "alloc"))))]
 impl<T: fmt::LowerHex> ToHex for T {
-    /// Outputs the hash in hexadecimal form
+    /// Outputs the hash in hexadecimal form.
     fn to_hex(&self) -> String {
         format!("{:x}", self)
     }
@@ -75,16 +81,14 @@ impl<T: fmt::LowerHex> ToHex for T {
 
 impl<T: Hash> FromHex for T {
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-        where I: Iterator<Item=Result<u8, Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator,
+    where
+        I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
-        let inner;
-        if Self::DISPLAY_BACKWARD {
-            inner = T::Inner::from_byte_iter(iter.rev())?;
+        let inner = if Self::DISPLAY_BACKWARD {
+            T::Inner::from_byte_iter(iter.rev())?
         } else {
-            inner = T::Inner::from_byte_iter(iter)?;
-        }
+            T::Inner::from_byte_iter(iter)?
+        };
         Ok(Hash::from_inner(inner))
     }
 }
@@ -97,8 +101,11 @@ pub struct HexIterator<'a> {
 }
 
 impl<'a> HexIterator<'a> {
-    /// Constructs a new `HexIterator` from a string slice. If the string is of
-    /// odd length it returns an error.
+    /// Constructs a new `HexIterator` from a string slice.
+    ///
+    /// # Errors
+    ///
+    /// If the input string is of odd length.
     pub fn new(s: &'a str) -> Result<HexIterator<'a>, Error> {
         if s.len() % 2 != 0 {
             Err(Error::OddLengthString(s.len()))
@@ -131,7 +138,25 @@ impl<'a> Iterator for HexIterator<'a> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (min, max) = self.iter.size_hint();
-        (min / 2, max.map(|x| x /2))
+        (min / 2, max.map(|x| x / 2))
+    }
+}
+
+#[cfg(any(feature = "std", feature = "core2"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "core2"))))]
+impl<'a> io::Read for HexIterator<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let mut bytes_read = 0usize;
+        for dst in buf {
+            match self.next() {
+                Some(Ok(src)) => {
+                    *dst = src;
+                    bytes_read += 1;
+                },
+                _ => break,
+            }
+        }
+        Ok(bytes_read)
     }
 }
 
@@ -145,8 +170,9 @@ impl<'a> DoubleEndedIterator for HexIterator<'a> {
 
 impl<'a> ExactSizeIterator for HexIterator<'a> {}
 
-/// Output hex into an object implementing `fmt::Write`, which is usually more
-/// efficient than going through a `String` using `ToHex`.
+/// Outputs hex into an object implementing `fmt::Write`.
+///
+/// This is usually more efficient than going through a `String` using [`ToHex`].
 pub fn format_hex(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     let prec = f.precision().unwrap_or(2 * data.len());
     let width = f.width().unwrap_or(2 * data.len());
@@ -162,8 +188,9 @@ pub fn format_hex(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     Ok(())
 }
 
-/// Output hex in reverse order; used for Sha256dHash whose standard hex encoding
-/// has the bytes reversed.
+/// Outputs hex in reverse order.
+///
+/// Used for `sha256d::Hash` whose standard hex encoding has the bytes reversed.
 pub fn format_hex_reverse(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     let prec = f.precision().unwrap_or(2 * data.len());
     let width = f.width().unwrap_or(2 * data.len());
@@ -179,7 +206,8 @@ pub fn format_hex_reverse(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     Ok(())
 }
 
-#[cfg(any(test, feature = "alloc", feature = "std"))]
+#[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(test, feature = "std", feature = "alloc"))))]
 impl ToHex for [u8] {
     fn to_hex(&self) -> String {
         use core::fmt::Write;
@@ -192,11 +220,11 @@ impl ToHex for [u8] {
 }
 
 #[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 impl FromHex for Vec<u8> {
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-        where I: Iterator<Item=Result<u8, Error>> +
-            ExactSizeIterator +
-            DoubleEndedIterator,
+    where
+        I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
         iter.collect()
     }
@@ -206,9 +234,8 @@ macro_rules! impl_fromhex_array {
     ($len:expr) => {
         impl FromHex for [u8; $len] {
             fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
-                where I: Iterator<Item=Result<u8, Error>> +
-                    ExactSizeIterator +
-                    DoubleEndedIterator,
+            where
+                I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator,
             {
                 if iter.len() == $len {
                     let mut ret = [0; $len];
@@ -251,6 +278,7 @@ mod tests {
     use core::fmt;
 
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn hex_roundtrip() {
         let expected = "0123456789abcdef";
         let expected_up = "0123456789ABCDEF";
@@ -338,6 +366,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     fn hex_error() {
         let oddlen = "0123456789abcdef0";
         let badchar1 = "Z123456789abcdef";

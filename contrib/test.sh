@@ -1,5 +1,6 @@
 #!/bin/sh -ex
 
+# TODO: Add core2 here once we bump MSRV past 1.29
 FEATURES="serde serde-std std"
 
 if [ "$DO_ALLOC_TESTS" = true ]; then
@@ -28,30 +29,31 @@ if [ "$DO_FEATURE_MATRIX" = true ]; then
 
     # All features
     cargo build --all --no-default-features --features="$FEATURES"
-    cargo test --all --features="$FEATURES"
+    cargo test --all --no-default-features --features="$FEATURES"
     # Single features
     for feature in ${FEATURES}
     do
         cargo build --all --no-default-features --features="$feature"
-        cargo test --all --features="$feature"
+        cargo test --all --no-default-features --features="$feature"
 		# All combos of two features
 		for featuretwo in ${FEATURES}; do
 			cargo build --all --no-default-features --features="$feature $featuretwo"
-			cargo test --all --features="$feature $featuretwo"
+			cargo test --all --no-default-features --features="$feature $featuretwo"
 		done
     done
 
     # Other combos
-    cargo test --all --features="serde-std"
+    # TODO: Add this test once we bump MSRV past 1.29
+    # cargo test --all --no-default-features --features="std,schemars"
 fi
 
 if [ "$DO_SCHEMARS_TESTS" = true ]; then
     (cd extended_tests/schemars && cargo test)
 fi
 
-# Docs
+# Build the docs if told to (this only works with the nightly toolchain)
 if [ "$DO_DOCS" = true ]; then
-    cargo doc --all --features="$FEATURES"
+    RUSTDOCFLAGS="--cfg docsrs" cargo doc --all --features="$FEATURES"
 fi
 
 # Webassembly stuff
@@ -69,11 +71,11 @@ if [ "$DO_ASAN" = true ]; then
     CC='clang -fsanitize=address -fno-omit-frame-pointer'                                        \
     RUSTFLAGS='-Zsanitizer=address -Clinker=clang -Cforce-frame-pointers=yes'                    \
     ASAN_OPTIONS='detect_leaks=1 detect_invalid_pointer_pairs=1 detect_stack_use_after_return=1' \
-    cargo test --lib --all --features="$FEATURES" -Zbuild-std --target x86_64-unknown-linux-gnu
+    cargo test --lib --all --no-default-features --features="$FEATURES" -Zbuild-std --target x86_64-unknown-linux-gnu
     cargo clean
     CC='clang -fsanitize=memory -fno-omit-frame-pointer'                                         \
     RUSTFLAGS='-Zsanitizer=memory -Zsanitizer-memory-track-origins -Cforce-frame-pointers=yes'   \
-    cargo test --lib --all --features="$FEATURES" -Zbuild-std --target x86_64-unknown-linux-gnu
+    cargo test --lib --all --no-default-features --features="$FEATURES" -Zbuild-std --target x86_64-unknown-linux-gnu
 fi
 
 # Bench
