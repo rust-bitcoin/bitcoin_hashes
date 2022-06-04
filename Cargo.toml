@@ -1,6 +1,6 @@
 [package]
 name = "groestlcoin_hashes"
-version = "0.10.0"
+version = "0.11.0"
 authors = ["Groestlcoin Developers <groestlcoin@gmail.com>"]
 license = "CC0-1.0"
 description = "Hash functions used by rust-groestlcoin which support rustc 1.29.0"
@@ -9,10 +9,7 @@ repository = "https://github.com/Groestlcoin/groestlcoin_hashes/"
 documentation = "https://docs.rs/groestlcoin_hashes/"
 keywords = [ "crypto", "groestlcoin", "hash", "digest" ]
 readme = "README.md"
-
-[lib]
-name = "groestlcoin_hashes"
-path = "src/lib.rs"
+edition = "2018"
 
 [features]
 default = ["std"]

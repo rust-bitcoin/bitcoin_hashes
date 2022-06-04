@@ -27,6 +27,9 @@
 #![deny(unused_mut)]
 //#![deny(missing_docs)]
 
+// Experimental features we need
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 // In general, rust is absolutely horrid at supporting users doing things like,
 // for example, compiling Rust code for real environments. Disable useless lints
 // that don't do anything but annoy us and cant actually ever be resolved.
@@ -47,9 +50,9 @@ pub extern crate groestl;
 
 #[doc(hidden)]
 pub mod _export {
-    /// A re-export of ::core::*
+    /// A re-export of core::*
     pub mod _core {
-        pub use ::core::*;
+        pub use core::*;
     }
 }
 
@@ -97,7 +100,7 @@ pub trait HashEngine: Clone + Default {
 }
 
 /// Trait which applies to hashes of all types.
-pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
+pub trait Hash: Copy + Clone + PartialEq + Eq + PartialOrd + Ord +
     hash::Hash + fmt::Debug + fmt::Display + fmt::LowerHex +
     ops::Index<ops::RangeFull, Output = [u8]> +
     ops::Index<ops::RangeFrom<usize>, Output = [u8]> +
@@ -148,13 +151,21 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + Default + PartialOrd + Ord +
 
     /// Constructs a hash from the underlying byte array.
     fn from_inner(inner: Self::Inner) -> Self;
+
+    /// Returns an all zero hash.
+    ///
+    /// An all zeros hash is a made up construct because there is not a known input that can create
+    /// it, however it is used in various places in Bitcoin e.g., the Bitcoin genesis block's
+    /// previous blockhash and the coinbase transaction's outpoint txid.
+    fn all_zeros() -> Self;
 }
 
 #[cfg(test)]
 mod tests {
-    use Hash;
-    hash_newtype!(TestNewtype, ::sha256d::Hash, 32, doc="A test newtype");
-    hash_newtype!(TestNewtype2, ::sha256d::Hash, 32, doc="A test newtype");
+    use crate::{Hash, sha256d};
+
+    hash_newtype!(TestNewtype, sha256d::Hash, 32, doc="A test newtype");
+    hash_newtype!(TestNewtype2, sha256d::Hash, 32, doc="A test newtype");
 
     #[test]
     fn convert_newtypes() {
@@ -162,7 +173,7 @@ mod tests {
         let h2: TestNewtype2 = h1.as_hash().into();
         assert_eq!(&h1[..], &h2[..]);
 
-        let h = ::sha256d::Hash::hash(&[]);
+        let h = sha256d::Hash::hash(&[]);
         let h2: TestNewtype = h.to_string().parse().unwrap();
         assert_eq!(h2.as_hash(), h);
     }

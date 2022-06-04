@@ -24,13 +24,10 @@ use core::str;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use sha256;
-use ripemd160;
-use Hash as HashTrait;
-use Error;
+use crate::{Error, hex, ripemd160, sha256};
 
 /// Output of the Bitcoin HASH160 hash function.
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
@@ -54,13 +51,13 @@ impl<I: SliceIndex<[u8]>> Index<I> for Hash {
 }
 
 impl str::FromStr for Hash {
-    type Err = ::hex::Error;
+    type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+        hex::FromHex::from_hex(s)
     }
 }
 
-impl HashTrait for Hash {
+impl crate::Hash for Hash {
     type Engine = sha256::HashEngine;
     type Inner = [u8; 20];
 
@@ -100,6 +97,10 @@ impl HashTrait for Hash {
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 20])
+    }
 }
 
 #[cfg(test)]
@@ -107,8 +108,8 @@ mod tests {
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
-        use {hash160, Hash, HashEngine};
-        use hex::{FromHex, ToHex};
+        use crate::{hash160, Hash, HashEngine};
+        use crate::hex::{FromHex, ToHex};
 
         #[derive(Clone)]
         #[cfg(any(feature = "std", feature = "alloc"))]
@@ -162,7 +163,7 @@ mod tests {
     #[test]
     fn ripemd_serde() {
         use serde_test::{Configure, Token, assert_tokens};
-        use {hash160, Hash};
+        use crate::{hash160, Hash};
 
         static HASH_BYTES: [u8; 20] = [
             0x13, 0x20, 0x72, 0xdf,
@@ -182,9 +183,7 @@ mod tests {
 mod benches {
     use test::Bencher;
 
-    use hash160;
-    use Hash;
-    use HashEngine;
+    use crate::{Hash, HashEngine, hash160};
 
     #[bench]
     pub fn hash160_10(bh: &mut Bencher) {

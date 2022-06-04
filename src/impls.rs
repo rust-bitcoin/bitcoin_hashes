@@ -23,9 +23,7 @@ use std::{error, io};
 #[cfg(not(feature = "std"))]
 use core2::{error, io};
 
-use {hex, sha1, sha256, sha512, ripemd160, siphash24, hmac, groestld};
-use HashEngine;
-use Error;
+use crate::{Error, HashEngine, hex, sha1, sha256, sha512, ripemd160, siphash24, hmac, groestld};
 
 impl error::Error for Error {
     #[cfg(feature = "std")]
@@ -95,7 +93,7 @@ impl io::Write for siphash24::HashEngine {
     }
 }
 
-impl<T: ::Hash> io::Write for hmac::HmacEngine<T> {
+impl<T: crate::Hash> io::Write for hmac::HmacEngine<T> {
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
@@ -108,8 +106,7 @@ impl<T: ::Hash> io::Write for hmac::HmacEngine<T> {
 mod tests {
     use super::io::Write;
 
-    use {sha1, sha256, sha256d, sha512, ripemd160, hash160, siphash24, hmac};
-    use Hash;
+    use crate::{Hash, sha1, sha256, sha256d, sha512, ripemd160, hash160, siphash24, hmac};
 
     macro_rules! write_test {
         ($mod:ident, $exp_empty:expr, $exp_256:expr, $exp_64k:expr,) => {

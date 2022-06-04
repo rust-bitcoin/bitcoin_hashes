@@ -20,24 +20,24 @@ pub fn fixed_time_eq(a: &[u8], b: &[u8]) -> bool {
 
     let mut r: u8 = 0;
     for i in 0..count {
-        let mut rs = unsafe { ::core::ptr::read_volatile(&r) };
+        let mut rs = unsafe { core::ptr::read_volatile(&r) };
         rs |= lhs[i] ^ rhs[i];
-        unsafe { ::core::ptr::write_volatile(&mut r, rs); }
+        unsafe { core::ptr::write_volatile(&mut r, rs); }
     }
     {
-        let mut t = unsafe { ::core::ptr::read_volatile(&r) };
+        let mut t = unsafe { core::ptr::read_volatile(&r) };
         t |= t >> 4;
-        unsafe { ::core::ptr::write_volatile(&mut r, t); }
+        unsafe { core::ptr::write_volatile(&mut r, t); }
     }
     {
-        let mut t = unsafe { ::core::ptr::read_volatile(&r) };
+        let mut t = unsafe { core::ptr::read_volatile(&r) };
         t |= t >> 2;
-        unsafe { ::core::ptr::write_volatile(&mut r, t); }
+        unsafe { core::ptr::write_volatile(&mut r, t); }
     }
     {
-        let mut t = unsafe { ::core::ptr::read_volatile(&r) };
+        let mut t = unsafe { core::ptr::read_volatile(&r) };
         t |= t >> 1;
-        unsafe { ::core::ptr::write_volatile(&mut r, t); }
+        unsafe { core::ptr::write_volatile(&mut r, t); }
     }
     unsafe { (::core::ptr::read_volatile(&r) & 1) == 0 }
 }
@@ -83,10 +83,8 @@ fn eq_test() {
 mod benches {
     use test::Bencher;
 
-    use sha256;
-    use sha512;
-    use Hash;
-    use cmp::fixed_time_eq;
+    use crate::{Hash, sha256, sha512};
+    use crate::cmp::fixed_time_eq;
 
     #[bench]
     fn bench_32b_constant_time_cmp_ne(bh: &mut Bencher) {

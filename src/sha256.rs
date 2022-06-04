@@ -19,11 +19,7 @@ use core::{cmp, str};
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use hex;
-use HashEngine as EngineTrait;
-use Hash as HashTrait;
-use Error;
-use util;
+use crate::{Error, HashEngine as _, hex, util};
 
 const BLOCK_SIZE: usize = 64;
 
@@ -45,7 +41,7 @@ impl Default for HashEngine {
     }
 }
 
-impl EngineTrait for HashEngine {
+impl crate::HashEngine for HashEngine {
     type MidState = Midstate;
 
     #[cfg(not(fuzzing))]
@@ -74,7 +70,7 @@ impl EngineTrait for HashEngine {
 }
 
 /// Output of the SHA256 hash function.
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
@@ -83,9 +79,9 @@ pub struct Hash(
 );
 
 impl str::FromStr for Hash {
-    type Err = ::hex::Error;
+    type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+        hex::FromHex::from_hex(s)
     }
 }
 
@@ -110,7 +106,7 @@ impl<I: SliceIndex<[u8]>> Index<I> for Hash {
     }
 }
 
-impl HashTrait for Hash {
+impl crate::Hash for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
 
@@ -168,6 +164,10 @@ impl HashTrait for Hash {
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 32])
+    }
 }
 
 /// Output of the SHA256 hash function.
@@ -190,9 +190,9 @@ impl<I: SliceIndex<[u8]>> Index<I> for Midstate {
 }
 
 impl str::FromStr for Midstate {
-    type Err = ::hex::Error;
+    type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+        hex::FromHex::from_hex(s)
     }
 }
 
@@ -275,7 +275,7 @@ impl HashEngine {
         HashEngine {
             buffer: [0; BLOCK_SIZE],
             h: ret,
-            length: length,
+            length,
         }
     }
 
@@ -378,13 +378,12 @@ impl HashEngine {
 
 #[cfg(test)]
 mod tests {
-    use sha256;
-    use {Hash, HashEngine};
+    use crate::{Hash, HashEngine, sha256};
 
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
-        use hex::{FromHex, ToHex};
+        use crate::hex::{FromHex, ToHex};
 
         #[derive(Clone)]
         struct Test {
@@ -555,9 +554,7 @@ mod tests {
 mod benches {
     use test::Bencher;
 
-    use sha256;
-    use Hash;
-    use HashEngine;
+    use crate::{Hash, HashEngine, sha256};
 
     #[bench]
     pub fn sha256_10(bh: &mut Bencher) {
