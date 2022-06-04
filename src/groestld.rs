@@ -41,11 +41,11 @@ impl Default for HashEngine {
 impl crate::HashEngine for HashEngine {
     type MidState = [u8; 64];
 
+    // this is not supported by Groestl512
     #[cfg(not(fuzzing))]
     fn midstate(&self) -> [u8; 64] {
-        let ret = [0; 64];
-        // this is not supported by Groestl512
-        ret
+        static RET: [u8; 64] = [0; 64];
+        RET
     }
 
     #[cfg(fuzzing)]
@@ -83,12 +83,6 @@ impl str::FromStr for Hash {
     }
 }
 
-impl Into<[u8; 32]> for Hash {
-    fn into(self) -> [u8; 32] {
-        self.0
-    }
-}
-
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
@@ -117,9 +111,10 @@ impl crate::Hash for Hash {
 
         // use the first 32 bytes
         let mut ret = [0; 32];
-        for x in 0..32 {
-            ret[x] = result.as_slice()[x]; // x: i32
-        }
+        //for x in 0..32 {
+        //    ret[x] = result.as_slice()[x]; // x: i32
+        //}
+        ret[..32].clone_from_slice(&result.as_slice()[..32]);
 
         Hash(ret)
     }

@@ -85,12 +85,6 @@ impl str::FromStr for Hash {
     }
 }
 
-impl Into<[u8; 32]> for Hash {
-    fn into(self) -> [u8; 32] {
-        self.0
-    }
-}
-
 hex_fmt_impl!(Debug, Hash);
 hex_fmt_impl!(Display, Hash);
 hex_fmt_impl!(LowerHex, Hash);
