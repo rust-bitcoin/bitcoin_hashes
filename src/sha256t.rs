@@ -21,10 +21,8 @@ use core::marker::PhantomData;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use sha256;
-use Hash as HashTrait;
-#[allow(unused)]
-use Error;
+use crate::{Error, hex, sha256};
+#[cfg(feature="serde")] use crate::Hash as _;
 
 /// Trait representing a tag that can be used as a context for SHA256t hashes.
 pub trait Tag {
@@ -69,16 +67,16 @@ impl<T: Tag> Ord for Hash<T> {
         cmp::Ord::cmp(&self.0, &other.0)
     }
 }
-impl<T: Tag> ::core::hash::Hash for Hash<T> {
-    fn hash<H: ::core::hash::Hasher>(&self, h: &mut H) {
+impl<T: Tag> core::hash::Hash for Hash<T> {
+    fn hash<H: core::hash::Hasher>(&self, h: &mut H) {
         self.0.hash(h)
     }
 }
 
 impl<T: Tag> str::FromStr for Hash<T> {
-    type Err = ::hex::Error;
+    type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+        hex::FromHex::from_hex(s)
     }
 }
 
@@ -96,7 +94,7 @@ impl<I: SliceIndex<[u8]>, T: Tag> Index<I> for Hash<T> {
     }
 }
 
-impl<T: Tag> HashTrait for Hash<T> {
+impl<T: Tag> crate::Hash for Hash<T> {
     type Engine = sha256::HashEngine;
     type Inner = [u8; 32];
 
@@ -134,6 +132,10 @@ impl<T: Tag> HashTrait for Hash<T> {
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner, PhantomData)
     }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 32], PhantomData)
+    }
 }
 
 /// Macro used to define a newtype tagged hash.
@@ -143,7 +145,14 @@ impl<T: Tag> HashTrait for Hash<T> {
 #[macro_export]
 macro_rules! sha256t_hash_newtype {
     ($newtype:ident, $tag:ident, $midstate:ident, $midstate_len:expr, $docs:meta, $reverse: expr) => {
-        /// The tag used for [$newtype].
+        sha256t_hash_newtype!($newtype, $tag, $midstate, $midstate_len, $docs, $reverse, stringify!($newtype));
+    };
+
+    ($newtype:ident, $tag:ident, $midstate:ident, $midstate_len:expr, $docs:meta, $reverse: expr, $sname:expr) => {
+        #[doc = "The tag used for ["]
+        #[doc = $sname]
+        #[doc = "]"]
+        #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
         pub struct $tag;
 
         impl $crate::sha256t::Tag for $tag {
@@ -158,8 +167,8 @@ macro_rules! sha256t_hash_newtype {
 }
 
 #[cfg(feature = "serde")]
-impl<T: Tag> ::serde::Serialize for Hash<T> {
-    fn serialize<S: ::serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+impl<T: Tag> serde::Serialize for Hash<T> {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         if s.is_human_readable() {
             s.collect_str(self)
         } else {
@@ -177,7 +186,7 @@ impl<T: Tag> Default for HexVisitor<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
+impl<'de, T: Tag> serde::de::Visitor<'de> for HexVisitor<T> {
     type Value = Hash<T>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -186,7 +195,7 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
     where
-        E: ::serde::de::Error,
+        E: serde::de::Error,
     {
         use core::str::FromStr;
         if let Ok(hex) = str::from_utf8(v) {
@@ -198,7 +207,7 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for HexVisitor<T> {
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
     where
-        E: ::serde::de::Error,
+        E: serde::de::Error,
     {
         use core::str::FromStr;
         Hash::<T>::from_str(v).map_err(E::custom)
@@ -214,7 +223,7 @@ impl<T: Tag> Default for BytesVisitor<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
+impl<'de, T: Tag> serde::de::Visitor<'de> for BytesVisitor<T> {
     type Value = Hash<T>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -223,7 +232,7 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
     where
-        E: ::serde::de::Error,
+        E: serde::de::Error,
     {
         Hash::<T>::from_slice(v).map_err(|_| {
             // from_slice only errors on incorrect length
@@ -233,8 +242,8 @@ impl<'de, T: Tag> ::serde::de::Visitor<'de> for BytesVisitor<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
-    fn deserialize<D: ::serde::Deserializer<'de>>(d: D) -> Result<Hash<T>, D::Error> {
+impl<'de, T: Tag> serde::Deserialize<'de> for Hash<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Hash<T>, D::Error> {
         if d.is_human_readable() {
             d.deserialize_str(HexVisitor::<T>::default())
         } else {
@@ -245,9 +254,11 @@ impl<'de, T: Tag> ::serde::Deserialize<'de> for Hash<T> {
 
 #[cfg(test)]
 mod tests {
-    use ::{Hash, sha256, sha256t};
+    use crate::{sha256, sha256t};
     #[cfg(any(feature = "std", feature = "alloc"))]
-    use ::hex::ToHex;
+    use crate::hex::ToHex;
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    use crate::Hash;
 
     const TEST_MIDSTATE: [u8; 32] = [
        156, 224, 228, 230, 124, 17, 108, 57, 56, 179, 202, 242, 195, 15, 80, 137, 211, 243,

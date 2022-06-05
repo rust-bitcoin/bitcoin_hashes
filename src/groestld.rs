@@ -19,9 +19,7 @@ use core::str;
 use core::ops::Index;
 use core::slice::SliceIndex;
 use groestl::{Groestl512, Digest};
-use HashEngine as EngineTrait;
-use Hash as HashTrait;
-use Error;
+use crate::{Error, hex};
 
 /// Engine to compute Groestld hash function.
 #[derive(Clone)]
@@ -40,14 +38,14 @@ impl Default for HashEngine {
 }
 
 // This will handle a single Groestl512 hash
-impl EngineTrait for HashEngine {
+impl crate::HashEngine for HashEngine {
     type MidState = [u8; 64];
 
+    // this is not supported by Groestl512
     #[cfg(not(fuzzing))]
     fn midstate(&self) -> [u8; 64] {
-        let ret = [0; 64];
-        // this is not supported by Groestl512
-        ret
+        static RET: [u8; 64] = [0; 64];
+        RET
     }
 
     #[cfg(fuzzing)]
@@ -79,15 +77,9 @@ pub struct Hash(
 );
 
 impl str::FromStr for Hash {
-    type Err = ::hex::Error;
+    type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
-    }
-}
-
-impl Into<[u8; 32]> for Hash {
-    fn into(self) -> [u8; 32] {
-        self.0
+        hex::FromHex::from_hex(s)
     }
 }
 
@@ -106,7 +98,7 @@ impl<I: SliceIndex<[u8]>> Index<I> for Hash {
     }
 }
 
-impl HashTrait for Hash {
+impl crate::Hash for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
 
@@ -119,9 +111,10 @@ impl HashTrait for Hash {
 
         // use the first 32 bytes
         let mut ret = [0; 32];
-        for x in 0..32 {
-            ret[x] = result.as_slice()[x]; // x: i32
-        }
+        //for x in 0..32 {
+        //    ret[x] = result.as_slice()[x]; // x: i32
+        //}
+        ret[..32].clone_from_slice(&result.as_slice()[..32]);
 
         Hash(ret)
     }
@@ -151,15 +144,20 @@ impl HashTrait for Hash {
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 32])
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::{groestld, Hash, HashEngine};
+
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
-        use {groestld, Hash, HashEngine};
-        use hex::{FromHex, ToHex};
+        use crate::hex::{FromHex, ToHex};
 
         #[derive(Clone)]
         struct Test {
@@ -225,7 +223,7 @@ mod tests {
     #[test]
     fn sha256_serde() {
         use serde_test::{Configure, Token, assert_tokens};
-        use {groestld, Hash};
+        //use {groestld, Hash};
 
         static HASH_BYTES: [u8; 32] = [
             0xef, 0x53, 0x7f, 0x25, 0xc8, 0x95, 0xbf, 0xa7,
@@ -255,9 +253,7 @@ mod tests {
 mod benches {
     use test::Bencher;
 
-    use groestld;
-    use Hash;
-    use HashEngine;
+    use crate::{Hash, HashEngine, groestld};
 
     #[bench]
     pub fn groestl512_10(bh: &mut Bencher) {

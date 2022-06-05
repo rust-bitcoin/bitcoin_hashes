@@ -31,15 +31,17 @@ macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ident, $($gen:ident: $gent:ident),*) => (
         impl<$($gen: $gent),*> $crate::_export::_core::fmt::$imp for $ty<$($gen),*> {
             fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
-                use $crate::hex::{format_hex, format_hex_reverse};
+                #[allow(unused_imports)]
+                use $crate::{Hash as _, HashEngine as _, hex};
+
                 if $ty::<$($gen),*>::DISPLAY_BACKWARD {
-                    format_hex_reverse(&self.0, f)
+                    hex::format_hex_reverse(&self.0, f)
                 } else {
-                    format_hex(&self.0, f)
+                    hex::format_hex(&self.0, f)
                 }
             }
         }
-    )
+    );
 );
 
 /// Adds slicing traits implementations to a given type `$ty`
@@ -76,14 +78,14 @@ macro_rules! engine_input_impl(
         #[cfg(not(fuzzing))]
         fn input(&mut self, mut inp: &[u8]) {
             while !inp.is_empty() {
-                let buf_idx = self.length % <Self as EngineTrait>::BLOCK_SIZE;
-                let rem_len = <Self as EngineTrait>::BLOCK_SIZE - buf_idx;
+                let buf_idx = self.length % <Self as crate::HashEngine>::BLOCK_SIZE;
+                let rem_len = <Self as crate::HashEngine>::BLOCK_SIZE - buf_idx;
                 let write_len = cmp::min(rem_len, inp.len());
 
                 self.buffer[buf_idx..buf_idx + write_len]
                     .copy_from_slice(&inp[..write_len]);
                 self.length += write_len;
-                if self.length % <Self as EngineTrait>::BLOCK_SIZE == 0 {
+                if self.length % <Self as crate::HashEngine>::BLOCK_SIZE == 0 {
                     self.process_block();
                 }
                 inp = &inp[write_len..];
@@ -106,7 +108,7 @@ macro_rules! define_slice_to_be {
     ($name: ident, $type: ty) => {
         #[inline]
         pub fn $name(slice: &[u8]) -> $type {
-            assert_eq!(slice.len(), ::core::mem::size_of::<$type>());
+            assert_eq!(slice.len(), core::mem::size_of::<$type>());
             let mut res = 0;
             for i in 0..::core::mem::size_of::<$type>() {
                 res |= (slice[i] as $type) << (::core::mem::size_of::<$type>() - i - 1)*8;
@@ -119,7 +121,7 @@ macro_rules! define_slice_to_le {
     ($name: ident, $type: ty) => {
         #[inline]
         pub fn $name(slice: &[u8]) -> $type {
-            assert_eq!(slice.len(), ::core::mem::size_of::<$type>());
+            assert_eq!(slice.len(), core::mem::size_of::<$type>());
             let mut res = 0;
             for i in 0..::core::mem::size_of::<$type>() {
                 res |= (slice[i] as $type) << i*8;
@@ -173,7 +175,7 @@ macro_rules! hash_newtype {
     };
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta, $reverse:expr) => {
         #[$docs]
-        #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+        #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
         #[repr(transparent)]
         pub struct $newtype($hash);
 
@@ -243,6 +245,12 @@ macro_rules! hash_newtype {
             fn as_inner(&self) -> &Self::Inner {
                 self.0.as_inner()
             }
+
+            #[inline]
+            fn all_zeros() -> Self {
+                let zeros = <$hash>::all_zeros();
+                $newtype(zeros)
+            }
         }
 
         impl $crate::_export::_core::str::FromStr for $newtype {
@@ -264,6 +272,7 @@ macro_rules! hash_newtype {
 }
 
 #[cfg(feature = "schemars")]
+#[cfg_attr(docsrs, doc(cfg(feature = "schemars")))]
 pub mod json_hex_string {
     use schemars::schema::{Schema, SchemaObject};
     use schemars::{gen::SchemaGenerator, JsonSchema};
@@ -288,8 +297,8 @@ pub mod json_hex_string {
 
 #[cfg(test)]
 mod test {
-    use Hash;
-    use sha256;
+    use crate::{Hash, sha256};
+
     use super::*;
 
     #[test]

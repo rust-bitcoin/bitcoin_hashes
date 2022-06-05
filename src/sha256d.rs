@@ -19,12 +19,10 @@ use core::str;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use sha256;
-use Hash as HashTrait;
-use Error;
+use crate::{Error, hex, sha256};
 
 /// Output of the SHA256d hash function.
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
@@ -48,13 +46,13 @@ impl<I: SliceIndex<[u8]>> Index<I> for Hash {
 }
 
 impl str::FromStr for Hash {
-    type Err = ::hex::Error;
+    type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+        hex::FromHex::from_hex(s)
     }
 }
 
-impl HashTrait for Hash {
+impl crate::Hash for Hash {
     type Engine = sha256::HashEngine;
     type Inner = [u8; 32];
 
@@ -96,11 +94,9 @@ impl HashTrait for Hash {
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
     }
-}
 
-impl From<sha256::Hash> for Hash {
-    fn from(hash: sha256::Hash) -> Self {
-        Self::from_inner(hash.into_inner())
+    fn all_zeros() -> Self {
+        Hash([0x00; 32])
     }
 }
 
@@ -109,8 +105,8 @@ mod tests {
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
-        use {sha256d, Hash, HashEngine};
-        use hex::{FromHex, ToHex};
+        use crate::{sha256d, Hash, HashEngine};
+        use crate::hex::{FromHex, ToHex};
 
         #[derive(Clone)]
         struct Test {
@@ -155,7 +151,7 @@ mod tests {
     #[test]
     fn sha256_serde() {
         use serde_test::{Configure, Token, assert_tokens};
-        use {sha256d, Hash};
+        use crate::{sha256d, Hash};
 
         static HASH_BYTES: [u8; 32] = [
             0xef, 0x53, 0x7f, 0x25, 0xc8, 0x95, 0xbf, 0xa7,
@@ -174,9 +170,7 @@ mod tests {
 mod benches {
     use test::Bencher;
 
-    use sha256d;
-    use Hash;
-    use HashEngine;
+    use crate::{Hash, HashEngine, sha256d};
 
     #[bench]
     pub fn sha256d_10(bh: &mut Bencher) {

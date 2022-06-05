@@ -19,10 +19,7 @@ use core::{cmp, str};
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use HashEngine as EngineTrait;
-use Hash as HashTrait;
-use Error;
-use util;
+use crate::{Error, HashEngine as _, hex, util};
 
 const BLOCK_SIZE: usize = 64;
 
@@ -44,7 +41,7 @@ impl Default for HashEngine {
     }
 }
 
-impl EngineTrait for HashEngine {
+impl crate::HashEngine for HashEngine {
     type MidState = [u8; 20];
 
     #[cfg(not(fuzzing))]
@@ -73,7 +70,7 @@ impl EngineTrait for HashEngine {
 }
 
 /// Output of the SHA1 hash function.
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
@@ -97,13 +94,13 @@ impl<I: SliceIndex<[u8]>> Index<I> for Hash {
 }
 
 impl str::FromStr for Hash {
-    type Err = ::hex::Error;
+    type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ::hex::FromHex::from_hex(s)
+        hex::FromHex::from_hex(s)
     }
 }
 
-impl HashTrait for Hash {
+impl crate::Hash for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 20];
 
@@ -148,6 +145,10 @@ impl HashTrait for Hash {
 
     fn from_inner(inner: Self::Inner) -> Self {
         Hash(inner)
+    }
+
+    fn all_zeros() -> Self {
+        Hash([0x00; 20])
     }
 }
 
@@ -200,8 +201,8 @@ mod tests {
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
-        use {sha1, Hash, HashEngine};
-        use hex::{FromHex, ToHex};
+        use crate::{sha1, Hash, HashEngine};
+        use crate::hex::{FromHex, ToHex};
 
         #[derive(Clone)]
         struct Test {
@@ -270,7 +271,7 @@ mod tests {
     #[test]
     fn sha1_serde() {
         use serde_test::{Configure, Token, assert_tokens};
-        use {sha1, Hash};
+        use crate::{sha1, Hash};
 
         static HASH_BYTES: [u8; 20] = [
             0x13, 0x20, 0x72, 0xdf,
@@ -290,9 +291,7 @@ mod tests {
 mod benches {
     use test::Bencher;
 
-    use sha1;
-    use Hash;
-    use HashEngine;
+    use crate::{Hash, HashEngine, sha1};
 
     #[bench]
     pub fn sha1_10(bh: &mut Bencher) {

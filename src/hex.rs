@@ -16,9 +16,9 @@
 //!
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-use alloc::{string::String, vec::Vec};
+use crate::alloc::{string::String, vec::Vec};
 #[cfg(feature = "alloc")]
-use alloc::format;
+use crate::alloc::format;
 
 #[cfg(feature = "std")]
 use std::io;
@@ -26,7 +26,7 @@ use std::io;
 use core2::io;
 
 use core::{fmt, str};
-use Hash;
+use crate::Hash;
 
 /// Hex decoding error.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -51,6 +51,7 @@ impl fmt::Display for Error {
 
 /// Trait for objects that can be serialized as hex strings.
 #[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(test, feature = "std", feature = "alloc"))))]
 pub trait ToHex {
     /// Converts to a hexadecimal representation of the object.
     fn to_hex(&self) -> String;
@@ -70,6 +71,7 @@ pub trait FromHex: Sized {
 }
 
 #[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(test, feature = "std", feature = "alloc"))))]
 impl<T: fmt::LowerHex> ToHex for T {
     /// Outputs the hash in hexadecimal form.
     fn to_hex(&self) -> String {
@@ -82,12 +84,11 @@ impl<T: Hash> FromHex for T {
     where
         I: Iterator<Item = Result<u8, Error>> + ExactSizeIterator + DoubleEndedIterator,
     {
-        let inner;
-        if Self::DISPLAY_BACKWARD {
-            inner = T::Inner::from_byte_iter(iter.rev())?;
+        let inner = if Self::DISPLAY_BACKWARD {
+            T::Inner::from_byte_iter(iter.rev())?
         } else {
-            inner = T::Inner::from_byte_iter(iter)?;
-        }
+            T::Inner::from_byte_iter(iter)?
+        };
         Ok(Hash::from_inner(inner))
     }
 }
@@ -142,6 +143,7 @@ impl<'a> Iterator for HexIterator<'a> {
 }
 
 #[cfg(any(feature = "std", feature = "core2"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "core2"))))]
 impl<'a> io::Read for HexIterator<'a> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let mut bytes_read = 0usize;
@@ -204,7 +206,8 @@ pub fn format_hex_reverse(data: &[u8], f: &mut fmt::Formatter) -> fmt::Result {
     Ok(())
 }
 
-#[cfg(any(test, feature = "alloc", feature = "std"))]
+#[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(test, feature = "std", feature = "alloc"))))]
 impl ToHex for [u8] {
     fn to_hex(&self) -> String {
         use core::fmt::Write;
@@ -217,6 +220,7 @@ impl ToHex for [u8] {
 }
 
 #[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 impl FromHex for Vec<u8> {
     fn from_byte_iter<I>(iter: I) -> Result<Self, Error>
     where
