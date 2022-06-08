@@ -212,10 +212,10 @@ impl crate::Hash for Hash {
 
 macro_rules! Ch( ($x:expr, $y:expr, $z:expr) => ($z ^ ($x & ($y ^ $z))) );
 macro_rules! Maj( ($x:expr, $y:expr, $z:expr) => (($x & $y) | ($z & ($x | $y))) );
-macro_rules! Sigma0( ($x:expr) => (circular_lshift64!(36, $x) ^ circular_lshift64!(30, $x) ^ circular_lshift64!(25, $x)) );
-macro_rules! Sigma1( ($x:expr) => (circular_lshift64!(50, $x) ^ circular_lshift64!(46, $x) ^ circular_lshift64!(23, $x)) );
-macro_rules! sigma0( ($x:expr) => (circular_lshift64!(63, $x) ^ circular_lshift64!(56, $x) ^ ($x >> 7)) );
-macro_rules! sigma1( ($x:expr) => (circular_lshift64!(45, $x) ^ circular_lshift64!(3, $x) ^ ($x >> 6)) );
+macro_rules! Sigma0( ($x:expr) => ($x.rotate_left(36) ^ $x.rotate_left(30) ^ $x.rotate_left(25)) );
+macro_rules! Sigma1( ($x:expr) => ($x.rotate_left(50) ^ $x.rotate_left(46) ^ $x.rotate_left(23)) );
+macro_rules! sigma0( ($x:expr) => ($x.rotate_left(63) ^ $x.rotate_left(56) ^ ($x >> 7)) );
+macro_rules! sigma1( ($x:expr) => ($x.rotate_left(45) ^ $x.rotate_left(3) ^ ($x >> 6)) );
 
 macro_rules! round(
     // first round
