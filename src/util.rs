@@ -12,16 +12,6 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-/// Circular left-shift a 32-bit word.
-macro_rules! circular_lshift32 (
-    ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (32 - $shift)))
-);
-
-/// Circular left-shift a 64-bit word.
-macro_rules! circular_lshift64 (
-    ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (64 - $shift)))
-);
-
 #[macro_export]
 /// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`.
 macro_rules! hex_fmt_impl(

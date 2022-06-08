@@ -233,9 +233,9 @@ impl hex::FromHex for Midstate {
 
 macro_rules! Ch( ($x:expr, $y:expr, $z:expr) => ($z ^ ($x & ($y ^ $z))) );
 macro_rules! Maj( ($x:expr, $y:expr, $z:expr) => (($x & $y) | ($z & ($x | $y))) );
-macro_rules! Sigma0( ($x:expr) => (circular_lshift32!(30, $x) ^ circular_lshift32!(19, $x) ^ circular_lshift32!(10, $x)) ); macro_rules! Sigma1( ($x:expr) => (circular_lshift32!(26, $x) ^ circular_lshift32!(21, $x) ^ circular_lshift32!(7, $x)) );
-macro_rules! sigma0( ($x:expr) => (circular_lshift32!(25, $x) ^ circular_lshift32!(14, $x) ^ ($x >> 3)) );
-macro_rules! sigma1( ($x:expr) => (circular_lshift32!(15, $x) ^ circular_lshift32!(13, $x) ^ ($x >> 10)) );
+macro_rules! Sigma0( ($x:expr) => ($x.rotate_left(30) ^ $x.rotate_left(19) ^ $x.rotate_left(10)) ); macro_rules! Sigma1( ($x:expr) => ( $x.rotate_left(26) ^ $x.rotate_left(21) ^ $x.rotate_left(7)) );
+macro_rules! sigma0( ($x:expr) => ($x.rotate_left(25) ^ $x.rotate_left(14) ^ ($x >> 3)) );
+macro_rules! sigma1( ($x:expr) => ($x.rotate_left(15) ^ $x.rotate_left(13) ^ ($x >> 10)) );
 
 macro_rules! round(
     // first round
