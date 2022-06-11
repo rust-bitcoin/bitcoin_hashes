@@ -20,9 +20,9 @@ use crate::alloc::{string::String, vec::Vec};
 #[cfg(feature = "alloc")]
 use crate::alloc::format;
 
-#[cfg(feature = "std")]
+#[cfg(any(test, feature = "std"))]
 use std::io;
-#[cfg(all(not(feature = "std"), feature = "core2"))]
+#[cfg(all(not(test), not(feature = "std"), feature = "core2"))]
 use core2::io;
 
 use core::{fmt, str};
@@ -219,6 +219,51 @@ impl ToHex for [u8] {
     }
 }
 
+/// A struct implementing [`io::Write`] that converts what's written to it into
+/// a hex String.
+///
+/// If you already have the data to be converted in a `Vec<u8>` use [`ToHex`]
+/// but if you have an encodable object, by using this you avoid the
+/// serialization to `Vec<u8>` by going directly to `String`.
+///
+/// Note that to achieve better perfomance than [`ToHex`] the struct must be
+/// created with the right `capacity` of the final hex string so that the inner
+/// `String` doesn't re-allocate.
+#[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(test, feature = "std", feature = "alloc"))))]
+pub struct HexWriter(String);
+
+#[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(test, feature = "std", feature = "alloc"))))]
+impl HexWriter {
+    /// Creates a new [`HexWriter`] with the `capacity` of the inner `String`
+    /// that will contain final hex value.
+    pub fn new(capacity: usize) -> Self {
+        HexWriter(String::with_capacity(capacity))
+    }
+
+    /// Returns the resulting hex string.
+    pub fn result(self) -> String {
+        self.0
+    }
+}
+
+#[cfg(any(test, feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(test, feature = "std", feature = "alloc"))))]
+impl io::Write for HexWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        use core::fmt::Write;
+        for ch in buf {
+            write!(self.0, "{:02x}", ch).expect("writing to string");
+        }
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
 #[cfg(any(test, feature = "std", feature = "alloc"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 impl FromHex for Vec<u8> {
@@ -276,6 +321,7 @@ mod tests {
     use super::*;
 
     use core::fmt;
+    use std::io::Write;
 
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
@@ -398,5 +444,41 @@ mod tests {
             Err(Error::InvalidChar(194))
         );
     }
+
+
+    #[test]
+    fn hex_writer() {
+        let vec: Vec<_>  = (0u8..32).collect();
+        let mut writer = HexWriter::new(64);
+        writer.write_all(&vec[..]).unwrap();
+        assert_eq!(vec.to_hex(), writer.result());
+    }
 }
 
+
+#[cfg(all(test, feature="unstable"))]
+mod benches {
+    use test::{Bencher, black_box};
+    use super::{ToHex, HexWriter};
+    use std::io::Write;
+    use crate::{sha256, Hash};
+
+    #[bench]
+    fn bench_to_hex(bh: &mut Bencher) {
+        let hash = sha256::Hash::hash(&[0; 1]);
+        bh.iter(|| {
+            black_box(hash.to_hex());
+        })
+    }
+
+
+    #[bench]
+    fn bench_to_hex_writer(bh: &mut Bencher) {
+        let hash = sha256::Hash::hash(&[0; 1]);
+        bh.iter(|| {
+            let mut writer = HexWriter::new(64);
+            writer.write_all(hash.as_inner()).unwrap();
+            black_box(writer.result());
+        })
+    }
+}

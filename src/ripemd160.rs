@@ -169,8 +169,8 @@ macro_rules! round(
     ($a:expr, $b:expr, $c:expr, $d:expr, $e:expr,
      $x:expr, $bits:expr, $add:expr, $round:expr) => ({
         $a = $a.wrapping_add($round).wrapping_add($x).wrapping_add($add);
-        $a = circular_lshift32!($bits, $a).wrapping_add($e);
-        $c = circular_lshift32!(10, $c);
+        $a = $a.rotate_left($bits).wrapping_add($e);
+        $c = $c.rotate_left(10);
     });
 );
 

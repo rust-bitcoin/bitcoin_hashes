@@ -12,21 +12,11 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
-/// Circular left-shift a 32-bit word.
-macro_rules! circular_lshift32 (
-    ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (32 - $shift)))
-);
-
-/// Circular left-shift a 64-bit word.
-macro_rules! circular_lshift64 (
-    ($shift:expr, $w:expr) => (($w << $shift) | ($w >> (64 - $shift)))
-);
-
 #[macro_export]
 /// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`.
 macro_rules! hex_fmt_impl(
     ($imp:ident, $ty:ident) => (
-        hex_fmt_impl!($imp, $ty, );
+        $crate::hex_fmt_impl!($imp, $ty, );
     );
     ($imp:ident, $ty:ident, $($gen:ident: $gent:ident),*) => (
         impl<$($gen: $gent),*> $crate::_export::_core::fmt::$imp for $ty<$($gen),*> {
@@ -48,7 +38,7 @@ macro_rules! hex_fmt_impl(
 #[macro_export]
 macro_rules! borrow_slice_impl(
     ($ty:ident) => (
-        borrow_slice_impl!($ty, );
+        $crate::borrow_slice_impl!($ty, );
     );
     ($ty:ident, $($gen:ident: $gent:ident),*) => (
         impl<$($gen: $gent),*> $crate::_export::_core::borrow::Borrow<[u8]> for $ty<$($gen),*>  {
@@ -171,7 +161,7 @@ define_le_to_array!(u64_to_array_le, u64, 8);
 #[macro_export]
 macro_rules! hash_newtype {
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta) => {
-        hash_newtype!($newtype, $hash, $len, $docs, <$hash as $crate::Hash>::DISPLAY_BACKWARD);
+        $crate::hash_newtype!($newtype, $hash, $len, $docs, <$hash as $crate::Hash>::DISPLAY_BACKWARD);
     };
     ($newtype:ident, $hash:ty, $len:expr, $docs:meta, $reverse:expr) => {
         #[$docs]
@@ -179,11 +169,11 @@ macro_rules! hash_newtype {
         #[repr(transparent)]
         pub struct $newtype($hash);
 
-        hex_fmt_impl!(Debug, $newtype);
-        hex_fmt_impl!(Display, $newtype);
-        hex_fmt_impl!(LowerHex, $newtype);
-        serde_impl!($newtype, $len);
-        borrow_slice_impl!($newtype);
+        $crate::hex_fmt_impl!(Debug, $newtype);
+        $crate::hex_fmt_impl!(Display, $newtype);
+        $crate::hex_fmt_impl!(LowerHex, $newtype);
+        $crate::serde_impl!($newtype, $len);
+        $crate::borrow_slice_impl!($newtype);
 
         impl $newtype {
             /// Creates this type from the inner hash type.

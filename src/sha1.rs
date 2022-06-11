@@ -162,7 +162,7 @@ impl HashEngine {
             *w_val = util::slice_to_u32_be(buff_bytes);
         }
         for i in 16..80 {
-            w[i] = circular_lshift32!(1, w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16]);
+            w[i] =(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16]).rotate_left(1);
         }
 
         let mut a = self.h[0];
@@ -180,10 +180,10 @@ impl HashEngine {
                 _ => unreachable!()
             };
 
-            let new_a = circular_lshift32!(5, a).wrapping_add(f).wrapping_add(e).wrapping_add(k).wrapping_add(wi);
+            let new_a = a.rotate_left(5).wrapping_add(f).wrapping_add(e).wrapping_add(k).wrapping_add(wi);
             e = d;
             d = c;
-            c = circular_lshift32!(30, b);
+            c = b.rotate_left(30);
             b = a;
             a = new_a;
         }
