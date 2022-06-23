@@ -1,4 +1,31 @@
 
+# 0.11.0 - 2022-06-25
+
+The major change in this version is the increase of the Minimum Supported Rust Version (MSRV) from
+1.29 to 1.41.1. This is a big change because it introduces Rust Edition 2018 to the codebase along
+with all the benefits that brings. We also did a bunch of optimisations to speed up encoding and
+decoding hex strings.
+
+## Breaking changes
+
+* [Enable edition 2018 and bump MSRV to Rust 1.41.1](https://github.com/rust-bitcoin/bitcoin_hashes/pull/136)
+
+## New features/APIs
+
+* [Add `all_zeros` to `Hash` trait](https://github.com/rust-bitcoin/bitcoin_hashes/pull/148)
+* [Implement `Write` on `HmacEngine`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/133)
+* [Introduce `HexWriter`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/156), makes serialising hex faster
+* [Implement `Read` on `HexIterator`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/135), makes deserialising hex faster
+
+## Other improvements
+
+* Use `rotate_left` [instead of custom macro](https://github.com/rust-bitcoin/bitcoin_hashes/pull/162)
+* [Enable clippy on CI](https://github.com/rust-bitcoin/bitcoin_hashes/pull/152)
+* Various docs fixes
+* [Improve feature test coverage](https://github.com/rust-bitcoin/bitcoin_hashes/pull/147)
+* [Add a disabled `rustfmt.toml`](https://github.com/rust-bitcoin/bitcoin_hashes/pull/141) to improve interaction with auto-formatting in editors
+
+
 # 0.10.0 - 2021-07-05
 
 * Increase `core2` to released version of 0.3.0
