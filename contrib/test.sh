@@ -1,7 +1,6 @@
 #!/bin/sh -ex
 
-# TODO: Add core2 here once we bump MSRV past 1.29
-FEATURES="serde serde-std std"
+FEATURES="serde serde-std std core2"
 
 if [ "$DO_ALLOC_TESTS" = true ]; then
 	FEATURES="$FEATURES alloc"
@@ -43,8 +42,7 @@ if [ "$DO_FEATURE_MATRIX" = true ]; then
     done
 
     # Other combos
-    # TODO: Add this test once we bump MSRV past 1.29
-    # cargo test --all --no-default-features --features="std,schemars"
+    cargo test --all --no-default-features --features="std,schemars"
 fi
 
 if [ "$DO_SCHEMARS_TESTS" = true ]; then
