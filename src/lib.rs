@@ -84,8 +84,9 @@
 #![deny(unused_mut)]
 #![deny(missing_docs)]
 
-// Experimental features we need
+// Experimental features we need.
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(bench, feature(test))]
 
 // In general, rust is absolutely horrid at supporting users doing things like,
 // for example, compiling Rust code for real environments. Disable useless lints
@@ -94,9 +95,8 @@
 #![allow(ellipsis_inclusive_range_patterns)]
 
 #![cfg_attr(all(not(test), not(feature = "std")), no_std)]
-#![cfg_attr(all(test, feature = "unstable"), feature(test))]
-#[cfg(all(test, feature = "unstable"))] extern crate test;
 
+#[cfg(bench)] extern crate test;
 #[cfg(any(test, feature = "std"))] extern crate core;
 #[cfg(feature = "core2")] extern crate core2;
 #[cfg(feature = "alloc")] extern crate alloc;
