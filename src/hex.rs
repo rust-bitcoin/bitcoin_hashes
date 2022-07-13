@@ -455,7 +455,6 @@ mod tests {
     }
 }
 
-
 #[cfg(all(test, feature="unstable"))]
 mod benches {
     use test::{Bencher, black_box};
