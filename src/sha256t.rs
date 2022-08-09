@@ -18,8 +18,6 @@
 use core::{cmp, str};
 #[cfg(feature = "serde")] use core::fmt;
 use core::marker::PhantomData;
-use core::ops::Index;
-use core::slice::SliceIndex;
 
 use crate::{Error, hex, sha256};
 #[cfg(feature="serde")] use crate::Hash as _;
@@ -82,15 +80,6 @@ impl<T: Tag> str::FromStr for Hash<T> {
 
 hex_fmt_impl!(Hash, T:Tag);
 borrow_slice_impl!(Hash, T:Tag);
-
-impl<I: SliceIndex<[u8]>, T: Tag> Index<I> for Hash<T> {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
-}
 
 impl<T: Tag> crate::Hash for Hash<T> {
     type Engine = sha256::HashEngine;
@@ -170,7 +159,7 @@ impl<T: Tag> serde::Serialize for Hash<T> {
         if s.is_human_readable() {
             s.collect_str(self)
         } else {
-            s.serialize_bytes(&self[..])
+            s.serialize_bytes(self.as_ref())
         }
     }
 }

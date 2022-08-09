@@ -131,7 +131,7 @@ pub mod siphash24;
 pub mod sha512;
 pub mod cmp;
 
-use core::{borrow, fmt, hash, ops};
+use core::{borrow, convert, fmt, hash};
 
 pub use hmac::{Hmac, HmacEngine};
 pub use error::Error;
@@ -156,14 +156,9 @@ pub trait HashEngine: Clone + Default {
 }
 
 /// Trait which applies to hashes of all types.
-pub trait Hash: Copy + Clone + PartialEq + Eq + PartialOrd + Ord +
-    hash::Hash + fmt::Debug + fmt::Display + fmt::LowerHex +
-    ops::Index<ops::RangeFull, Output = [u8]> +
-    ops::Index<ops::RangeFrom<usize>, Output = [u8]> +
-    ops::Index<ops::RangeTo<usize>, Output = [u8]> +
-    ops::Index<ops::Range<usize>, Output = [u8]> +
-    ops::Index<usize, Output = u8> +
-    borrow::Borrow<[u8]>
+pub trait Hash: Copy + Clone + PartialEq + Eq + PartialOrd + Ord
+    + hash::Hash + fmt::Debug + fmt::Display + fmt::LowerHex
+    + borrow::Borrow<[u8]> + convert::AsRef<[u8]>
 {
     /// A hashing engine which bytes can be serialized into. It is expected
     /// to implement the `io::Write` trait, and to never return errors under
@@ -227,7 +222,7 @@ mod tests {
     fn convert_newtypes() {
         let h1 = TestNewtype::hash(&[]);
         let h2: TestNewtype2 = h1.as_hash().into();
-        assert_eq!(&h1[..], &h2[..]);
+        assert_eq!(h1.as_ref(), h2.as_ref());
 
         let h = sha256d::Hash::hash(&[]);
         let h2: TestNewtype = h.to_string().parse().unwrap();

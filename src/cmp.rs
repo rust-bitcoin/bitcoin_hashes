@@ -91,7 +91,7 @@ mod benches {
         let hash_a = sha256::Hash::hash(&[0; 1]);
         let hash_b = sha256::Hash::hash(&[1; 1]);
         bh.iter(|| {
-            fixed_time_eq(&hash_a[..], &hash_b[..])
+            fixed_time_eq(hash_a.as_ref(), hash_b.as_ref())
         })
     }
 
@@ -100,7 +100,7 @@ mod benches {
         let hash_a = sha256::Hash::hash(&[0; 1]);
         let hash_b = sha256::Hash::hash(&[1; 1]);
         bh.iter(|| {
-            &hash_a[..] == &hash_b[..]
+            hash_a.as_ref() == hash_b.as_ref()
         })
     }
 
@@ -109,7 +109,7 @@ mod benches {
         let hash_a = sha256::Hash::hash(&[0; 1]);
         let hash_b = sha256::Hash::hash(&[0; 1]);
         bh.iter(|| {
-            fixed_time_eq(&hash_a[..], &hash_b[..])
+            fixed_time_eq(hash_a.as_ref(), hash_b.as_ref())
         })
     }
 
@@ -118,7 +118,7 @@ mod benches {
         let hash_a = sha256::Hash::hash(&[0; 1]);
         let hash_b = sha256::Hash::hash(&[0; 1]);
         bh.iter(|| {
-            &hash_a[..] == &hash_b[..]
+            hash_a.as_ref() == hash_b.as_ref()
         })
     }
 
@@ -127,7 +127,7 @@ mod benches {
         let hash_a = sha512::Hash::hash(&[0; 1]);
         let hash_b = sha512::Hash::hash(&[1; 1]);
         bh.iter(|| {
-            fixed_time_eq(&hash_a[..], &hash_b[..])
+            fixed_time_eq(hash_a.as_ref(), hash_b.as_ref())
         })
     }
 
@@ -136,7 +136,7 @@ mod benches {
         let hash_a = sha512::Hash::hash(&[0; 1]);
         let hash_b = sha512::Hash::hash(&[1; 1]);
         bh.iter(|| {
-            &hash_a[..] == &hash_b[..]
+            hash_a.as_ref() == hash_b.as_ref()
         })
     }
 
@@ -145,7 +145,7 @@ mod benches {
         let hash_a = sha512::Hash::hash(&[0; 1]);
         let hash_b = sha512::Hash::hash(&[0; 1]);
         bh.iter(|| {
-            fixed_time_eq(&hash_a[..], &hash_b[..])
+            fixed_time_eq(hash_a.as_ref(), hash_b.as_ref())
         })
     }
 
@@ -154,7 +154,7 @@ mod benches {
         let hash_a = sha512::Hash::hash(&[0; 1]);
         let hash_b = sha512::Hash::hash(&[0; 1]);
         bh.iter(|| {
-            &hash_a[..] == &hash_b[..]
+            hash_a.as_ref() == hash_b.as_ref()
         })
     }
 }

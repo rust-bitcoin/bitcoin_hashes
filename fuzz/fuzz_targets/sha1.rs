@@ -15,7 +15,7 @@ fn do_test(data: &[u8]) {
     rc_sha1.input(data);
     rc_sha1.result(&mut rc_hash);
 
-    assert_eq!(&our_hash[..], &rc_hash[..]);
+    assert_eq!(our_hash.as_ref(), rc_hash.as_ref());
 }
 
 #[cfg(feature = "honggfuzz")]

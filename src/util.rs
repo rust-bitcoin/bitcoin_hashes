@@ -58,13 +58,13 @@ macro_rules! borrow_slice_impl(
     ($ty:ident, $($gen:ident: $gent:ident),*) => (
         impl<$($gen: $gent),*> $crate::_export::_core::borrow::Borrow<[u8]> for $ty<$($gen),*>  {
             fn borrow(&self) -> &[u8] {
-                &self[..]
+                self.0.borrow()
             }
         }
 
         impl<$($gen: $gent),*> $crate::_export::_core::convert::AsRef<[u8]> for $ty<$($gen),*>  {
             fn as_ref(&self) -> &[u8] {
-                &self[..]
+                self.0.as_ref()
             }
         }
     )
@@ -189,15 +189,6 @@ macro_rules! hash_newtype {
             type Err = $crate::hex::Error;
             fn from_str(s: &str) -> $crate::_export::_core::result::Result<$newtype, Self::Err> {
                 $crate::hex::FromHex::from_hex(s)
-            }
-        }
-
-        impl<I: $crate::_export::_core::slice::SliceIndex<[u8]>> $crate::_export::_core::ops::Index<I> for $newtype {
-            type Output = I::Output;
-
-            #[inline]
-            fn index(&self, index: I) -> &Self::Output {
-                &self.0[index]
             }
         }
     };

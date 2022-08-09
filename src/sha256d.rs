@@ -16,8 +16,6 @@
 //!
 
 use core::str;
-use core::ops::Index;
-use core::slice::SliceIndex;
 
 use crate::{Error, hex, sha256};
 
@@ -33,15 +31,6 @@ pub struct Hash(
 hex_fmt_impl!(Hash);
 serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
-
-impl<I: SliceIndex<[u8]>> Index<I> for Hash {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
-}
 
 impl str::FromStr for Hash {
     type Err = hex::Error;
@@ -60,10 +49,10 @@ impl crate::Hash for Hash {
 
     fn from_engine(e: sha256::HashEngine) -> Hash {
         let sha2 = sha256::Hash::from_engine(e);
-        let sha2d = sha256::Hash::hash(&sha2[..]);
+        let sha2d = sha256::Hash::hash(sha2.as_ref());
 
         let mut ret = [0; 32];
-        ret.copy_from_slice(&sha2d[..]);
+        ret.copy_from_slice(sha2d.as_ref());
         Hash(ret)
     }
 
@@ -131,7 +120,7 @@ mod tests {
             // Hash through high-level API, check hex encoding/decoding
             let hash = sha256d::Hash::hash(&test.input.as_bytes());
             assert_eq!(hash, sha256d::Hash::from_hex(test.output_str).expect("parse hex"));
-            assert_eq!(&hash[..], &test.output[..]);
+            assert_eq!(hash.as_ref(), &test.output[..]);
             assert_eq!(&hash.to_hex(), &test.output_str);
 
             // Hash through engine, checking that we can input byte by byte

@@ -22,8 +22,6 @@
 
 use core::{cmp, str};
 use core::convert::TryInto;
-use core::ops::Index;
-use core::slice::SliceIndex;
 
 use crate::{Error, HashEngine as _, hex};
 
@@ -87,15 +85,6 @@ pub struct Hash(
 hex_fmt_impl!(Hash);
 serde_impl!(Hash, 20);
 borrow_slice_impl!(Hash);
-
-impl<I: SliceIndex<[u8]>> Index<I> for Hash {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
-}
 
 impl str::FromStr for Hash {
     type Err = hex::Error;
@@ -526,7 +515,7 @@ mod tests {
             // Hash through high-level API, check hex encoding/decoding
             let hash = ripemd160::Hash::hash(&test.input.as_bytes());
             assert_eq!(hash, ripemd160::Hash::from_hex(test.output_str).expect("parse hex"));
-            assert_eq!(&hash[..], &test.output[..]);
+            assert_eq!(hash.as_ref(), &test.output[..]);
             assert_eq!(&hash.to_hex(), &test.output_str);
 
             // Hash through engine, checking that we can input byte by byte

@@ -20,7 +20,7 @@
 //! Hash-based Message Authentication Code (HMAC).
 //!
 
-use core::{borrow, fmt, ops, str};
+use core::{borrow, convert, fmt, str};
 #[cfg(feature = "serde")]
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
@@ -81,10 +81,10 @@ impl<T: Hash> HmacEngine<T> {
 
         if key.len() > T::Engine::BLOCK_SIZE {
             let hash = <T as Hash>::hash(key);
-            for (b_i, b_h) in ipad.iter_mut().zip(&hash[..]) {
+            for (b_i, b_h) in ipad.iter_mut().zip(hash.as_ref()) {
                 *b_i ^= *b_h;
             }
-            for (b_o, b_h) in opad.iter_mut().zip(&hash[..]) {
+            for (b_o, b_h) in opad.iter_mut().zip(hash.as_ref()) {
                 *b_o ^= *b_h;
             }
         } else {
@@ -149,44 +149,15 @@ impl<T: Hash> fmt::LowerHex for Hmac<T> {
     }
 }
 
-impl<T: Hash> ops::Index<usize> for Hmac<T> {
-    type Output = u8;
-    fn index(&self, index: usize) -> &u8 {
-        &self.0[index]
-    }
-}
-
-impl<T: Hash> ops::Index<ops::Range<usize>> for Hmac<T> {
-    type Output = [u8];
-    fn index(&self, index: ops::Range<usize>) -> &[u8] {
-        &self.0[index]
-    }
-}
-
-impl<T: Hash> ops::Index<ops::RangeFrom<usize>> for Hmac<T> {
-    type Output = [u8];
-    fn index(&self, index: ops::RangeFrom<usize>) -> &[u8] {
-        &self.0[index]
-    }
-}
-
-impl<T: Hash> ops::Index<ops::RangeTo<usize>> for Hmac<T> {
-    type Output = [u8];
-    fn index(&self, index: ops::RangeTo<usize>) -> &[u8] {
-        &self.0[index]
-    }
-}
-
-impl<T: Hash> ops::Index<ops::RangeFull> for Hmac<T> {
-    type Output = [u8];
-    fn index(&self, index: ops::RangeFull) -> &[u8] {
-        &self.0[index]
-    }
-}
-
 impl<T: Hash> borrow::Borrow<[u8]> for Hmac<T> {
     fn borrow(&self) -> &[u8] {
-        &self[..]
+        self.0.borrow()
+    }
+}
+
+impl<T: Hash> convert::AsRef<[u8]> for Hmac<T> {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
     }
 }
 
@@ -196,7 +167,7 @@ impl<T: Hash> Hash for Hmac<T> {
 
     fn from_engine(mut e: HmacEngine<T>) -> Hmac<T> {
         let ihash = T::from_engine(e.iengine);
-        e.oengine.input(&ihash[..]);
+        e.oengine.input(ihash.as_ref());
         let ohash = T::from_engine(e.oengine);
         Hmac(ohash)
     }
@@ -364,7 +335,7 @@ mod tests {
             let mut engine = HmacEngine::<sha256::Hash>::new(&test.key);
             engine.input(&test.input);
             let hash = Hmac::<sha256::Hash>::from_engine(engine);
-            assert_eq!(&hash[..], &test.output[..]);
+            assert_eq!(hash.as_ref(), &test.output[..]);
             assert_eq!(hash.into_inner()[..].as_ref(), test.output.as_slice());
         }
     }
