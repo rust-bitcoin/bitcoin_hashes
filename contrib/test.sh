@@ -6,12 +6,6 @@ if [ "$DO_ALLOC_TESTS" = true ]; then
 	FEATURES="$FEATURES alloc"
 fi
 
-# Use toolchain if explicitly specified
-if [ -n "$TOOLCHAIN" ]
-then
-    alias cargo="cargo +$TOOLCHAIN"
-fi
-
 cargo --version
 rustc --version
 
