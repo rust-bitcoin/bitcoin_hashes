@@ -21,10 +21,11 @@
 //!
 
 use core::{cmp, hash, str};
+use core::convert::TryInto;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, HashEngine as _, hex, util};
+use crate::{Error, HashEngine as _, hex};
 
 const BLOCK_SIZE: usize = 128;
 
@@ -56,7 +57,7 @@ impl crate::HashEngine for HashEngine {
     fn midstate(&self) -> [u8; 64] {
         let mut ret = [0; 64];
         for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(8)) {
-            ret_bytes.copy_from_slice(&util::u64_to_array_be(*val));
+            ret_bytes.copy_from_slice(&val.to_be_bytes());
         }
         ret
     }
@@ -166,7 +167,7 @@ impl crate::Hash for Hash {
         debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
 
         e.input(&[0; 8]);
-        e.input(&util::u64_to_array_be(8 * data_len));
+        e.input(&(8 * data_len).to_be_bytes());
         debug_assert_eq!(e.length % BLOCK_SIZE, 0);
 
         Hash(e.midstate())
@@ -237,7 +238,7 @@ impl HashEngine {
 
         let mut w = [0u64; 16];
         for (w_val, buff_bytes) in w.iter_mut().zip(self.buffer.chunks(8)) {
-            *w_val = util::slice_to_u64_be(buff_bytes);
+            *w_val = u64::from_be_bytes(buff_bytes.try_into().expect("8 byte slice"));
         }
 
         let mut a = self.h[0];
