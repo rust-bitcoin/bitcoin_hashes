@@ -21,81 +21,24 @@ use core::slice::SliceIndex;
 
 use crate::{Error, hex, sha256};
 
-/// Output of the SHA256d hash function.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
-#[repr(transparent)]
-pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_32"))]
-    [u8; 32]
-);
-
-hex_fmt_impl!(Hash);
-serde_impl!(Hash, 32);
-borrow_slice_impl!(Hash);
-
-impl<I: SliceIndex<[u8]>> Index<I> for Hash {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
+crate::internal_macros::hash_type! {
+    256,
+    true,
+    "Output of the SHA256d hash function.",
+    "crate::util::json_hex_string::len_32"
 }
 
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
-    }
-}
+type HashEngine = sha256::HashEngine;
 
-impl crate::Hash for Hash {
-    type Engine = sha256::HashEngine;
-    type Inner = [u8; 32];
+fn from_engine(e: sha256::HashEngine) -> Hash {
+    use crate::Hash as _;
 
-    fn engine() -> sha256::HashEngine {
-        sha256::Hash::engine()
-    }
+    let sha2 = sha256::Hash::from_engine(e);
+    let sha2d = sha256::Hash::hash(&sha2[..]);
 
-    fn from_engine(e: sha256::HashEngine) -> Hash {
-        let sha2 = sha256::Hash::from_engine(e);
-        let sha2d = sha256::Hash::hash(&sha2[..]);
-
-        let mut ret = [0; 32];
-        ret.copy_from_slice(&sha2d[..]);
-        Hash(ret)
-    }
-
-    const LEN: usize = 32;
-
-    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
-        if sl.len() != 32 {
-            Err(Error::InvalidLength(Self::LEN, sl.len()))
-        } else {
-            let mut ret = [0; 32];
-            ret.copy_from_slice(sl);
-            Ok(Hash(ret))
-        }
-    }
-
-    const DISPLAY_BACKWARD: bool = true;
-
-    fn into_inner(self) -> Self::Inner {
-        self.0
-    }
-
-    fn as_inner(&self) -> &Self::Inner {
-        &self.0
-    }
-
-    fn from_inner(inner: Self::Inner) -> Self {
-        Hash(inner)
-    }
-
-    fn all_zeros() -> Self {
-        Hash([0x00; 32])
-    }
+    let mut ret = [0; 32];
+    ret.copy_from_slice(&sha2d[..]);
+    Hash(ret)
 }
 
 #[cfg(test)]

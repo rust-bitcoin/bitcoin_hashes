@@ -27,6 +27,8 @@ use core::slice::SliceIndex;
 
 use crate::{Error, HashEngine as _, hex};
 
+crate::internal_macros::hash_trait_impls!(512, false);
+
 const BLOCK_SIZE: usize = 128;
 
 /// Engine to compute SHA512 hash function.
@@ -86,6 +88,16 @@ pub struct Hash(
     [u8; 64]
 );
 
+impl Hash {
+    fn internal_new(arr: [u8; 64]) -> Self {
+        Hash(arr)
+    }
+
+    fn internal_engine() -> HashEngine {
+        Default::default()
+    }
+}
+
 impl Copy for Hash {}
 
 impl Clone for Hash {
@@ -128,85 +140,32 @@ impl hash::Hash for Hash {
     }
 }
 
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
+#[cfg(not(fuzzing))]
+fn from_engine(mut e: HashEngine) -> Hash {
+    // pad buffer with a single 1-bit then all 0s, until there are exactly 16 bytes remaining
+    let data_len = e.length as u64;
+
+    let zeroes = [0; BLOCK_SIZE - 16];
+    e.input(&[0x80]);
+    if e.length % BLOCK_SIZE > zeroes.len() {
+        e.input(&zeroes);
     }
+    let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
+    e.input(&zeroes[..pad_length]);
+    debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
+
+    e.input(&[0; 8]);
+    e.input(&(8 * data_len).to_be_bytes());
+    debug_assert_eq!(e.length % BLOCK_SIZE, 0);
+
+    Hash(e.midstate())
 }
 
-hex_fmt_impl!(Hash);
-serde_impl!(Hash, 64);
-borrow_slice_impl!(Hash);
-
-impl<I: SliceIndex<[u8]>> Index<I> for Hash {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
-}
-
-impl crate::Hash for Hash {
-    type Engine = HashEngine;
-    type Inner = [u8; 64];
-
-    #[cfg(not(fuzzing))]
-    fn from_engine(mut e: HashEngine) -> Hash {
-        // pad buffer with a single 1-bit then all 0s, until there are exactly 16 bytes remaining
-        let data_len = e.length as u64;
-
-        let zeroes = [0; BLOCK_SIZE - 16];
-        e.input(&[0x80]);
-        if e.length % BLOCK_SIZE > zeroes.len() {
-            e.input(&zeroes);
-        }
-        let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
-        e.input(&zeroes[..pad_length]);
-        debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
-
-        e.input(&[0; 8]);
-        e.input(&(8 * data_len).to_be_bytes());
-        debug_assert_eq!(e.length % BLOCK_SIZE, 0);
-
-        Hash(e.midstate())
-    }
-
-    #[cfg(fuzzing)]
-    fn from_engine(e: HashEngine) -> Hash {
-        let mut hash = e.midstate();
-        hash[0] ^= 0xff; // Make this distinct from SHA-256
-        Hash(hash)
-    }
-
-    const LEN: usize = 64;
-
-    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
-        if sl.len() != 64 {
-            Err(Error::InvalidLength(Self::LEN, sl.len()))
-        } else {
-            let mut ret = [0; 64];
-            ret.copy_from_slice(sl);
-            Ok(Hash(ret))
-        }
-    }
-
-    fn into_inner(self) -> Self::Inner {
-        self.0
-    }
-
-    fn as_inner(&self) -> &Self::Inner {
-        &self.0
-    }
-
-    fn from_inner(inner: Self::Inner) -> Self {
-        Hash(inner)
-    }
-
-    fn all_zeros() -> Self {
-        Hash([0x00; 64])
-    }
+#[cfg(fuzzing)]
+fn from_engine(e: HashEngine) -> Hash {
+    let mut hash = e.midstate();
+    hash[0] ^= 0xff; // Make this distinct from SHA-256
+    Hash(hash)
 }
 
 macro_rules! Ch( ($x:expr, $y:expr, $z:expr) => ($z ^ ($x & ($y ^ $z))) );

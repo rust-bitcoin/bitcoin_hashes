@@ -16,13 +16,13 @@
 //!
 
 use core::{cmp, str};
-#[cfg(feature = "serde")] use core::fmt;
 use core::marker::PhantomData;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
 use crate::{Error, hex, sha256};
-#[cfg(feature="serde")] use crate::Hash as _;
+
+type HashEngine = sha256::HashEngine;
 
 /// Trait representing a tag that can be used as a context for SHA256t hashes.
 pub trait Tag {
@@ -39,6 +39,16 @@ pub struct Hash<T: Tag>(
     #[cfg_attr(feature = "schemars", schemars(skip))]
     PhantomData<T>
 );
+
+impl<T: Tag> Hash<T> {
+    fn internal_new(arr: [u8; 32]) -> Self {
+        Hash(arr, Default::default())
+    }
+
+    fn internal_engine() -> HashEngine {
+        T::engine()
+    }
+}
 
 impl<T: Tag> Copy for Hash<T> {}
 impl<T: Tag> Clone for Hash<T> {
@@ -73,67 +83,12 @@ impl<T: Tag> core::hash::Hash for Hash<T> {
     }
 }
 
-impl<T: Tag> str::FromStr for Hash<T> {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
-    }
-}
+crate::internal_macros::hash_trait_impls!(256, true, T: Tag);
 
-hex_fmt_impl!(Hash, T:Tag);
-borrow_slice_impl!(Hash, T:Tag);
+fn from_engine<T: Tag>(e: sha256::HashEngine) -> Hash<T> {
+    use crate::Hash as _;
 
-impl<I: SliceIndex<[u8]>, T: Tag> Index<I> for Hash<T> {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
-}
-
-impl<T: Tag> crate::Hash for Hash<T> {
-    type Engine = sha256::HashEngine;
-    type Inner = [u8; 32];
-
-    fn engine() -> sha256::HashEngine {
-        T::engine()
-    }
-
-    fn from_engine(e: sha256::HashEngine) -> Hash<T> {
-        Hash::from_inner(sha256::Hash::from_engine(e).into_inner())
-    }
-
-    const LEN: usize = 32;
-
-    fn from_slice(sl: &[u8]) -> Result<Hash<T>, Error> {
-        if sl.len() != 32 {
-            Err(Error::InvalidLength(Self::LEN, sl.len()))
-        } else {
-            let mut ret = [0; 32];
-            ret.copy_from_slice(sl);
-            Ok(Hash::from_inner(ret))
-        }
-    }
-
-    // NOTE! If this is changed, please make sure the serde serialization is still correct.
-    const DISPLAY_BACKWARD: bool = true;
-
-    fn into_inner(self) -> Self::Inner {
-        self.0
-    }
-
-    fn as_inner(&self) -> &Self::Inner {
-        &self.0
-    }
-
-    fn from_inner(inner: Self::Inner) -> Self {
-        Hash(inner, PhantomData)
-    }
-
-    fn all_zeros() -> Self {
-        Hash([0x00; 32], PhantomData)
-    }
+    Hash::from_inner(sha256::Hash::from_engine(e).into_inner())
 }
 
 /// Macro used to define a newtype tagged hash.
@@ -162,92 +117,6 @@ macro_rules! sha256t_hash_newtype {
 
         $crate::hash_newtype!($newtype, $crate::sha256t::Hash<$tag>, 32, $docs, $reverse);
     };
-}
-
-#[cfg(feature = "serde")]
-impl<T: Tag> serde::Serialize for Hash<T> {
-    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        if s.is_human_readable() {
-            s.collect_str(self)
-        } else {
-            s.serialize_bytes(&self[..])
-        }
-    }
-}
-
-#[cfg(feature = "serde")]
-struct HexVisitor<T: Tag>(PhantomData<T>);
-
-#[cfg(feature = "serde")]
-impl<T: Tag> Default for HexVisitor<T> {
-    fn default() -> Self { HexVisitor(PhantomData) }
-}
-
-#[cfg(feature = "serde")]
-impl<'de, T: Tag> serde::de::Visitor<'de> for HexVisitor<T> {
-    type Value = Hash<T>;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("an ASCII hex string")
-    }
-
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        use core::str::FromStr;
-        if let Ok(hex) = str::from_utf8(v) {
-            Hash::<T>::from_str(hex).map_err(E::custom)
-        } else {
-            return Err(E::invalid_value(::serde::de::Unexpected::Bytes(v), &self));
-        }
-    }
-
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        use core::str::FromStr;
-        Hash::<T>::from_str(v).map_err(E::custom)
-    }
-}
-
-#[cfg(feature = "serde")]
-struct BytesVisitor<T: Tag>(PhantomData<T>);
-
-#[cfg(feature = "serde")]
-impl<T: Tag> Default for BytesVisitor<T> {
-    fn default() -> Self { BytesVisitor(PhantomData) }
-}
-
-#[cfg(feature = "serde")]
-impl<'de, T: Tag> serde::de::Visitor<'de> for BytesVisitor<T> {
-    type Value = Hash<T>;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("a bytestring")
-    }
-
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Hash::<T>::from_slice(v).map_err(|_| {
-            // from_slice only errors on incorrect length
-            E::invalid_length(v.len(), &"32")
-        })
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de, T: Tag> serde::Deserialize<'de> for Hash<T> {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Hash<T>, D::Error> {
-        if d.is_human_readable() {
-            d.deserialize_str(HexVisitor::<T>::default())
-        } else {
-            d.deserialize_bytes(BytesVisitor::<T>::default())
-        }
-    }
 }
 
 #[cfg(test)]
