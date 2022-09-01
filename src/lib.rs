@@ -19,6 +19,63 @@
 //! thing, it exposes hexadecimal serialization and deserialization, since these
 //! are needed to display hashes anway.
 //!
+//! ## Commonly used operations
+//!
+//! Hashing a single byte slice or a string:
+//!
+//! ```rust
+//! use bitcoin_hashes::sha256;
+//! use bitcoin_hashes::Hash;
+//!
+//! let bytes = [0u8; 5];
+//! let hash_of_bytes = sha256::Hash::hash(&bytes);
+//! let hash_of_string = sha256::Hash::hash("some string".as_bytes());
+//! ```
+//!
+//!
+//! Hashing content from a reader:
+//!
+//! ```rust
+//! use bitcoin_hashes::sha256;
+//! use bitcoin_hashes::Hash;
+//!
+//! #[cfg(std)]
+//! # fn main() -> std::io::Result<()> {
+//! let mut reader: &[u8] = b"hello"; // in real code, this could be a `File` or `TcpStream`
+//! let mut engine = sha256::HashEngine::default();
+//! std::io::copy(&mut reader, &mut engine)?;
+//! let hash = sha256::Hash::from_engine(engine);
+//! # Ok(())
+//! # }
+//!
+//! #[cfg(not(std))]
+//! # fn main() {}
+//! ```
+//!
+//!
+//! Hashing content by [`std::io::Write`] on HashEngine:
+//!
+//! ```rust
+//! use bitcoin_hashes::sha256;
+//! use bitcoin_hashes::Hash;
+//! use std::io::Write;
+//!
+//! #[cfg(std)]
+//! # fn main() -> std::io::Result<()> {
+//! let mut part1: &[u8] = b"hello";
+//! let mut part2: &[u8] = b" ";
+//! let mut part3: &[u8] = b"world";
+//! let mut engine = sha256::HashEngine::default();
+//! engine.write_all(part1)?;
+//! engine.write_all(part2)?;
+//! engine.write_all(part3)?;
+//! let hash = sha256::Hash::from_engine(engine);
+//! # Ok(())
+//! # }
+//!
+//! #[cfg(not(std))]
+//! # fn main() {}
+//! ```
 
 // Coding conventions
 #![deny(non_upper_case_globals)]
