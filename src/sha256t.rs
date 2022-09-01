@@ -80,9 +80,7 @@ impl<T: Tag> str::FromStr for Hash<T> {
     }
 }
 
-hex_fmt_impl!(Debug, Hash, T:Tag);
-hex_fmt_impl!(Display, Hash, T:Tag);
-hex_fmt_impl!(LowerHex, Hash, T:Tag);
+hex_fmt_impl!(Hash, T:Tag);
 borrow_slice_impl!(Hash, T:Tag);
 
 impl<I: SliceIndex<[u8]>, T: Tag> Index<I> for Hash<T> {

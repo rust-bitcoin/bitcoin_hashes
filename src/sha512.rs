@@ -134,9 +134,7 @@ impl str::FromStr for Hash {
     }
 }
 
-hex_fmt_impl!(Debug, Hash);
-hex_fmt_impl!(Display, Hash);
-hex_fmt_impl!(LowerHex, Hash);
+hex_fmt_impl!(Hash);
 serde_impl!(Hash, 64);
 borrow_slice_impl!(Hash);
 

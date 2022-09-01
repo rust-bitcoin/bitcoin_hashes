@@ -15,20 +15,35 @@
 #[macro_export]
 /// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`.
 macro_rules! hex_fmt_impl(
-    ($imp:ident, $ty:ident) => (
-        $crate::hex_fmt_impl!($imp, $ty, );
+    ($ty:ident) => (
+        $crate::hex_fmt_impl!($ty, );
     );
-    ($imp:ident, $ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::_export::_core::fmt::$imp for $ty<$($gen),*> {
+    ($ty:ident, $($gen:ident: $gent:ident),*) => (
+        impl<$($gen: $gent),*> $crate::_export::_core::fmt::LowerHex for $ty<$($gen),*> {
             fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
                 #[allow(unused_imports)]
                 use $crate::{Hash as _, HashEngine as _, hex};
 
+                if f.alternate() {
+                    write!(f, "0x")?;
+                }
                 if $ty::<$($gen),*>::DISPLAY_BACKWARD {
                     hex::format_hex_reverse(&self.0, f)
                 } else {
                     hex::format_hex(&self.0, f)
                 }
+            }
+        }
+
+        impl<$($gen: $gent),*> $crate::_export::_core::fmt::Display for $ty<$($gen),*> {
+            fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
+                $crate::_export::_core::fmt::LowerHex::fmt(self, f)
+            }
+        }
+
+        impl<$($gen: $gent),*> $crate::_export::_core::fmt::Debug for $ty<$($gen),*> {
+            fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
+                write!(f, "{:#}", self)
             }
         }
     );
@@ -169,9 +184,7 @@ macro_rules! hash_newtype {
         #[repr(transparent)]
         pub struct $newtype($hash);
 
-        $crate::hex_fmt_impl!(Debug, $newtype);
-        $crate::hex_fmt_impl!(Display, $newtype);
-        $crate::hex_fmt_impl!(LowerHex, $newtype);
+        $crate::hex_fmt_impl!($newtype);
         $crate::serde_impl!($newtype, $len);
         $crate::borrow_slice_impl!($newtype);
 
