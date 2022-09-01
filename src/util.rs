@@ -323,4 +323,34 @@ mod test {
         assert_eq!(u32_to_array_le(0xdeadbeef), [0xef, 0xbe, 0xad, 0xde]);
         assert_eq!(u64_to_array_le(0x1badcafedeadbeef), [0xef, 0xbe, 0xad, 0xde, 0xfe, 0xca, 0xad, 0x1b]);
     }
+
+    hash_newtype!(TestHash, crate::sha256d::Hash, 32, doc="Test hash.");
+
+    #[test]
+    fn display() {
+        let want = "0000000000000000000000000000000000000000000000000000000000000000";
+        let got = format!("{}", TestHash::all_zeros());
+        assert_eq!(got, want)
+    }
+
+    #[test]
+    fn display_alternate() {
+        let want = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        let got = format!("{:#}", TestHash::all_zeros());
+        assert_eq!(got, want)
+    }
+
+    #[test]
+    fn lower_hex() {
+        let want = "0000000000000000000000000000000000000000000000000000000000000000";
+        let got = format!("{:x}", TestHash::all_zeros());
+        assert_eq!(got, want)
+    }
+
+    #[test]
+    fn lower_hex_alternate() {
+        let want = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        let got = format!("{:#x}", TestHash::all_zeros());
+        assert_eq!(got, want)
+    }
 }
