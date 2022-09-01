@@ -85,9 +85,7 @@ impl str::FromStr for Hash {
     }
 }
 
-hex_fmt_impl!(Debug, Hash);
-hex_fmt_impl!(Display, Hash);
-hex_fmt_impl!(LowerHex, Hash);
+hex_fmt_impl!(Hash);
 serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
 
@@ -168,9 +166,7 @@ impl crate::Hash for Hash {
 #[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
 pub struct Midstate(pub [u8; 32]);
 
-hex_fmt_impl!(Debug, Midstate);
-hex_fmt_impl!(Display, Midstate);
-hex_fmt_impl!(LowerHex, Midstate);
+hex_fmt_impl!(Midstate);
 serde_impl!(Midstate, 32);
 borrow_slice_impl!(Midstate);
 
