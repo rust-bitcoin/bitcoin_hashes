@@ -56,7 +56,7 @@ impl crate::HashEngine for HashEngine {
     #[cfg(not(fuzzing))]
     fn midstate(&self) -> [u8; 64] {
         let mut ret = [0; 64];
-        for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(8)) {
+        for (val, ret_bytes) in self.h.iter().zip(ret.chunks_exact_mut(8)) {
             ret_bytes.copy_from_slice(&val.to_be_bytes());
         }
         ret
@@ -237,7 +237,7 @@ impl HashEngine {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
 
         let mut w = [0u64; 16];
-        for (w_val, buff_bytes) in w.iter_mut().zip(self.buffer.chunks(8)) {
+        for (w_val, buff_bytes) in w.iter_mut().zip(self.buffer.chunks_exact(8)) {
             *w_val = u64::from_be_bytes(buff_bytes.try_into().expect("8 byte slice"));
         }
 
