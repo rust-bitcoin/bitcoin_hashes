@@ -24,7 +24,7 @@ use core::{cmp, mem, ptr, str};
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, Hash as _, HashEngine as _, hex, util};
+use crate::{Error, Hash as _, HashEngine as _, hex};
 
 macro_rules! compress {
     ($state:expr) => {{
@@ -199,7 +199,7 @@ impl crate::HashEngine for HashEngine {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[repr(transparent)]
 pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_8"))]
+    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_8"))]
     [u8; 8]
 );
 
@@ -257,12 +257,12 @@ impl Hash {
 
     /// Returns the (little endian) 64-bit integer representation of the hash value.
     pub fn as_u64(&self) -> u64 {
-        util::slice_to_u64_le(&self.0[..])
+        u64::from_le_bytes(self.0)
     }
 
     /// Creates a hash from its (little endian) 64-bit integer representation.
     pub fn from_u64(hash: u64) -> Hash {
-        Hash(util::u64_to_array_le(hash))
+        Hash(hash.to_le_bytes())
     }
 }
 
