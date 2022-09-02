@@ -100,6 +100,8 @@ impl crate::Hash for Hash {
 
 #[cfg(test)]
 mod tests {
+    use crate::sha256;
+
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
@@ -141,6 +143,12 @@ mod tests {
             }
             let manual_hash = sha256d::Hash::from_engine(engine);
             assert_eq!(hash, manual_hash);
+
+            // Hash by computing a sha256 then `hash_again`ing it
+            let sha2_hash = sha256::Hash::hash(test.input.as_bytes());
+            let sha2d_hash = sha2_hash.hash_again();
+            assert_eq!(hash, sha2d_hash);
+
             assert_eq!(hash.into_inner()[..].as_ref(), test.output.as_slice());
         }
     }
