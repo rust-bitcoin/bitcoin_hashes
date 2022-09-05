@@ -15,6 +15,16 @@ This library should always compile with any combination of features on **Rust 1.
 The one exception is the `schemars` feature which has no MSRV and should not be used
 by users who expect stability from their libraries.
 
+### Dependency pinning
+
+Some dependencies break the MSRV build (only when building with `schemars` feature), to build with
+Rust 1.41.1 you may need to pin as follows:
+```bash
+
+    cargo update --package schemars --precise 0.8.3
+    cargo update --package dyn-clone --precise 1.0.7
+```
+
 ## Contributions
 
 Contributions are welcome, including additional hash function implementations.

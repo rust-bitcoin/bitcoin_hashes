@@ -18,9 +18,21 @@ fi
 # Make all cargo invocations verbose
 export CARGO_TERM_VERBOSE=true
 
+# Pin if using MSRV toolchain.
+REQUIRE_VERSION_PINNING=false
+if cargo --version | grep "cargo 1\.41"; then
+    REQUIRE_VERSION_PINNING=true
+fi
+
 # Defaults / sanity checks
 cargo build --all
 cargo test --all
+
+
+if [ "$REQUIRE_VERSION_PINNING" = true ]; then
+    cargo update --package schemars --precise 0.8.3
+    cargo update --package dyn-clone --precise 1.0.7
+fi
 
 if [ "$DO_FEATURE_MATRIX" = true ]; then
     cargo build --all --no-default-features
@@ -46,7 +58,15 @@ if [ "$DO_FEATURE_MATRIX" = true ]; then
 fi
 
 if [ "$DO_SCHEMARS_TESTS" = true ]; then
-    (cd extended_tests/schemars && cargo test)
+    (
+        cd extended_tests/schemar
+        if [ "$REQUIRE_VERSION_PINNING" = true ]; then
+            cargo update --package schemars --precise 0.8.3
+            cargo update --package dyn-clone --precise 1.0.7
+        fi
+
+        cargo test
+    )
 fi
 
 # Build the docs if told to (this only works with the nightly toolchain)
