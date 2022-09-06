@@ -254,8 +254,6 @@ impl<'de, T: Tag> serde::Deserialize<'de> for Hash<T> {
 mod tests {
     use crate::{sha256, sha256t};
     #[cfg(any(feature = "std", feature = "alloc"))]
-    use crate::hex::ToHex;
-    #[cfg(any(feature = "std", feature = "alloc"))]
     use crate::Hash;
 
     const TEST_MIDSTATE: [u8; 32] = [
@@ -285,11 +283,11 @@ mod tests {
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test_sha256t() {
         assert_eq!(
-            TestHash::hash(&[0]).to_hex(),
+            TestHash::hash(&[0]).to_string(),
             "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
         );
         assert_eq!(
-            NewTypeHash::hash(&[0]).to_hex(),
+            NewTypeHash::hash(&[0]).to_string(),
             "29589d5122ec666ab5b4695070b6debc63881a4f85d88d93ddc90078038213ed"
         );
     }

@@ -15,9 +15,9 @@ edition = "2018"
 default = ["std"]
 std = []
 schemars = ["actual-schemars", "dyn-clone"]
-# If you disable std, you can still use a Write trait via the core2 feature.
-# You can also use ToHex via the alloc feature, as it requires Vec/String.
-# And you can still just disable std by disabling default features, without enabling these two.
+# If you disable std, you can still use a Write trait via the core2 feature. You can also use
+# ToString via the alloc feature. And you can still just disable std by disabling default features,
+# without enabling these two.
 alloc = ["core2/alloc"]
 serde-std = ["serde/std"]
 unstable = []  # for benchmarking
