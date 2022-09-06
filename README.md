@@ -27,3 +27,9 @@ git config --local core.hooksPath githooks/
 ```
 
 Alternatively add symlinks in your `.git/hooks` directory to any of the githooks we provide.
+
+### Running Benchmarks
+
+We use a custom Rust compiler configuration conditional to guard the bench mark code. To run the
+bench marks use: `RUSTFLAGS='--cfg=bench' cargo +nightly bench`.
+
