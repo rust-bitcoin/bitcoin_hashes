@@ -171,7 +171,7 @@ pub trait Hash: Copy + Clone + PartialEq + Eq + PartialOrd + Ord +
     type Engine: HashEngine;
 
     /// The byte array that represents the hash internally.
-    type Inner: hex::FromHex;
+    type Inner;
 
     /// Constructs a new engine.
     fn engine() -> Self::Engine {

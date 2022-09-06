@@ -19,7 +19,7 @@ use core::str;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, hex, sha256};
+use crate::{Error, sha256};
 
 /// Output of the SHA256d hash function.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -43,12 +43,7 @@ impl<I: SliceIndex<[u8]>> Index<I> for Hash {
     }
 }
 
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
-    }
-}
+crate::util::from_str_impl!(Hash, 32, true);
 
 impl crate::Hash for Hash {
     type Engine = sha256::HashEngine;
@@ -103,8 +98,8 @@ mod tests {
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use core::str::FromStr;
         use crate::{sha256d, Hash, HashEngine};
-        use crate::hex::FromHex;
 
         #[derive(Clone)]
         struct Test {
@@ -130,7 +125,7 @@ mod tests {
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
             let hash = sha256d::Hash::hash(&test.input.as_bytes());
-            assert_eq!(hash, sha256d::Hash::from_hex(test.output_str).expect("parse hex"));
+            assert_eq!(hash, sha256d::Hash::from_str(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_string(), &test.output_str);
 

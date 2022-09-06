@@ -20,7 +20,7 @@ use core::convert::TryInto;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, HashEngine as _, hex};
+use crate::{Error, HashEngine as _};
 
 const BLOCK_SIZE: usize = 64;
 
@@ -78,13 +78,7 @@ pub struct Hash(
     #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_32"))]
     [u8; 32]
 );
-
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
-    }
-}
+crate::util::from_str_impl!(Hash, 32, false);
 
 hex_fmt_impl!(Hash);
 serde_impl!(Hash, 32);
@@ -170,6 +164,7 @@ pub struct Midstate(pub [u8; 32]);
 hex_fmt_impl!(Midstate);
 serde_impl!(Midstate, 32);
 borrow_slice_impl!(Midstate);
+crate::util::from_str_impl!(Midstate, 32, true);
 
 impl<I: SliceIndex<[u8]>> Index<I> for Midstate {
     type Output = I::Output;
@@ -177,13 +172,6 @@ impl<I: SliceIndex<[u8]>> Index<I> for Midstate {
     #[inline]
     fn index(&self, index: I) -> &Self::Output {
         &self.0[index]
-    }
-}
-
-impl str::FromStr for Midstate {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
     }
 }
 
@@ -215,16 +203,6 @@ impl Midstate {
     /// Unwraps the [`Midstate`] and returns the underlying byte array.
     pub fn into_inner(self) -> [u8; 32] {
         self.0
-    }
-}
-
-impl hex::FromHex for Midstate {
-    fn from_byte_iter<I>(iter: I) -> Result<Self, hex::Error>
-    where
-        I: Iterator<Item = Result<u8, hex::Error>> + ExactSizeIterator + DoubleEndedIterator,
-    {
-        // DISPLAY_BACKWARD is true
-        Ok(Midstate::from_inner(hex::FromHex::from_byte_iter(iter.rev())?))
     }
 }
 
@@ -374,7 +352,7 @@ mod tests {
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
-        use crate::hex::FromHex;
+        use core::str::FromStr;
 
         #[derive(Clone)]
         struct Test {
@@ -420,7 +398,7 @@ mod tests {
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
             let hash = sha256::Hash::hash(&test.input.as_bytes());
-            assert_eq!(hash, sha256::Hash::from_hex(test.output_str).expect("parse hex"));
+            assert_eq!(hash, sha256::Hash::from_str(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_string(), &test.output_str);
 

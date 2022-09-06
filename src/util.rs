@@ -12,6 +12,28 @@
 // If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //
 
+macro_rules! from_str_impl {
+    ($ty:ident, $size:expr, $reverse:expr) => {
+        impl core::str::FromStr for $ty {
+            type Err = $crate::hex::Error;
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                let mut out = [0_u8; $size];
+                if $reverse {
+                    for (i, chars_to_hex_result) in $crate::hex::HexIterator::new(s)?.rev().enumerate() {
+                        out[i] = chars_to_hex_result?;
+                    }
+                } else {
+                    for (i, chars_to_hex_result) in $crate::hex::HexIterator::new(s)?.enumerate() {
+                        out[i] = chars_to_hex_result?;
+                    }
+                }
+                Ok($ty(out))
+            }
+        }
+    }
+}
+pub(crate) use from_str_impl;
+
 #[macro_export]
 /// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`.
 macro_rules! hex_fmt_impl(
@@ -19,6 +41,7 @@ macro_rules! hex_fmt_impl(
         $crate::hex_fmt_impl!($ty, );
     );
     ($ty:ident, $($gen:ident: $gent:ident),*) => (
+
         impl<$($gen: $gent),*> $crate::_export::_core::fmt::LowerHex for $ty<$($gen),*> {
             fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
                 #[allow(unused_imports)]
@@ -196,7 +219,7 @@ macro_rules! hash_newtype {
         impl $crate::_export::_core::str::FromStr for $newtype {
             type Err = $crate::hex::Error;
             fn from_str(s: &str) -> $crate::_export::_core::result::Result<$newtype, Self::Err> {
-                $crate::hex::FromHex::from_hex(s)
+                Ok($newtype(<$hash>::from_str(s)?))
             }
         }
 

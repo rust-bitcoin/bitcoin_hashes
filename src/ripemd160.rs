@@ -25,7 +25,7 @@ use core::convert::TryInto;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, HashEngine as _, hex};
+use crate::{Error, HashEngine as _};
 
 const BLOCK_SIZE: usize = 64;
 
@@ -87,6 +87,7 @@ pub struct Hash(
 hex_fmt_impl!(Hash);
 serde_impl!(Hash, 20);
 borrow_slice_impl!(Hash);
+crate::util::from_str_impl!(Hash, 20, false);
 
 impl<I: SliceIndex<[u8]>> Index<I> for Hash {
     type Output = I::Output;
@@ -94,13 +95,6 @@ impl<I: SliceIndex<[u8]>> Index<I> for Hash {
     #[inline]
     fn index(&self, index: I) -> &Self::Output {
         &self.0[index]
-    }
-}
-
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
     }
 }
 
@@ -462,8 +456,8 @@ mod tests {
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use core::str::FromStr;
         use crate::{Hash, HashEngine, ripemd160};
-        use crate::hex::FromHex;
 
         #[derive(Clone)]
         struct Test {
@@ -525,7 +519,7 @@ mod tests {
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
             let hash = ripemd160::Hash::hash(&test.input.as_bytes());
-            assert_eq!(hash, ripemd160::Hash::from_hex(test.output_str).expect("parse hex"));
+            assert_eq!(hash, ripemd160::Hash::from_str(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_string(), &test.output_str);
 

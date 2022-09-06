@@ -25,7 +25,7 @@ use core::convert::TryInto;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, HashEngine as _, hex};
+use crate::{Error, HashEngine as _};
 
 const BLOCK_SIZE: usize = 128;
 
@@ -85,6 +85,7 @@ pub struct Hash(
     #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_64"))]
     [u8; 64]
 );
+crate::util::from_str_impl!(Hash, 64, false);
 
 impl Copy for Hash {}
 
@@ -125,13 +126,6 @@ impl Ord for Hash {
 impl hash::Hash for Hash {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         (&self.0).hash(state)
-    }
-}
-
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
     }
 }
 
@@ -351,8 +345,8 @@ mod tests {
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use core::str::FromStr;
         use crate::{sha512, Hash, HashEngine};
-        use crate::hex::FromHex;
 
         #[derive(Clone)]
         struct Test {
@@ -410,7 +404,7 @@ mod tests {
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
             let hash = sha512::Hash::hash(&test.input.as_bytes());
-            assert_eq!(hash, sha512::Hash::from_hex(test.output_str).expect("parse hex"));
+            assert_eq!(hash, sha512::Hash::from_str(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_string(), &test.output_str);
 

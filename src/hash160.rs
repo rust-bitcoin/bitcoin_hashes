@@ -24,7 +24,7 @@ use core::str;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, hex, ripemd160, sha256};
+use crate::{Error, ripemd160, sha256};
 
 /// Output of the Bitcoin HASH160 hash function.
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -48,12 +48,7 @@ impl<I: SliceIndex<[u8]>> Index<I> for Hash {
     }
 }
 
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
-    }
-}
+crate::util::from_str_impl!(Hash, 20, false);
 
 impl crate::Hash for Hash {
     type Engine = sha256::HashEngine;
@@ -106,8 +101,8 @@ mod tests {
     #[test]
     #[cfg(any(feature = "std", feature = "alloc"))]
     fn test() {
+        use core::str::FromStr;
         use crate::{hash160, Hash, HashEngine};
-        use crate::hex::FromHex;
 
         #[derive(Clone)]
         #[cfg(any(feature = "std", feature = "alloc"))]
@@ -142,7 +137,7 @@ mod tests {
         for test in tests {
             // Hash through high-level API, check hex encoding/decoding
             let hash = hash160::Hash::hash(&test.input[..]);
-            assert_eq!(hash, hash160::Hash::from_hex(test.output_str).expect("parse hex"));
+            assert_eq!(hash, hash160::Hash::from_str(test.output_str).expect("parse hex"));
             assert_eq!(&hash[..], &test.output[..]);
             assert_eq!(&hash.to_string(), &test.output_str);
 

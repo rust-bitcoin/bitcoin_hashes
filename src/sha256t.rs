@@ -22,6 +22,7 @@ use core::ops::Index;
 use core::slice::SliceIndex;
 
 use crate::{Error, hex, sha256};
+use crate::hex::HexIterator;
 #[cfg(feature="serde")] use crate::Hash as _;
 
 /// Trait representing a tag that can be used as a context for SHA256t hashes.
@@ -76,7 +77,11 @@ impl<T: Tag> core::hash::Hash for Hash<T> {
 impl<T: Tag> str::FromStr for Hash<T> {
     type Err = hex::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
+        let mut out = [0_u8; 32];
+        for (i, chars_to_hex_result) in HexIterator::new(s)?.enumerate() {
+            out[i] = chars_to_hex_result?;
+        }
+        Ok(Hash(out, PhantomData))
     }
 }
 
