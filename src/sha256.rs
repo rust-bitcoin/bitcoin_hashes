@@ -20,7 +20,7 @@ use core::convert::TryInto;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, HashEngine as _, hex};
+use crate::{Error, HashEngine as _, hex, sha256d};
 
 const BLOCK_SIZE: usize = 64;
 
@@ -78,6 +78,13 @@ pub struct Hash(
     #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_32"))]
     [u8; 32]
 );
+
+impl Hash {
+    /// Iterate the sha256 algorithm to turn a sha256 hash into a sha256d hash
+    pub fn hash_again(&self) -> sha256d::Hash {
+        crate::Hash::from_inner(<Self as crate::Hash>::hash(&self.0).0)
+    }
+}
 
 impl str::FromStr for Hash {
     type Err = hex::Error;
