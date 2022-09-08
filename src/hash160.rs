@@ -36,6 +36,7 @@ pub struct Hash(
 hex_fmt_impl!(Hash);
 serde_impl!(Hash, 20);
 borrow_slice_impl!(Hash);
+as_bytes_impl!(Hash, 20);
 
 impl str::FromStr for Hash {
     type Err = hex::Error;

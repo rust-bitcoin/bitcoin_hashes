@@ -70,6 +70,22 @@ macro_rules! borrow_slice_impl(
     )
 );
 
+/// Adds a method `as_bytes` to a given type `$ty`.
+#[macro_export]
+macro_rules! as_bytes_impl(
+    ($ty:ident, $len:expr) => (
+        $crate::as_bytes_impl!($ty, $len, );
+    );
+    ($ty:ident, $len:expr, $($gen:ident: $gent:ident),*) => (
+        impl<$($gen: $gent),*> $ty<$($gen),*>  {
+            /// Returns `self` as a byte array reference.
+            pub fn as_bytes(&self) -> &[u8; $len] {
+                &self.0
+            }
+        }
+    );
+);
+
 macro_rules! engine_input_impl(
     () => (
         #[cfg(not(fuzzing))]
@@ -127,6 +143,11 @@ macro_rules! hash_newtype {
             pub fn as_hash(&self) -> $hash {
                 // Hashes implement Copy so don't need into_hash.
                 self.0
+            }
+
+            /// Returns `self` as a byte array reference.
+            pub fn as_bytes(&self) -> &[u8; $len] {
+                &self.0.as_bytes()
             }
         }
 

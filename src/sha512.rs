@@ -136,6 +136,7 @@ impl str::FromStr for Hash {
 hex_fmt_impl!(Hash);
 serde_impl!(Hash, 64);
 borrow_slice_impl!(Hash);
+as_bytes_impl!(Hash, 64);
 
 impl crate::Hash for Hash {
     type Engine = HashEngine;

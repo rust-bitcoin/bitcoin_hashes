@@ -80,6 +80,7 @@ impl<T: Tag> str::FromStr for Hash<T> {
 
 hex_fmt_impl!(Hash, T:Tag);
 borrow_slice_impl!(Hash, T:Tag);
+as_bytes_impl!(Hash, 32, T:Tag);
 
 impl<T: Tag> crate::Hash for Hash<T> {
     type Engine = sha256::HashEngine;

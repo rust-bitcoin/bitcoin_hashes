@@ -85,6 +85,7 @@ pub struct Hash(
 hex_fmt_impl!(Hash);
 serde_impl!(Hash, 20);
 borrow_slice_impl!(Hash);
+as_bytes_impl!(Hash, 20);
 
 impl str::FromStr for Hash {
     type Err = hex::Error;
@@ -516,6 +517,7 @@ mod tests {
             let hash = ripemd160::Hash::hash(&test.input.as_bytes());
             assert_eq!(hash, ripemd160::Hash::from_hex(test.output_str).expect("parse hex"));
             assert_eq!(hash.as_ref(), &test.output[..]);
+            assert_eq!(hash.as_bytes(), &test.output[..]);
             assert_eq!(&hash.to_hex(), &test.output_str);
 
             // Hash through engine, checking that we can input byte by byte

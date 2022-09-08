@@ -87,6 +87,7 @@ impl str::FromStr for Hash {
 hex_fmt_impl!(Hash);
 serde_impl!(Hash, 32);
 borrow_slice_impl!(Hash);
+as_bytes_impl!(Hash, 32);
 
 impl crate::Hash for Hash {
     type Engine = HashEngine;
@@ -159,6 +160,7 @@ pub struct Midstate(pub [u8; 32]);
 hex_fmt_impl!(Midstate);
 serde_impl!(Midstate, 32);
 borrow_slice_impl!(Midstate);
+as_bytes_impl!(Midstate, 32);
 
 impl str::FromStr for Midstate {
     type Err = hex::Error;
