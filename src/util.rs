@@ -70,7 +70,7 @@ macro_rules! borrow_slice_impl(
     )
 );
 
-/// Adds a method `as_bytes` to a given type `$ty`.
+/// Adds methods `as_bytes` and `as_mut_bytes` to a given type `$ty`.
 #[macro_export]
 macro_rules! as_bytes_impl(
     ($ty:ident, $len:expr) => (
@@ -81,6 +81,11 @@ macro_rules! as_bytes_impl(
             /// Returns `self` as a byte array reference.
             pub fn as_bytes(&self) -> &[u8; $len] {
                 &self.0
+            }
+
+            /// Returns `self` as a mutable byte array reference.
+            pub fn as_mut_bytes(&mut self) -> &mut [u8; $len] {
+                &mut self.0
             }
         }
     );
@@ -148,6 +153,11 @@ macro_rules! hash_newtype {
             /// Returns `self` as a byte array reference.
             pub fn as_bytes(&self) -> &[u8; $len] {
                 &self.0.as_bytes()
+            }
+
+            /// Returns `self` as a mutable byte array reference.
+            pub fn as_mut_bytes(&mut self) -> &mut [u8; $len] {
+                self.0.as_mut_bytes()
             }
         }
 
@@ -277,6 +287,18 @@ mod test {
     fn lower_hex_alternate() {
         let want = "0x0000000000000000000000000000000000000000000000000000000000000000";
         let got = format!("{:#x}", TestHash::all_zeros());
+        assert_eq!(got, want)
+    }
+
+    #[test]
+    fn as_mut_bytes() {
+        let mut hash = TestHash::all_zeros();
+        for b in hash.as_mut_bytes().iter_mut() {
+            *b = 0xff;
+        }
+
+        let got = format!("{:#x}", hash);
+        let want = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
         assert_eq!(got, want)
     }
 }
