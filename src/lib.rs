@@ -24,8 +24,8 @@
 //! Hashing a single byte slice or a string:
 //!
 //! ```rust
-//! use bitcoin_hashes::sha256;
-//! use bitcoin_hashes::Hash;
+//! use groestlcoin_hashes::sha256;
+//! use groestlcoin_hashes::Hash;
 //!
 //! let bytes = [0u8; 5];
 //! let hash_of_bytes = sha256::Hash::hash(&bytes);
@@ -36,8 +36,8 @@
 //! Hashing content from a reader:
 //!
 //! ```rust
-//! use bitcoin_hashes::sha256;
-//! use bitcoin_hashes::Hash;
+//! use groestlcoin_hashes::sha256;
+//! use groestlcoin_hashes::Hash;
 //!
 //! #[cfg(std)]
 //! # fn main() -> std::io::Result<()> {
@@ -56,8 +56,8 @@
 //! Hashing content by [`std::io::Write`] on HashEngine:
 //!
 //! ```rust
-//! use bitcoin_hashes::sha256;
-//! use bitcoin_hashes::Hash;
+//! use groestlcoin_hashes::sha256;
+//! use groestlcoin_hashes::Hash;
 //! use std::io::Write;
 //!
 //! #[cfg(std)]

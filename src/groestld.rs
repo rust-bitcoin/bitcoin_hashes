@@ -21,6 +21,13 @@ use core::slice::SliceIndex;
 use groestl::{Groestl512, Digest};
 use crate::{Error, hex};
 
+crate::internal_macros::hash_type! {
+    256,
+    true,
+    "Output of the Groestld hash function.",
+    "crate::util::json_hex_string::len_32"
+}
+
 /// Engine to compute Groestld hash function.
 #[derive(Clone)]
 pub struct HashEngine {
@@ -67,88 +74,26 @@ impl crate::HashEngine for HashEngine {
     }
 }
 
-/// Output of the Groestl512d hash function.
-#[derive(Copy, Clone, PartialEq, Eq, Default, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
-#[repr(transparent)]
-pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_32"))]
-    [u8; 32]
-);
 
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
-    }
+
+
+fn from_engine(e: HashEngine) -> Hash {
+    let first = e.hasher.finalize();
+
+    let mut groestl_engine2 = Groestl512::new();
+    groestl_engine2.update(first);
+    let result = groestl_engine2.finalize();
+
+    // use the first 32 bytes
+    let mut ret = [0; 32];
+    //for x in 0..32 {
+    //    ret[x] = result.as_slice()[x]; // x: i32
+    //}
+    ret[..32].clone_from_slice(&result.as_slice()[..32]);
+
+    Hash(ret)
 }
 
-hex_fmt_impl!(Debug, Hash);
-hex_fmt_impl!(Display, Hash);
-hex_fmt_impl!(LowerHex, Hash);
-serde_impl!(Hash, 32);
-borrow_slice_impl!(Hash);
-
-impl<I: SliceIndex<[u8]>> Index<I> for Hash {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
-}
-
-impl crate::Hash for Hash {
-    type Engine = HashEngine;
-    type Inner = [u8; 32];
-
-    fn from_engine(e: HashEngine) -> Hash {
-        let first = e.hasher.finalize();
-
-        let mut groestl_engine2 = Groestl512::new();
-        groestl_engine2.update(first);
-        let result = groestl_engine2.finalize();
-
-        // use the first 32 bytes
-        let mut ret = [0; 32];
-        //for x in 0..32 {
-        //    ret[x] = result.as_slice()[x]; // x: i32
-        //}
-        ret[..32].clone_from_slice(&result.as_slice()[..32]);
-
-        Hash(ret)
-    }
-
-    const LEN: usize = 32;
-
-    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
-        if sl.len() != 32 {
-            Err(Error::InvalidLength(Self::LEN, sl.len()))
-        } else {
-            let mut ret = [0; 32];
-            ret.copy_from_slice(sl);
-            Ok(Hash(ret))
-        }
-    }
-
-    const DISPLAY_BACKWARD: bool = true;
-
-    fn into_inner(self) -> Self::Inner {
-        self.0
-    }
-
-    fn as_inner(&self) -> &Self::Inner {
-        &self.0
-    }
-
-    fn from_inner(inner: Self::Inner) -> Self {
-        Hash(inner)
-    }
-
-    fn all_zeros() -> Self {
-        Hash([0x00; 32])
-    }
-}
 
 #[cfg(test)]
 mod tests {
