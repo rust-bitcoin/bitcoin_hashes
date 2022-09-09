@@ -19,6 +19,63 @@
 //! thing, it exposes hexadecimal serialization and deserialization, since these
 //! are needed to display hashes anway.
 //!
+//! ## Commonly used operations
+//!
+//! Hashing a single byte slice or a string:
+//!
+//! ```rust
+//! use bitcoin_hashes::sha256;
+//! use bitcoin_hashes::Hash;
+//!
+//! let bytes = [0u8; 5];
+//! let hash_of_bytes = sha256::Hash::hash(&bytes);
+//! let hash_of_string = sha256::Hash::hash("some string".as_bytes());
+//! ```
+//!
+//!
+//! Hashing content from a reader:
+//!
+//! ```rust
+//! use bitcoin_hashes::sha256;
+//! use bitcoin_hashes::Hash;
+//!
+//! #[cfg(std)]
+//! # fn main() -> std::io::Result<()> {
+//! let mut reader: &[u8] = b"hello"; // in real code, this could be a `File` or `TcpStream`
+//! let mut engine = sha256::HashEngine::default();
+//! std::io::copy(&mut reader, &mut engine)?;
+//! let hash = sha256::Hash::from_engine(engine);
+//! # Ok(())
+//! # }
+//!
+//! #[cfg(not(std))]
+//! # fn main() {}
+//! ```
+//!
+//!
+//! Hashing content by [`std::io::Write`] on HashEngine:
+//!
+//! ```rust
+//! use bitcoin_hashes::sha256;
+//! use bitcoin_hashes::Hash;
+//! use std::io::Write;
+//!
+//! #[cfg(std)]
+//! # fn main() -> std::io::Result<()> {
+//! let mut part1: &[u8] = b"hello";
+//! let mut part2: &[u8] = b" ";
+//! let mut part3: &[u8] = b"world";
+//! let mut engine = sha256::HashEngine::default();
+//! engine.write_all(part1)?;
+//! engine.write_all(part2)?;
+//! engine.write_all(part3)?;
+//! let hash = sha256::Hash::from_engine(engine);
+//! # Ok(())
+//! # }
+//!
+//! #[cfg(not(std))]
+//! # fn main() {}
+//! ```
 
 // Coding conventions
 #![deny(non_upper_case_globals)]
@@ -27,8 +84,9 @@
 #![deny(unused_mut)]
 //#![deny(missing_docs)]
 
-// Experimental features we need
+// Experimental features we need.
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(bench, feature(test))]
 
 // In general, rust is absolutely horrid at supporting users doing things like,
 // for example, compiling Rust code for real environments. Disable useless lints
@@ -37,9 +95,8 @@
 #![allow(ellipsis_inclusive_range_patterns)]
 
 #![cfg_attr(all(not(test), not(feature = "std")), no_std)]
-#![cfg_attr(all(test, feature = "unstable"), feature(test))]
-#[cfg(all(test, feature = "unstable"))] extern crate test;
 
+#[cfg(bench)] extern crate test;
 #[cfg(any(test, feature = "std"))] extern crate core;
 #[cfg(feature = "core2")] extern crate core2;
 #[cfg(feature = "alloc")] extern crate alloc;
@@ -59,6 +116,7 @@ pub mod _export {
 #[cfg(feature = "schemars")]
 extern crate actual_schemars as schemars;
 
+mod internal_macros;
 #[macro_use] mod util;
 #[macro_use] pub mod serde_macros;
 #[cfg(any(feature = "std", feature = "core2"))] mod impls;

@@ -79,7 +79,7 @@ fn eq_test() {
     assert!(!fixed_time_eq(&[0b00000000, 0b00000000], &[0b00000001, 0b00000001]));
 }
 
-#[cfg(all(test, feature = "unstable"))]
+#[cfg(bench)]
 mod benches {
     use test::Bencher;
 

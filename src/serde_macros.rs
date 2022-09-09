@@ -126,8 +126,8 @@ pub mod serde_details {
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 macro_rules! serde_impl(
-    ($t:ident, $len:expr) => (
-        impl $crate::serde_macros::serde_details::SerdeHash for $t {
+    ($t:ident, $len:expr $(, $gen:ident: $gent:ident)*) => (
+        impl<$($gen: $gent),*> $crate::serde_macros::serde_details::SerdeHash for $t<$($gen),*> {
             const N : usize = $len;
             fn from_slice_delegated(sl: &[u8]) -> Result<Self, $crate::Error> {
                 #[allow(unused_imports)]
@@ -136,14 +136,14 @@ macro_rules! serde_impl(
             }
         }
 
-        impl $crate::serde::Serialize for $t {
+        impl<$($gen: $gent),*> $crate::serde::Serialize for $t<$($gen),*> {
             fn serialize<S: $crate::serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
                 $crate::serde_macros::serde_details::SerdeHash::serialize(self, s)
             }
         }
 
-        impl<'de> $crate::serde::Deserialize<'de> for $t {
-            fn deserialize<D: $crate::serde::Deserializer<'de>>(d: D) -> Result<$t, D::Error> {
+        impl<'de $(, $gen: $gent)*> $crate::serde::Deserialize<'de> for $t<$($gen),*> {
+            fn deserialize<D: $crate::serde::Deserializer<'de>>(d: D) -> Result<$t<$($gen),*>, D::Error> {
                 $crate::serde_macros::serde_details::SerdeHash::deserialize(d)
             }
         }
@@ -154,5 +154,5 @@ macro_rules! serde_impl(
 #[cfg(not(feature = "serde"))]
 #[cfg_attr(docsrs, doc(cfg(not(feature = "serde"))))]
 macro_rules! serde_impl(
-        ($t:ident, $len:expr) => ()
+        ($t:ident, $len:expr $(, $gen:ident: $gent:ident)*) => ()
 );

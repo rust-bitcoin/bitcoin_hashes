@@ -15,20 +15,35 @@
 #[macro_export]
 /// Adds hexadecimal formatting implementation of a trait `$imp` to a given type `$ty`.
 macro_rules! hex_fmt_impl(
-    ($imp:ident, $ty:ident) => (
-        $crate::hex_fmt_impl!($imp, $ty, );
+    ($ty:ident) => (
+        $crate::hex_fmt_impl!($ty, );
     );
-    ($imp:ident, $ty:ident, $($gen:ident: $gent:ident),*) => (
-        impl<$($gen: $gent),*> $crate::_export::_core::fmt::$imp for $ty<$($gen),*> {
+    ($ty:ident, $($gen:ident: $gent:ident),*) => (
+        impl<$($gen: $gent),*> $crate::_export::_core::fmt::LowerHex for $ty<$($gen),*> {
             fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
                 #[allow(unused_imports)]
                 use $crate::{Hash as _, HashEngine as _, hex};
 
+                if f.alternate() {
+                    write!(f, "0x")?;
+                }
                 if $ty::<$($gen),*>::DISPLAY_BACKWARD {
                     hex::format_hex_reverse(&self.0, f)
                 } else {
                     hex::format_hex(&self.0, f)
                 }
+            }
+        }
+
+        impl<$($gen: $gent),*> $crate::_export::_core::fmt::Display for $ty<$($gen),*> {
+            fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
+                $crate::_export::_core::fmt::LowerHex::fmt(self, f)
+            }
+        }
+
+        impl<$($gen: $gent),*> $crate::_export::_core::fmt::Debug for $ty<$($gen),*> {
+            fn fmt(&self, f: &mut $crate::_export::_core::fmt::Formatter) -> $crate::_export::_core::fmt::Result {
+                write!(f, "{:#}", self)
             }
         }
     );
@@ -94,69 +109,6 @@ macro_rules! engine_input_impl(
 
 
 
-macro_rules! define_slice_to_be {
-    ($name: ident, $type: ty) => {
-        #[inline]
-        pub fn $name(slice: &[u8]) -> $type {
-            assert_eq!(slice.len(), core::mem::size_of::<$type>());
-            let mut res = 0;
-            for i in 0..::core::mem::size_of::<$type>() {
-                res |= (slice[i] as $type) << (::core::mem::size_of::<$type>() - i - 1)*8;
-            }
-            res
-        }
-    }
-}
-macro_rules! define_slice_to_le {
-    ($name: ident, $type: ty) => {
-        #[inline]
-        pub fn $name(slice: &[u8]) -> $type {
-            assert_eq!(slice.len(), core::mem::size_of::<$type>());
-            let mut res = 0;
-            for i in 0..::core::mem::size_of::<$type>() {
-                res |= (slice[i] as $type) << i*8;
-            }
-            res
-        }
-    }
-}
-macro_rules! define_be_to_array {
-    ($name: ident, $type: ty, $byte_len: expr) => {
-        #[inline]
-        pub fn $name(val: $type) -> [u8; $byte_len] {
-            assert_eq!(::core::mem::size_of::<$type>(), $byte_len); // size_of isn't a constfn in 1.22
-            let mut res = [0; $byte_len];
-            for i in 0..$byte_len {
-                res[i] = ((val >> ($byte_len - i - 1)*8) & 0xff) as u8;
-            }
-            res
-        }
-    }
-}
-macro_rules! define_le_to_array {
-    ($name: ident, $type: ty, $byte_len: expr) => {
-        #[inline]
-        pub fn $name(val: $type) -> [u8; $byte_len] {
-            assert_eq!(::core::mem::size_of::<$type>(), $byte_len); // size_of isn't a constfn in 1.22
-            let mut res = [0; $byte_len];
-            for i in 0..$byte_len {
-                res[i] = ((val >> i*8) & 0xff) as u8;
-            }
-            res
-        }
-    }
-}
-
-define_slice_to_be!(slice_to_u32_be, u32);
-define_slice_to_be!(slice_to_u64_be, u64);
-define_be_to_array!(u32_to_array_be, u32, 4);
-define_be_to_array!(u64_to_array_be, u64, 8);
-
-define_slice_to_le!(slice_to_u32_le, u32);
-define_slice_to_le!(slice_to_u64_le, u64);
-define_le_to_array!(u32_to_array_le, u32, 4);
-define_le_to_array!(u64_to_array_le, u64, 8);
-
 /// Creates a new newtype around a [`Hash`] type.
 #[macro_export]
 macro_rules! hash_newtype {
@@ -169,9 +121,7 @@ macro_rules! hash_newtype {
         #[repr(transparent)]
         pub struct $newtype($hash);
 
-        $crate::hex_fmt_impl!(Debug, $newtype);
-        $crate::hex_fmt_impl!(Display, $newtype);
-        $crate::hex_fmt_impl!(LowerHex, $newtype);
+        $crate::hex_fmt_impl!($newtype);
         $crate::serde_impl!($newtype, $len);
         $crate::borrow_slice_impl!($newtype);
 
@@ -289,8 +239,6 @@ pub mod json_hex_string {
 mod test {
     use crate::{Hash, sha256};
 
-    use super::*;
-
     #[test]
     fn borrow_slice_impl_to_vec() {
         // Test that the borrow_slice_impl macro gives to_vec.
@@ -298,16 +246,33 @@ mod test {
         assert_eq!(hash.to_vec().len(), sha256::Hash::LEN);
     }
 
-    #[test]
-    fn endianness_test() {
-        assert_eq!(slice_to_u32_be(&[0xde, 0xad, 0xbe, 0xef]), 0xdeadbeef);
-        assert_eq!(slice_to_u64_be(&[0x1b, 0xad, 0xca, 0xfe, 0xde, 0xad, 0xbe, 0xef]), 0x1badcafedeadbeef);
-        assert_eq!(u32_to_array_be(0xdeadbeef), [0xde, 0xad, 0xbe, 0xef]);
-        assert_eq!(u64_to_array_be(0x1badcafedeadbeef), [0x1b, 0xad, 0xca, 0xfe, 0xde, 0xad, 0xbe, 0xef]);
+    hash_newtype!(TestHash, crate::sha256d::Hash, 32, doc="Test hash.");
 
-        assert_eq!(slice_to_u32_le(&[0xef, 0xbe, 0xad, 0xde]), 0xdeadbeef);
-        assert_eq!(slice_to_u64_le(&[0xef, 0xbe, 0xad, 0xde, 0xfe, 0xca, 0xad, 0x1b]), 0x1badcafedeadbeef);
-        assert_eq!(u32_to_array_le(0xdeadbeef), [0xef, 0xbe, 0xad, 0xde]);
-        assert_eq!(u64_to_array_le(0x1badcafedeadbeef), [0xef, 0xbe, 0xad, 0xde, 0xfe, 0xca, 0xad, 0x1b]);
+    #[test]
+    fn display() {
+        let want = "0000000000000000000000000000000000000000000000000000000000000000";
+        let got = format!("{}", TestHash::all_zeros());
+        assert_eq!(got, want)
+    }
+
+    #[test]
+    fn display_alternate() {
+        let want = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        let got = format!("{:#}", TestHash::all_zeros());
+        assert_eq!(got, want)
+    }
+
+    #[test]
+    fn lower_hex() {
+        let want = "0000000000000000000000000000000000000000000000000000000000000000";
+        let got = format!("{:x}", TestHash::all_zeros());
+        assert_eq!(got, want)
+    }
+
+    #[test]
+    fn lower_hex_alternate() {
+        let want = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        let got = format!("{:#x}", TestHash::all_zeros());
+        assert_eq!(got, want)
     }
 }

@@ -20,7 +20,6 @@ schemars = ["actual-schemars", "dyn-clone"]
 # And you can still just disable std by disabling default features, without enabling these two.
 alloc = ["core2/alloc"]
 serde-std = ["serde/std"]
-unstable = []  # for benchmarking
 
 [dependencies]
 # Only enable this if you explicitly do not want to use "std", otherwise enable "serde-std".

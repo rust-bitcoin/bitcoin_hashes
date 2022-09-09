@@ -24,7 +24,26 @@ use core::{cmp, mem, ptr, str};
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, Hash as _, HashEngine as _, hex, util};
+use crate::{Error, Hash as _, HashEngine as _, hex};
+
+crate::internal_macros::hash_type! {
+    64,
+    false,
+    "Output of the SipHash24 hash function.",
+    "crate::util::json_hex_string::len_8"
+}
+
+#[cfg(not(fuzzing))]
+fn from_engine(e: HashEngine) -> Hash {
+    Hash::from_u64(Hash::from_engine_to_u64(e))
+}
+
+#[cfg(fuzzing)]
+fn from_engine(e: HashEngine) -> Hash {
+    let state = e.midstate();
+    Hash::from_u64(state.v0 ^ state.v1 ^ state.v2 ^ state.v3)
+}
+
 
 macro_rules! compress {
     ($state:expr) => {{
@@ -194,37 +213,6 @@ impl crate::HashEngine for HashEngine {
 
 }
 
-/// Output of the SipHash24 hash function.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
-#[repr(transparent)]
-pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_8"))]
-    [u8; 8]
-);
-
-hex_fmt_impl!(Debug, Hash);
-hex_fmt_impl!(Display, Hash);
-hex_fmt_impl!(LowerHex, Hash);
-serde_impl!(Hash, 8);
-borrow_slice_impl!(Hash);
-
-impl<I: SliceIndex<[u8]>> Index<I> for Hash {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
-}
-
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
-    }
-}
-
 impl Hash {
     /// Hashes the given data with an engine with the provided keys.
     pub fn hash_with_keys(k0: u64, k1: u64, data: &[u8]) -> Hash {
@@ -259,56 +247,12 @@ impl Hash {
 
     /// Returns the (little endian) 64-bit integer representation of the hash value.
     pub fn as_u64(&self) -> u64 {
-        util::slice_to_u64_le(&self.0[..])
+        u64::from_le_bytes(self.0)
     }
 
     /// Creates a hash from its (little endian) 64-bit integer representation.
     pub fn from_u64(hash: u64) -> Hash {
-        Hash(util::u64_to_array_le(hash))
-    }
-}
-
-impl crate::Hash for Hash {
-    type Engine = HashEngine;
-    type Inner = [u8; 8];
-
-    #[cfg(not(fuzzing))]
-    fn from_engine(e: HashEngine) -> Hash {
-        Hash::from_u64(Hash::from_engine_to_u64(e))
-    }
-
-    #[cfg(fuzzing)]
-    fn from_engine(e: HashEngine) -> Hash {
-        let state = e.midstate();
-        Hash::from_u64(state.v0 ^ state.v1 ^ state.v2 ^ state.v3)
-    }
-
-    const LEN: usize = 8;
-
-    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
-        if sl.len() != 8 {
-            Err(Error::InvalidLength(Self::LEN, sl.len()))
-        } else {
-            let mut ret = [0; 8];
-            ret.copy_from_slice(sl);
-            Ok(Hash(ret))
-        }
-    }
-
-    fn into_inner(self) -> Self::Inner {
-        self.0
-    }
-
-    fn as_inner(&self) -> &Self::Inner {
-        &self.0
-    }
-
-    fn from_inner(inner: Self::Inner) -> Self {
-        Hash(inner)
-    }
-
-    fn all_zeros() -> Self {
-        Hash([0x00; 8])
+        Hash(hash.to_le_bytes())
     }
 }
 
@@ -427,7 +371,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature = "unstable"))]
+#[cfg(bench)]
 mod benches {
     use test::Bencher;
 

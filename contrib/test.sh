@@ -6,14 +6,14 @@ if [ "$DO_ALLOC_TESTS" = true ]; then
 	FEATURES="$FEATURES alloc"
 fi
 
-# Use toolchain if explicitly specified
-if [ -n "$TOOLCHAIN" ]
-then
-    alias cargo="cargo +$TOOLCHAIN"
-fi
-
 cargo --version
 rustc --version
+
+# Work out if we are using a nightly toolchain.
+NIGHTLY=false
+if cargo --version | grep nightly >/dev/null; then
+    NIGHTLY=true
+fi
 
 # Make all cargo invocations verbose
 export CARGO_TERM_VERBOSE=true
@@ -76,7 +76,18 @@ if [ "$DO_ASAN" = true ]; then
     cargo test --lib --all --no-default-features --features="$FEATURES" -Zbuild-std --target x86_64-unknown-linux-gnu
 fi
 
-# Bench
-if [ "$DO_BENCH" = true ]; then
-    cargo bench --all --features="unstable"
+# Bench if told to, only works with non-stable toolchain (nightly, beta).
+if [ "$DO_BENCH" = true ]
+then
+    if [ "$NIGHTLY" = false ]
+    then
+        if [ -n "$RUSTUP_TOOLCHAIN" ]
+        then
+            echo "RUSTUP_TOOLCHAIN is set to a non-nightly toolchain but DO_BENCH requires a nightly toolchain"
+        else
+            echo "DO_BENCH requires a nightly toolchain"
+        fi
+        exit 1
+    fi
+    RUSTFLAGS='--cfg=bench' cargo bench
 fi

@@ -21,10 +21,45 @@
 //!
 
 use core::{cmp, str};
+use core::convert::TryInto;
 use core::ops::Index;
 use core::slice::SliceIndex;
 
-use crate::{Error, HashEngine as _, hex, util};
+use crate::{Error, HashEngine as _, hex};
+
+crate::internal_macros::hash_type! {
+    160,
+    false,
+    "Output of the RIPEMD160 hash function.",
+    "crate::util::json_hex_string::len_20"
+}
+
+#[cfg(not(fuzzing))]
+fn from_engine(mut e: HashEngine) -> Hash {
+    // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
+    let data_len = e.length as u64;
+
+    let zeroes = [0; BLOCK_SIZE - 8];
+    e.input(&[0x80]);
+    if e.length % BLOCK_SIZE > zeroes.len() {
+        e.input(&zeroes);
+    }
+    let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
+    e.input(&zeroes[..pad_length]);
+    debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
+
+    e.input(&(8 * data_len).to_le_bytes());
+    debug_assert_eq!(e.length % BLOCK_SIZE, 0);
+
+    Hash(e.midstate())
+}
+
+#[cfg(fuzzing)]
+fn from_engine(e: HashEngine) -> Hash {
+    let mut res = e.midstate();
+    res[0] ^= (e.length & 0xff) as u8;
+    Hash(res)
+}
 
 const BLOCK_SIZE: usize = 64;
 
@@ -52,8 +87,8 @@ impl crate::HashEngine for HashEngine {
     #[cfg(not(fuzzing))]
     fn midstate(&self) -> [u8; 20] {
         let mut ret = [0; 20];
-        for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
-            ret_bytes.copy_from_slice(&util::u32_to_array_le(*val));
+        for (val, ret_bytes) in self.h.iter().zip(ret.chunks_exact_mut(4)) {
+            ret_bytes.copy_from_slice(&(*val).to_le_bytes());
         }
         ret
     }
@@ -72,97 +107,6 @@ impl crate::HashEngine for HashEngine {
     }
 
     engine_input_impl!();
-}
-
-/// Output of the RIPEMD160 hash function.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
-#[repr(transparent)]
-pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with = "util::json_hex_string::len_20"))]
-    [u8; 20]
-);
-
-hex_fmt_impl!(Debug, Hash);
-hex_fmt_impl!(Display, Hash);
-hex_fmt_impl!(LowerHex, Hash);
-serde_impl!(Hash, 20);
-borrow_slice_impl!(Hash);
-
-impl<I: SliceIndex<[u8]>> Index<I> for Hash {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
-}
-
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
-    }
-}
-
-impl crate::Hash for Hash {
-    type Engine = HashEngine;
-    type Inner = [u8; 20];
-
-    #[cfg(not(fuzzing))]
-    fn from_engine(mut e: HashEngine) -> Hash {
-        // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
-        let data_len = e.length as u64;
-
-        let zeroes = [0; BLOCK_SIZE - 8];
-        e.input(&[0x80]);
-        if e.length % BLOCK_SIZE > zeroes.len() {
-            e.input(&zeroes);
-        }
-        let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
-        e.input(&zeroes[..pad_length]);
-        debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
-
-        e.input(&util::u64_to_array_le(8 * data_len));
-        debug_assert_eq!(e.length % BLOCK_SIZE, 0);
-
-        Hash(e.midstate())
-    }
-
-    #[cfg(fuzzing)]
-    fn from_engine(e: HashEngine) -> Hash {
-        let mut res = e.midstate();
-        res[0] ^= (e.length & 0xff) as u8;
-        Hash(res)
-    }
-
-    const LEN: usize = 20;
-
-    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
-        if sl.len() != 20 {
-            Err(Error::InvalidLength(Self::LEN, sl.len()))
-        } else {
-            let mut ret = [0; 20];
-            ret.copy_from_slice(sl);
-            Ok(Hash(ret))
-        }
-    }
-
-    fn into_inner(self) -> Self::Inner {
-        self.0
-    }
-
-    fn as_inner(&self) -> &Self::Inner {
-        &self.0
-    }
-
-    fn from_inner(inner: Self::Inner) -> Self {
-        Hash(inner)
-    }
-
-    fn all_zeros() -> Self {
-        Hash([0x00; 20])
-    }
 }
 
 macro_rules! round(
@@ -270,8 +214,8 @@ impl HashEngine {
         debug_assert_eq!(self.buffer.len(), BLOCK_SIZE);
 
         let mut w = [0u32; 16];
-        for (w_val, buff_bytes) in w.iter_mut().zip(self.buffer.chunks(4)) {
-            *w_val = util::slice_to_u32_le(buff_bytes);
+        for (w_val, buff_bytes) in w.iter_mut().zip(self.buffer.chunks_exact(4)) {
+            *w_val = u32::from_le_bytes(buff_bytes.try_into().expect("4 byte slice"))
         }
 
         process_block!(self.h, w,
@@ -561,7 +505,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature = "unstable"))]
+#[cfg(bench)]
 mod benches {
     use test::Bencher;
 
