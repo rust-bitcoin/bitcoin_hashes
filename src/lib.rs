@@ -115,6 +115,7 @@ pub mod _export {
 #[cfg(feature = "schemars")]
 extern crate actual_schemars as schemars;
 
+mod internal_macros;
 #[macro_use] mod util;
 #[macro_use] pub mod serde_macros;
 #[cfg(any(feature = "std", feature = "core2"))] mod impls;

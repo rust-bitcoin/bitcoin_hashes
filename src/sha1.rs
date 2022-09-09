@@ -22,6 +22,32 @@ use core::slice::SliceIndex;
 
 use crate::{Error, HashEngine as _, hex};
 
+crate::internal_macros::hash_type! {
+    160,
+    false,
+    "Output of the SHA1 hash function.",
+    "crate::util::json_hex_string::len_20"
+}
+
+fn from_engine(mut e: HashEngine) -> Hash {
+    // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
+    let data_len = e.length as u64;
+
+    let zeroes = [0; BLOCK_SIZE - 8];
+    e.input(&[0x80]);
+    if e.length % BLOCK_SIZE > zeroes.len() {
+        e.input(&zeroes);
+    }
+    let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
+    e.input(&zeroes[..pad_length]);
+    debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
+
+    e.input(&(8 * data_len).to_be_bytes());
+    debug_assert_eq!(e.length % BLOCK_SIZE, 0);
+
+    Hash(e.midstate())
+}
+
 const BLOCK_SIZE: usize = 64;
 
 /// Engine to compute SHA1 hash function.
@@ -68,87 +94,6 @@ impl crate::HashEngine for HashEngine {
     }
 
     engine_input_impl!();
-}
-
-/// Output of the SHA1 hash function.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
-#[repr(transparent)]
-pub struct Hash(
-    #[cfg_attr(feature = "schemars", schemars(schema_with = "crate::util::json_hex_string::len_20"))]
-    [u8; 20]
-);
-
-hex_fmt_impl!(Hash);
-serde_impl!(Hash, 20);
-borrow_slice_impl!(Hash);
-
-impl<I: SliceIndex<[u8]>> Index<I> for Hash {
-    type Output = I::Output;
-
-    #[inline]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
-    }
-}
-
-impl str::FromStr for Hash {
-    type Err = hex::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::FromHex::from_hex(s)
-    }
-}
-
-impl crate::Hash for Hash {
-    type Engine = HashEngine;
-    type Inner = [u8; 20];
-
-    fn from_engine(mut e: HashEngine) -> Hash {
-        // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
-        let data_len = e.length as u64;
-
-        let zeroes = [0; BLOCK_SIZE - 8];
-        e.input(&[0x80]);
-        if e.length % BLOCK_SIZE > zeroes.len() {
-            e.input(&zeroes);
-        }
-        let pad_length = zeroes.len() - (e.length % BLOCK_SIZE);
-        e.input(&zeroes[..pad_length]);
-        debug_assert_eq!(e.length % BLOCK_SIZE, zeroes.len());
-
-        e.input(&(8 * data_len).to_be_bytes());
-        debug_assert_eq!(e.length % BLOCK_SIZE, 0);
-
-        Hash(e.midstate())
-    }
-
-    const LEN: usize = 20;
-
-    fn from_slice(sl: &[u8]) -> Result<Hash, Error> {
-        if sl.len() != 20 {
-            Err(Error::InvalidLength(Self::LEN, sl.len()))
-        } else {
-            let mut ret = [0; 20];
-            ret.copy_from_slice(sl);
-            Ok(Hash(ret))
-        }
-    }
-
-    fn into_inner(self) -> Self::Inner {
-        self.0
-    }
-
-    fn as_inner(&self) -> &Self::Inner {
-        &self.0
-    }
-
-    fn from_inner(inner: Self::Inner) -> Self {
-        Hash(inner)
-    }
-
-    fn all_zeros() -> Self {
-        Hash([0x00; 20])
-    }
 }
 
 impl HashEngine {
