@@ -12,6 +12,8 @@ since these are needed to display hashes anway.
 ## Minimum Supported Rust Version (MSRV)
 
 This library should always compile with any combination of features on **Rust 1.41.1**.
+The one exception is the `schemars` feature which has no MSRV and should not be used
+by users who expect stability from their libraries.
 
 ## Contributions
 
