@@ -26,17 +26,39 @@ use core2::{error, io};
 use crate::{Error, HashEngine, hex, sha1, sha256, sha512, ripemd160, siphash24, hmac};
 
 impl error::Error for Error {
-    #[cfg(feature = "std")]
-    fn cause(&self) -> Option<&error::Error> { None }
-    #[cfg(feature = "std")]
-    fn description(&self) -> &str { "`std::error::description` is deprecated" }
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        use Error::*;
+
+        match *self {
+            InvalidLength(_, _) => None
+        }
+    }
 }
 
 impl error::Error for hex::Error {
-    #[cfg(feature = "std")]
-    fn cause(&self) -> Option<&error::Error> { None }
-    #[cfg(feature = "std")]
-    fn description(&self) -> &str { "`std::error::description` is deprecated" }
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        use hex::Error::*;
+
+        match *self {
+            InvalidChar(_) | OddLengthString(_) | InvalidLength(_, _) => None
+        }
+    }
+}
+
+impl<'a> io::Read for hex::HexIterator<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let mut bytes_read = 0usize;
+        for dst in buf {
+            match self.next() {
+                Some(Ok(src)) => {
+                    *dst = src;
+                    bytes_read += 1;
+                },
+                _ => break,
+            }
+        }
+        Ok(bytes_read)
+    }
 }
 
 impl io::Write for sha1::HashEngine {

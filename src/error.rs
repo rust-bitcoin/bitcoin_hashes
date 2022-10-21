@@ -19,6 +19,7 @@ use core::fmt;
 
 /// Crate error type.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[non_exhaustive]
 pub enum Error {
     /// Tried to create a fixed-length hash from a slice with the wrong size (expected, got).
     InvalidLength(usize, usize),
@@ -31,4 +32,3 @@ impl fmt::Display for Error {
         }
     }
 }
-
