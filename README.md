@@ -1,5 +1,11 @@
 [![Status](https://travis-ci.org/rust-bitcoin/bitcoin_hashes.png?branch=master)](https://travis-ci.org/rust-bitcoin/bitcoin_hashes)
 
+**This library is in the process of being moved over to the rust-bitcoin repository**
+
+No more PRs will be merged and as soon as the move is complete this repository will be archived.
+
+Please see PR: https://github.com/rust-bitcoin/rust-bitcoin/pull/1284
+
 # Bitcoin Hashes Library
 
 This is a simple, no-dependency library which implements the hash functions
