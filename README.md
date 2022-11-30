@@ -1,10 +1,7 @@
 [![Status](https://travis-ci.org/rust-bitcoin/bitcoin_hashes.png?branch=master)](https://travis-ci.org/rust-bitcoin/bitcoin_hashes)
 
-**This library is in the process of being moved over to the rust-bitcoin repository**
-
-No more PRs will be merged and as soon as the move is complete this repository will be archived.
-
-Please see PR: https://github.com/rust-bitcoin/rust-bitcoin/pull/1284
+Development of this library has now been moved over to the
+[rust-bitcoin](https://github.com/rust-bitcoin/rust-bitcoin) repository (see `rust-bitcoin/src/hashes`).
 
 # Bitcoin Hashes Library
 
